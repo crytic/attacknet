@@ -53,15 +53,59 @@ initContainers:
     - name: config
       mountPath: "/config"
       readOnly: true
- - name: init-copy-genesis
+
+ - name: init-prepare-genesis1
    image: busybox:latest
-   command: ['cp', '/config/genesis.json','/data']
+   command: ['cp', '/config/genesis.json','/genesis']
    volumeMounts:
-    - name: storage
-      mountPath: "/data"
     - name: config
       mountPath: "/config"
       readOnly: true
+    - name: genesis
+      mountPath: "/genesis"
+ - name: init-prepare-genesis2
+   image: busybox:latest
+   command: ['cp', '/config/config.yml','/genesis']
+   volumeMounts:
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+    - name: genesis
+      mountPath: "/genesis"
+
+ - name: init-cleanup-ssz
+   image: busybox:latest
+   command: ['rm','-f', '/genesis/genesis.ssz']
+   volumeMounts:
+    - name: genesis
+      mountPath: "/genesis"
+
+ - name: init-create-genesis
+   image: gcr.io/prysmaticlabs/prysm/cmd/prysmctl:latest
+   args: [
+    'testnet',
+    'generate-genesis',
+    '--fork=bellatrix',
+    '--num-validators=64',
+    '--output-ssz=/genesis/genesis.ssz',
+    '--chain-config-file=/genesis/config.yml',
+    '--geth-genesis-json-in=/genesis/genesis.json',
+    '--geth-genesis-json-out=/genesis/genesis.json'
+    ]
+   volumeMounts:
+    - name: genesis
+      mountPath: "/genesis"
+
+ - name: init-copy-genesis
+   image: busybox:latest
+   command: ['cp', '/genesis/genesis.json','/data']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: genesis
+      mountPath: "/genesis"
+      readOnly: true
+
  - name: init-create-genesis-block
    image: ethereum/client-go:stable
    command: ['geth', '--datadir=/data', 'init', '/data/genesis.json']
@@ -225,6 +269,7 @@ persistence:
   selector: {}
   #   matchLabels:
   #     app.kubernetes.io/name: something
+
 
 # -- Pod labels
 podLabels: {}

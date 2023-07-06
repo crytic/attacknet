@@ -27,17 +27,17 @@ mode: "beacon"
 # -- Extra args for the prysm container
 extraArgs:
   ## Example for beacon mode
-  - --goerli
+  #- --goerli
   #- --execution-endpoint=https://goerli.infura.io/v3/b9cf48060bf14e6aba5f5a0f9e98bd60
   - --execution-endpoint=http://geth.default:8551
-  - --checkpoint-sync-url=https://goerli.checkpoint-sync.ethdevops.io
-  - --genesis-beacon-api-url=https://goerli.checkpoint-sync.ethdevops.io
+  #- --checkpoint-sync-url=https://goerli.checkpoint-sync.ethdevops.io
+  #- --genesis-beacon-api-url=https://goerli.checkpoint-sync.ethdevops.io
   #
   ##
   ## Example for validator mode
   #- --goerli
   #- --enable-doppelganger-protection
-  #- --beacon-nodes=http://prysm-beacon:5052
+  #- --beacon-nodes=http://prysm.default:5052
 
 # -- JWT secret used by client as a secret. Change this value.
 jwt: ecb22bc24e7d4061f7ed690ccd5846d7d73f5d2b9733267e12f56790398d908a
@@ -301,7 +301,20 @@ updateStrategy:
   type: RollingUpdate
 
 # -- Additional init containers
-initContainers: []
+initContainers:
+  - name: copy-genesis
+    image: busybox:latest
+    command: ["cp", "-R", "/genesis", "/data"]
+    volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: genesis
+      mountPath: "/genesis"
+      readOnly: true
+#- name: generate-ssz
+#  image: ethpandaops/prysm:master
+#  command: ["prysmctl"]
+#  args: ["testnet", "generate-genesis", "--fork=bellatrix", "--num-validators=64"]
 # - name: my-init-container
 #   image: busybox:latest
 #   command: ['sh', '-c', 'echo hello']
@@ -313,7 +326,10 @@ extraContainers: []
 extraVolumes: []
 
 # -- Additional volume mounts
-extraVolumeMounts: []
+extraVolumeMounts: 
+#  - name: config
+#   mountPath: "/config"
+#    readOnly: true
 
 # -- Additional ports. Useful when using extraContainers
 extraPorts: []

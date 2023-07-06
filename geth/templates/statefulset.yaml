@@ -184,6 +184,9 @@ spec:
         - name: config
           configMap:
             name: {{ include "geth.fullname" . }}
+        - name: genesis
+          #persistentVolumeClaim:
+          #  claimName: genesis-claim
   {{- if not .Values.persistence.enabled }}
         - name: storage
           emptyDir: {}
@@ -209,3 +212,14 @@ spec:
         {{- toYaml .Values.persistence.selector | nindent 8 }}
       {{- end }}
   {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: genesis
+      annotations: {}
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 500Mi
+      storageClassName: null
