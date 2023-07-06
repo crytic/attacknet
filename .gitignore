@@ -1,1 +1,3 @@
-consensus/genesis.ssz
+prysm/consensus/genesis.ssz
+geth/execution
+geth/execution/geth
