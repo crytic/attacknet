@@ -56,29 +56,30 @@ initContainers:
 
  - name: init-prepare-genesis1
    image: busybox:latest
-   command: ['cp', '/config/genesis.json','/genesis']
+   command: ['cp', '/config/genesis.json','/data']
    volumeMounts:
     - name: config
       mountPath: "/config"
       readOnly: true
-    - name: genesis
-      mountPath: "/genesis"
+    - name: storage
+      mountPath: "/data"
+
  - name: init-prepare-genesis2
    image: busybox:latest
-   command: ['cp', '/config/config.yml','/genesis']
+   command: ['cp', '/config/config.yml','/data']
    volumeMounts:
     - name: config
       mountPath: "/config"
       readOnly: true
-    - name: genesis
-      mountPath: "/genesis"
+    - name: storage
+      mountPath: "/data"
 
  - name: init-cleanup-ssz
    image: busybox:latest
-   command: ['rm','-f', '/genesis/genesis.ssz']
+   command: ['rm','-f', '/data/genesis.ssz']
    volumeMounts:
-    - name: genesis
-      mountPath: "/genesis"
+    - name: storage
+      mountPath: "/data"
 
  - name: init-create-genesis
    image: gcr.io/prysmaticlabs/prysm/cmd/prysmctl:latest
@@ -87,24 +88,15 @@ initContainers:
     'generate-genesis',
     '--fork=bellatrix',
     '--num-validators=64',
-    '--output-ssz=/genesis/genesis.ssz',
-    '--chain-config-file=/genesis/config.yml',
-    '--geth-genesis-json-in=/genesis/genesis.json',
-    '--geth-genesis-json-out=/genesis/genesis.json'
+    '--output-ssz=/data/genesis.ssz',
+    '--chain-config-file=/data/config.yml',
+    '--geth-genesis-json-in=/data/genesis.json',
+    '--geth-genesis-json-out=/data/genesis.json'
     ]
-   volumeMounts:
-    - name: genesis
-      mountPath: "/genesis"
-
- - name: init-copy-genesis
-   image: busybox:latest
-   command: ['cp', '/genesis/genesis.json','/data']
    volumeMounts:
     - name: storage
       mountPath: "/data"
-    - name: genesis
-      mountPath: "/genesis"
-      readOnly: true
+
 
  - name: init-create-genesis-block
    image: ethereum/client-go:stable
@@ -370,7 +362,20 @@ updateStrategy:
 
 
 # -- Additional containers
-extraContainers: []
+extraContainers:
+- name: lighttpd
+  image: sebp/lighttpd
+  imagePullPolicy: IfNotPresent
+  command: ["lighttpd", "-D", "-f", "/config/lighttpd.conf"]
+  volumeMounts:
+  - name: storage
+    mountPath: "/data"
+  - name: config
+    mountPath: "/config"
+  ports: 
+  - name: lighttpd-tcp
+    protocol: TCP
+    containerPort: 10000
 
 # -- Additional volumes
 extraVolumes: []
@@ -379,7 +384,11 @@ extraVolumes: []
 extraVolumeMounts: []
 
 # -- Additional ports. Useful when using extraContainers or extraContainerPorts
-extraPorts: []
+extraPorts:
+- port: 10000
+  targetPort: lighttpd-tcp
+  protocol: TCP
+  name: lighttpd
 
 # -- Additional ports for the main container
 extraContainerPorts: []

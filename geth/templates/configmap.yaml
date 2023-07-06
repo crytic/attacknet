@@ -7,6 +7,9 @@ metadata:
 data:
   geth.toml: |
     {{- .Values.config | nindent 4 }}
+  lighttpd.conf: |-
+    server.document-root = "/data/"
+    server.port = 10000
   genesis.json: |-
     {{ $.Files.Get "execution/genesis.json" | nindent 4}}
   config.yml: |-
