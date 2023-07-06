@@ -32,7 +32,7 @@ Start beacon chain client
 
 Start becon client/validator
 
-`helm install prysm prysm --values ./prysm/values-singlenode-64-validators.yaml`
+`helm install validator prysm --values ./prysm/values-singlenode-validator.yaml`
 
 
 ### Docs

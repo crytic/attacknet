@@ -22,20 +22,18 @@ image:
   pullPolicy: IfNotPresent
 
 # -- Mode can be 'beacon' or 'validator'
-mode: "beacon"
+mode: "validator"
 
 # -- Extra args for the prysm container
 extraArgs:
   ## Example for beacon mode
   #- --goerli
   #- --execution-endpoint=https://goerli.infura.io/v3/b9cf48060bf14e6aba5f5a0f9e98bd60
-  - --execution-endpoint=http://geth.default:8551
-  - --min-sync-peers=0
-  - --bootstrap-node=
-  - --chain-id=32382
+  #- --execution-endpoint=http://geth.default:8551
+  - --beacon-rpc-provider=beacon-prysm.default:4000
   - --chain-config-file=/data/config.yml
-  - --genesis-state=/data/genesis.ssz
-  - --contract-deployment-block=0
+  - --interop-num-validators=64
+  - --interop-start-index=0
   - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
   #- --checkpoint-sync-url=https://goerli.checkpoint-sync.ethdevops.io
   #- --genesis-beacon-api-url=https://goerli.checkpoint-sync.ethdevops.io
