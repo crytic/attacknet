@@ -12,23 +12,12 @@
 
 ### Private Devnet, single node
 
-Generate genesis manifest
-```
-prysmctl testnet generate-genesis \
-    --fork=bellatrix \
-    --num-validators=64 \
-    --output-ssz=./prysm/consensus/genesis.ssz \
-    --chain-config-file=./prysm/consensus/config.yml \
-    --geth-genesis-json-in=./geth/execution/genesis.json \
-    --geth-genesis-json-out=./geth/execution/genesis.json
-```
-
 Start execution client (runs until merge):
 
-`helm install geth geth --values ./geth/values-singlenode-64-validators.yaml`
+`helm install geth geth --values ./geth/values-singlenode-64-validators.yaml --wait`
 
 Start beacon chain client
-`helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml`
+`helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait`
 
 Start becon client/validator
 
@@ -38,6 +27,24 @@ Start becon client/validator
 ### Docs
 
 https://docs.prylabs.network/docs/advanced/proof-of-stake-devnet
+
+### live tail k8s logs
+
+`k logs --follow geth-0`
+`k logs --follow beacon-prysm-0`
+`k logs --follow validator-prysm-0`
+
+```
+helm install geth geth --values ./geth/values-singlenode-64-validators.yaml --wait && helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait && helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
+
+```
+helm uninstall geth
+helm uninstall beacon
+helm uninstall validator
+
+```
 
 ## Create PVC Inspector pod
 ```

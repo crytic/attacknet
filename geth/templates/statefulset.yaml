@@ -212,14 +212,3 @@ spec:
         {{- toYaml .Values.persistence.selector | nindent 8 }}
       {{- end }}
   {{- end }}
-  volumeClaimTemplates:
-  - metadata:
-      name: genesis
-      annotations: {}
-    spec:
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: 500Mi
-      storageClassName: null

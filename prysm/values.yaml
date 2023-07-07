@@ -165,8 +165,8 @@ livenessProbe:
 readinessProbe:
   tcpSocket:
     port: http-api
-  initialDelaySeconds: 10
-  periodSeconds: 10
+  initialDelaySeconds: 60
+  periodSeconds: 120
 
 # -- P2P Port
 p2pPort: 13000
