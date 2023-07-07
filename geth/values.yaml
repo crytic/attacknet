@@ -4,6 +4,10 @@ nameOverride: ""
 # -- Overrides the chart's computed fullname
 fullnameOverride: ""
 
+genesisConfigPath: execution/genesis.json
+consensusConfigPath: execution/config.yml
+keysPath: execution/keys.json
+
 # -- Number of replicas
 replicas: 1
 

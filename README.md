@@ -26,9 +26,52 @@ Start becon client/validator
 
 ### Docs
 
+https://ethresear.ch/t/cascading-network-effects-on-ethereums-finality/15871
+
 https://docs.prylabs.network/docs/advanced/proof-of-stake-devnet
 
-### live tail k8s logs
+more focused on execution layer fuzzing:
+https://www.usenix.org/system/files/osdi21-yang.pdf
+https://github.com/snuspl/fluffy
+
+
+https://github.com/jepsen-io/tendermint
+
+
+### Notes
+
+suspected repro requirements:
+1. correct version of the prysm client
+
+Actual live env:
+2. enough validators in set (mainnet had 600k at time of incident)
+3. deposit queue (30k?) (read: big spike in deposits)
+4. byzantine fault is 0.2% 
+
+Potential repro env:
+2. enough validators in set
+3. deposit queue present w/ spike
+4. drop packets from CL -> EL
+
+
+
+prometheus setup
+```
+kubectl apply --server-side -f manifests/setup
+kubectl wait \
+	--for condition=Established \
+	--all CustomResourceDefinition \
+	--namespace=monitoring
+kubectl apply -f manifests/
+
+
+kubectl delete --ignore-not-found=true -f manifests/ -f manifests/setup
+
+use for grafana: https://github.com/metanull-operator/eth2-grafana/blob/master/eth2-grafana-dashboard-multiple-sources.json
+```
+
+
+### commands for single-node devnet
 
 `k logs --follow geth-0`
 `k logs --follow beacon-prysm-0`
@@ -40,13 +83,26 @@ helm install geth geth --values ./geth/values-singlenode-64-validators.yaml --wa
 
 
 ```
+helm upgrade geth geth --values ./geth/values-singlenode-64-validators.yaml 
+helm upgrade beacon prysm --values ./prysm/values-singlenode-beacon.yaml
+helm upgrade validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
+
+```
 helm uninstall geth
 helm uninstall beacon
 helm uninstall validator
 
 ```
 
-## Create PVC Inspector pod
+```
+helm diff upgrade geth geth --values ./geth/values-singlenode-64-validators.yaml
+helm diff upgrade beacon prysm --values ./prysm/values-singlenode-beacon.yaml
+helm diff upgrade validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
+### Create PVC Inspector pod
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -70,3 +126,18 @@ EOF
 ```
 
 `kubectl exec -it pvc-inspector -- sh`
+
+
+### Port forwarding
+
+```
+kubectl --namespace default port-forward prometheus-operator-6c77ccb5d9-rdlfj 8080
+```
+
+```
+kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
+```
+
+```
+kubectl --namespace monitoring port-forward svc/grafana 3000
+```
