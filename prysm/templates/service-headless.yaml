@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "prysm.labels" . | nindent 4 }}
 spec:
-  clusterIP: None
+  {{- if .Values.staticClusterIp }}
+  clusterIP: {{ .Values.staticClusterIp }}
+  {{- end}}
   ports:
   {{- if eq .Values.mode "beacon" }}
     - port: {{ .Values.p2pPort }}

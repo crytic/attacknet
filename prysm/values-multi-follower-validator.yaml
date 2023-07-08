@@ -1,20 +1,18 @@
-mode: "beacon"
+# -- Mode can be 'beacon' or 'validator'
+mode: "validator"
 
 # -- Extra args for the prysm container
 extraArgs:
-  - --execution-endpoint=http://geth.default:8551
-  - --min-sync-peers=0
-  - --bootstrap-node=
-  - --chain-id=32382
+  - --beacon-rpc-provider=beacon-follower-prysm.default:4000
   - --chain-config-file=/data/config.yml
-  - --genesis-state=/data/genesis.ssz
-  - --contract-deployment-block=0
+  - --interop-num-validators=20
+  - --interop-start-index=64
   - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
-  - --p2p-static-id
-  - --p2p-host-ip 10.245.0.20
+
+# -- JWT secret used by client as a secret. Change this value.
+jwt: ecb22bc24e7d4061f7ed690ccd5846d7d73f5d2b9733267e12f56790398d908a
 
 
-staticClusterIp: 10.245.0.20
 # -- Additional init containers
 initContainers:
   - name: copy-genesis-ssz
@@ -29,24 +27,25 @@ initContainers:
     volumeMounts:
     - name: storage
       mountPath: "/data"
-  - name: copy-network-key
-    image: busybox:latest
-    command: ["wget", "http://geth.default:10000/network-keys", "--directory-prefix", "/data"]
-    volumeMounts:
-    - name: storage
-      mountPath: "/data"
 
-#extraPorts:
-#- port: 13000
-#  targetPort: p2p-tcp
-##  protocol: TCP
- # name: p2p-tcp
-#- port: 13000
-#  targetPort: p2p-udp
-#  protocol: TCP
-#  name: p2p-udp
+# -- Liveness probe
+# @default -- See `values.yaml`
+livenessProbe:
+  tcpSocket:
+    port: metrics
+  initialDelaySeconds: 60
+  periodSeconds: 120
+
+# -- Readiness probe
+# @default -- See `values.yaml`
+readinessProbe:
+  tcpSocket:
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
 
 serviceMonitor:
   # -- If true, a ServiceMonitor CRD is created for a prometheus operator
   # https://github.com/coreos/prometheus-operator
-  enabled: true
+  enabled: false

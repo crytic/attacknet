@@ -1,0 +1,100 @@
+
+# -- Extra args for the geth container
+extraArgs: 
+#  - --networkid=32382
+  - --allow-insecure-unlock
+  - --unlock=0x123463a4b065722e99115d6c222f267d9cabb524
+#  - --nodiscover
+  - --syncmode=full
+  - --password /config/geth_password.txt
+  - --bootnodes enode://98e2b5d5f4d33bd093f174ee727e72f2fadbe5ac6920327f84d1e576b4e2b12b545d282f3f9971821f9a17cacbd3638dfbce37bd777c4c5f4fbef42555e0ca68@geth.default:30303
+  
+genesisConfigPath: execution/genesis.json
+consensusConfigPath: execution/config.yml
+keysPath: execution/keys.json
+
+# -- Additional init containers
+initContainers:
+ - name: init-create-keystore
+   image: busybox:latest
+   command: ['mkdir', '/data/keystore']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+ - name: init-copy-key
+   image: busybox:latest
+   command: ['cp', '/config/key','/data/keystore']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+
+## copy genesis from the configserver instead
+ - name: init-prepare-genesis1
+   image: busybox:latest
+   command: ["wget", "http://geth.default:10000/genesis.json", "--directory-prefix", "/data"]
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+ - name: init-create-genesis-block
+   image: ethereum/client-go:stable
+   command: ['geth', '--datadir=/data', 'init', '/data/genesis.json']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+
+ - name: dump-genesis
+   image: ethereum/client-go:stable
+   command: ['geth', 'dumpgenesis','--datadir', '/data']
+   volumeMounts:
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+    - name: storage
+      mountPath: "/data"
+
+
+ #- name: init-prepare-genesis1
+ #  image: busybox:latest
+ #  command: ['cp', '/config/genesis.json','/data']
+ #  volumeMounts:
+ #   - name: config
+ #     mountPath: "/config"
+ #     readOnly: true
+ #   - name: storage
+ #     mountPath: "/data"
+
+ #- name: init-prepare-genesis2
+ #  image: busybox:latest
+ #  command: ['cp', '/config/config.yml','/data']
+ #  volumeMounts:
+ #   - name: config
+ #     mountPath: "/config"
+ #     readOnly: true
+ #   - name: storage
+ #     mountPath: "/data"
+
+
+
+
+
+# -- Additional containers
+
+
+# -- Additional ports. Useful when using extraContainers or extraContainerPorts
+
+
+
+serviceMonitor:
+  # -- If true, a ServiceMonitor CRD is created for a prometheus operator
+  # https://github.com/coreos/prometheus-operator
+  enabled: false

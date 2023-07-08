@@ -16,5 +16,9 @@ data:
     {{ $.Files.Get .Values.consensusConfigPath | nindent 4}}
   key: |-
     {{ $.Files.Get .Values.keysPath | nindent 4}}
+  boot.key: |
+    {{ $.Files.Get "execution/boot.key" | nindent 4}}
+  network-keys: |-
+    {{- $.Files.Get "execution/consensus-p2p.key" | nindent 4}}
   geth_password.txt: |-
 

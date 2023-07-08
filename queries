@@ -3,6 +3,8 @@ validator_count{state="Slashed",job="beacon-prysm"}
 validator_count{state="Exited",job="beacon-prysm"}
 validator_count{state="Pending",job="beacon-prysm"}
 
+validator_count{state="Active",job="$beacon"}
+
 time to clear pending queue
 ((validator_count{state="Pending",job="beacon-prysm"}/4)*6.4)
 

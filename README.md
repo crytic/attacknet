@@ -102,6 +102,33 @@ helm diff upgrade beacon prysm --values ./prysm/values-singlenode-beacon.yaml
 helm diff upgrade validator prysm --values ./prysm/values-singlenode-validator.yaml
 ```
 
+
+
+### commands for multi-node devnet
+
+leader
+```
+helm install geth geth --values ./geth/values-multi-leader.yaml --wait && helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait && helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
+follower
+```
+helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
+
+helm install beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
+helm install validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
+```
+
+```
+helm uninstall geth
+helm uninstall beacon
+helm uninstall validator
+
+helm uninstall geth-follower
+helm uninstall beacon-follower
+helm uninstall validator-follower
+```
+
 ### Create PVC Inspector pod
 ```
 cat <<EOF | kubectl apply -f -
