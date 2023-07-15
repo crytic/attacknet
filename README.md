@@ -108,15 +108,24 @@ helm diff upgrade validator prysm --values ./prysm/values-singlenode-validator.y
 
 leader
 ```
-helm install geth geth --values ./geth/values-multi-leader.yaml --wait && helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait && helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
+helm install geth geth --values ./geth/values-multi-leader.yaml --wait
+helm install beacon prysm --values ./prysm/values-multi-leader-beacon.yaml --wait
+helm install validator prysm --values ./prysm/values-multi-leader-validator.yaml
 ```
 
 follower
 ```
 helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-
 helm install beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
 helm install validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
+```
+
+followerN
+```
+helm install geth-follower1 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
+helm install validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
+
 ```
 
 ```
@@ -127,8 +136,73 @@ helm uninstall validator
 helm uninstall geth-follower
 helm uninstall beacon-follower
 helm uninstall validator-follower
+
+helm uninstall geth-follower1
+helm uninstall beacon-follower1
+helm uninstall validator-follower1
 ```
 
+Startup configs tested
+
+##### Start 66+% single node, wait 32 slots. Once finalizing, start remainder 33%.
+Result: network terminates around slot 682
+```
+time="2023-07-10 17:52:38" level=error msg="Failed to find peers" error="unable to find requisite number of peers for topic /eth2/ca17b34f/beacon_attestation_5/ssz_snappy - only 0 out of 1 peers were able to be found" prefix=p2p
+time="2023-07-10 17:52:38" level=warning msg="Attestation is too old to broadcast, discarding it. Current Slot: 682 , Attestation Slot: 5" prefix=p2p
+```
+Notably, the follower mode kept submitting attestations and stopped at slot 1200
+
+Start 100% validators on single node.
+
+Next test, we'll set the beacon leader's min sync peers to 1.
+
+##### Same as before, but with leader beacon's minpeers set to 1
+
+Follower beacon chain could not join network, was waiting for suitiable peers that did not show up.
+
+##### Start with genesis 5 mins in future
+
+still terminated eventually. slot 155ish.
+```
+time="2023-07-10 21:45:15" level=warning msg="voting period before genesis + follow distance, using eth1data from head" genesisTime=1689023139 latestValidTime=1688994467 prefix="rpc/validator"
+time="2023-07-10 21:45:18" level=warning msg="Execution client is not syncing" prefix=powchain
+time="2023-07-10 21:45:18" level=error msg="Beacon node is not respecting the follow distance" prefix=powchain
+time="2023-07-10 21:45:23" level=info msg="Got interrupt, shutting down..." prefix=node
+time="2023-07-10 21:45:23" level=info msg="Stopping beacon node" prefix=node
+time="2023-07-10 21:45:27" level=error msg="Failed to find peers" error="unable to find requisite number of peers for topic /eth2/ca17b34f/beacon_attestation_0/ssz_snappy - only 0 out of 1 peers were able to be found" prefix=p2p
+time="2023-07-10 21:45:27" level=warning msg="Attestation is too old to broadcast, discarding it. Current Slot: 199 , Attestation Slot: 0" prefix=p2p
+time="2023-07-10 21:45:27" level=error msg="Could not register validator for topic" error="context canceled" prefix=sync topic="/eth2/ca17b34f/sync_committee_1/ssz_snappy"
+```
+
+##### start with genesis 5 mins in future, single, 64 validator node
+todo: undo --nodiscover in values-multi-leader
+undo peers=0 in values-multi-leader
+
+terminated eventually, both beacon and execution clients waiting on each other
+
+trying again, this time disabling k8s restarts.
+
+trying again, this time upping the per-node ram to 16gb. we saw memory-based evictions atound slot 600 last run.
+also undoing the genesis timestamp setting. allowing auto-config.
+
+
+^ terminated 16 hours later, out of memory again
+adding memory request/limits to node
+
+^^ was okay after 4 hrs, but mem still going up.
+adding --minimum-peers-per-subnet=0
+
+##### testing with multi-node now
+- set validator count to 80
+- unset --nodiscover in values-multi-leader
+- set follower promethus=true
+- re-enable genesis-time
+
+Theories:
+- there's a minpeers requirement somewhere that's screwing the node up
+- we actually need more nodes on the network for it to work
+- genesis time in past is a problem [discard]
+- --minimum-peers-per-subnet
 ### Create PVC Inspector pod
 ```
 cat <<EOF | kubectl apply -f -

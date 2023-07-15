@@ -3,7 +3,7 @@
 extraArgs: 
   - --allow-insecure-unlock
   - --unlock=0x123463a4b065722e99115d6c222f267d9cabb524
-  # - --nodiscover
+ # - --nodiscover
   - --syncmode=full
   - --password /config/geth_password.txt
   - --nodekeyhex a2bd0f92786c5b35643761c33dbdcdc412e525602244048d0893d4669b2b5d85
@@ -66,11 +66,12 @@ initContainers:
     'testnet',
     'generate-genesis',
     '--fork=bellatrix',
-    '--num-validators=80',
+    '--num-validators=192',
     '--output-ssz=/data/genesis.ssz',
     '--chain-config-file=/data/config.yml',
     '--geth-genesis-json-in=/data/genesis.json',
-    '--geth-genesis-json-out=/data/genesis.json'
+    '--geth-genesis-json-out=/data/genesis.json',
+    '--genesis-time=1689443943'
     ]
    volumeMounts:
     - name: storage
@@ -136,3 +137,9 @@ serviceMonitor:
   # -- If true, a ServiceMonitor CRD is created for a prometheus operator
   # https://github.com/coreos/prometheus-operator
   enabled: true
+
+resources:
+  requests:
+    memory: "1Gi"
+  limits:
+    memory: "1Gi"
