@@ -101,6 +101,6 @@ serviceMonitor:
 
 resources:
   requests:
-    memory: "300Mi"
+    memory: "1Gi"
   limits:
-    memory: "300Mi"
+    memory: "1Gi"

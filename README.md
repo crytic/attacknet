@@ -126,6 +126,26 @@ helm install geth-follower1 geth --values ./geth/values-multi-follower.yaml --wa
 helm install beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
 helm install validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
 
+helm install geth-follower2 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower2 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/2-beacon.yaml --wait
+helm install validator-follower2 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/2-validator.yaml
+
+helm install geth-follower3 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower3 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/3-beacon.yaml --wait
+helm install validator-follower3 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/3-validator.yaml
+
+helm install geth-follower4 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower4 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/4-beacon.yaml --wait
+helm install validator-follower4 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/4-validator.yaml
+
+helm install geth-follower5 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower5 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/5-beacon.yaml --wait
+helm install validator-follower5 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/5-validator.yaml
+
+helm install geth-follower6 geth --values ./geth/values-multi-follower.yaml --wait
+helm install beacon-follower6 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/6-beacon.yaml --wait
+helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
+
 ```
 
 ```
@@ -140,6 +160,26 @@ helm uninstall validator-follower
 helm uninstall geth-follower1
 helm uninstall beacon-follower1
 helm uninstall validator-follower1
+
+helm uninstall geth-follower2
+helm uninstall beacon-follower2
+helm uninstall validator-follower2
+
+helm uninstall geth-follower3
+helm uninstall beacon-follower3
+helm uninstall validator-follower3
+
+helm uninstall geth-follower4
+helm uninstall beacon-follower4
+helm uninstall validator-follower4
+
+helm uninstall geth-follower5
+helm uninstall beacon-follower5
+helm uninstall validator-follower5
+
+helm uninstall geth-follower6
+helm uninstall beacon-follower6
+helm uninstall validator-follower6
 ```
 
 Startup configs tested

@@ -1,0 +1,16 @@
+
+extraArgs:
+  - --execution-endpoint=http://geth-follower5.default:8551
+  - --bootstrap-node=
+  - --chain-id=32382
+  - --chain-config-file=/data/config.yml
+  - --genesis-state=/data/genesis.ssz
+  - --contract-deployment-block=0
+  - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
+  #- --genesis-beacon-api-url=
+  #- --peer /ip4/10.244.0.92/tcp/31000/p2p/16Uiu2HAmM5cfKfxEfp3r4D1BAzWAKmCkg4kNVqZDvrWP23YaaufY
+  # - --peer /ip4/10.244.0.53/tcp/31000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
+  - --peer /ip4/10.245.0.20/tcp/13000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
+  # - --peer /ip4/10.244.0.48/tcp/13000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
+  - --min-sync-peers=1
+  - --minimum-peers-per-subnet=0
