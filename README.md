@@ -157,6 +157,11 @@ helm upgrade beacon-follower1 prysm  --values ./prysm/values-multi-follower-beac
 helm upgrade validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
 k delete po geth-follower1-0 beacon-follower1-prysm-0 validator-follower1-prysm-0
 
+helm upgrade geth-follower3 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower3 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/3-beacon.yaml --wait
+helm upgrade validator-follower3 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/3-validator.yaml
+
+
 ```
 
 ```
@@ -311,3 +316,6 @@ restarts
 `current_eth1_data_deposit_count`
 `beacondb_pending_deposits`
 `beacon_processed_deposits_total`
+
+attestation processing rate
+`rate(process_attestations_milliseconds_count[5m])`

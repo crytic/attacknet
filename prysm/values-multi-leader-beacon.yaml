@@ -3,7 +3,6 @@ mode: "beacon"
 # -- Extra args for the prysm container
 extraArgs:
   - --execution-endpoint=http://geth.default:8551
-  - --min-sync-peers=0
   - --bootstrap-node=
   - --chain-id=32382
   - --chain-config-file=/data/config.yml
@@ -13,6 +12,7 @@ extraArgs:
   - --p2p-static-id
   - --p2p-host-ip 10.245.0.20
   - --minimum-peers-per-subnet=0
+  - --min-sync-peers=1
 
 
 staticClusterIp: 10.245.0.20

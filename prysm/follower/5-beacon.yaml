@@ -1,7 +1,7 @@
 
 extraArgs:
   - --execution-endpoint=http://geth-follower5.default:8551
-  - --bootstrap-node=
+  - --bootstrap-node=enr:-MK4QHLwlUaX0Xox3KtdQ6u5tYYPcozXy7sqvR_qCZ8ABVxvd0W1A4Z-34b4P7fr_Wg9NYbGzxELiroAH2AcvbpJMC6GAYmO-y7mh2F0dG5ldHOIAAAAAAAAAACEZXRoMpC4dt4xIAAAkgIAAAAAAAAAgmlkgnY0gmlwhAr1ABSJc2VjcDI1NmsxoQJWH5D7S4145jEEMuBvUzQFic2PXHF0xax2t-XUoTkD6IhzeW5jbmV0cwCDdGNwgjLIg3VkcIIyyA
   - --chain-id=32382
   - --chain-config-file=/data/config.yml
   - --genesis-state=/data/genesis.ssz
@@ -10,7 +10,7 @@ extraArgs:
   #- --genesis-beacon-api-url=
   #- --peer /ip4/10.244.0.92/tcp/31000/p2p/16Uiu2HAmM5cfKfxEfp3r4D1BAzWAKmCkg4kNVqZDvrWP23YaaufY
   # - --peer /ip4/10.244.0.53/tcp/31000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
-  - --peer /ip4/10.245.0.20/tcp/13000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
+  #- --peer /ip4/10.245.0.20/tcp/13000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
   # - --peer /ip4/10.244.0.48/tcp/13000/p2p/16Uiu2HAm1DrxbnunPrB6r5x8egB1X3ETMgzC8cSganDcbuLEoHfm
   - --min-sync-peers=1
   - --minimum-peers-per-subnet=0
