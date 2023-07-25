@@ -148,6 +148,17 @@ helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-v
 
 ```
 
+
+```
+upgrade
+
+helm upgrade geth-follower1 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
+helm upgrade validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
+k delete po geth-follower1-0 beacon-follower1-prysm-0 validator-follower1-prysm-0
+
+```
+
 ```
 helm uninstall geth
 helm uninstall beacon
@@ -282,3 +293,21 @@ kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
 ```
 kubectl --namespace monitoring port-forward svc/grafana 3000
 ```
+
+### Prom queries
+
+Head slot, beacon nodes
+`beacon_head_slot{service=~"beacon-follower-prysm|beacon-follower1-prysm|beacon-follower2-prysm|beacon-follower3-prysm|beacon-follower4-prysm|beacon-follower5-prysm|beacon-follower6-prysm|beacon-prysm"}`
+
+current justified epoch, beacon nodes
+`beacon_current_justified_epoch{service=~"beacon-follower-prysm|beacon-follower1-prysm|beacon-follower2-prysm|beacon-follower3-prysm|beacon-follower4-prysm|beacon-follower5-prysm|beacon-follower6-prysm|beacon-prysm"}`
+
+restarts
+`kube_pod_container_status_restarts_total{namespace="default"}`
+
+
+`beacondb_all_deposits{}`
+`powchain_valid_deposits_received`
+`current_eth1_data_deposit_count`
+`beacondb_pending_deposits`
+`beacon_processed_deposits_total`

@@ -52,3 +52,6 @@ resources:
     memory: "2Gi"
   limits:
     memory: "2Gi"
+
+
+nodeType: beacon

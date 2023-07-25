@@ -366,3 +366,6 @@ serviceMonitor:
   scrapeTimeout: 30s
   # -- ServiceMonitor relabelings
   relabelings: []
+
+
+nodeType: "na"

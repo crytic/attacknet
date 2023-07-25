@@ -71,7 +71,7 @@ initContainers:
     '--chain-config-file=/data/config.yml',
     '--geth-genesis-json-in=/data/genesis.json',
     '--geth-genesis-json-out=/data/genesis.json',
-    '--genesis-time=1689445203'
+    '--genesis-time=1690303886'
     ]
    volumeMounts:
     - name: storage

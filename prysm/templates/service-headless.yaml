@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "prysm.fullname" . }}-headless
   labels:
-    {{- include "prysm.labels" . | nindent 4 }}
+    nodeType: headless
 spec:
   {{- if .Values.staticClusterIp }}
   clusterIP: {{ .Values.staticClusterIp }}

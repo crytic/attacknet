@@ -4,6 +4,7 @@ metadata:
   name: {{ include "prysm.fullname" . }}
   labels:
     {{- include "prysm.labels" . | nindent 4 }}
+    nodeType: {{ .Values.nodeType }}
 spec:
   type: ClusterIP
   ports:

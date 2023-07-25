@@ -55,3 +55,6 @@ resources:
     memory: "300Mi"
   limits:
     memory: "300Mi"
+
+
+nodeType: validator

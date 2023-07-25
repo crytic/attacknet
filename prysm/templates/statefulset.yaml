@@ -18,6 +18,7 @@ spec:
   template:
     metadata:
       labels:
+        nodeType: {{ .Values.nodeType }}
         {{- include "prysm.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
