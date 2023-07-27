@@ -5,8 +5,8 @@ mode: "validator"
 extraArgs:
   - --beacon-rpc-provider=beacon-follower-prysm.default:4000
   - --chain-config-file=/data/config.yml
-  - --interop-num-validators=64
-  - --interop-start-index=64
+  - --interop-num-validators=2048
+  - --interop-start-index=2048
   - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
 
 # -- JWT secret used by client as a secret. Change this value.

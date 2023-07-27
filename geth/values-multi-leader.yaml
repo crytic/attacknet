@@ -66,12 +66,12 @@ initContainers:
     'testnet',
     'generate-genesis',
     '--fork=bellatrix',
-    '--num-validators=512',
+    '--num-validators=16384',
     '--output-ssz=/data/genesis.ssz',
     '--chain-config-file=/data/config.yml',
     '--geth-genesis-json-in=/data/genesis.json',
     '--geth-genesis-json-out=/data/genesis.json',
-    '--genesis-time=1690321432'
+    '--genesis-time=1690474401'
     ]
    volumeMounts:
     - name: storage

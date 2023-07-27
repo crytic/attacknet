@@ -151,16 +151,35 @@ helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-v
 
 ```
 upgrade
+helm upgrade geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
+helm upgrade validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
+
 
 helm upgrade geth-follower1 geth --values ./geth/values-multi-follower.yaml --wait
 helm upgrade beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
 helm upgrade validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
 k delete po geth-follower1-0 beacon-follower1-prysm-0 validator-follower1-prysm-0
 
+helm upgrade geth-follower2 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower2 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/2-beacon.yaml --wait
+helm upgrade validator-follower2 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/2-validator.yaml
+
 helm upgrade geth-follower3 geth --values ./geth/values-multi-follower.yaml --wait
 helm upgrade beacon-follower3 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/3-beacon.yaml --wait
 helm upgrade validator-follower3 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/3-validator.yaml
 
+helm upgrade geth-follower4 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower4 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/4-beacon.yaml --wait
+helm upgrade validator-follower4 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/4-validator.yaml
+
+helm upgrade geth-follower5 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower5 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/5-beacon.yaml --wait
+helm upgrade validator-follower5 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/5-validator.yaml
+
+helm upgrade geth-follower6 geth --values ./geth/values-multi-follower.yaml --wait
+helm upgrade beacon-follower6 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/6-beacon.yaml --wait
+helm upgrade validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
 
 ```
 
