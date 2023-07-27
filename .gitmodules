@@ -1,0 +1,3 @@
+[submodule "eth2-val-tools"]
+	path = eth2-val-tools
+	url = git@github.com:bsamuels453/eth2-val-tools.git

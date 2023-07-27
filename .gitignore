@@ -1,2 +1,3 @@
 prysm/consensus/genesis.ssz
 geth/execution/geth
+.test/
