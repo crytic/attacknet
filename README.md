@@ -217,6 +217,25 @@ helm uninstall beacon-follower6
 helm uninstall validator-follower6
 ```
 
+
+
+```
+helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
+helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
+helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
+
+helm uninstall geth-follower
+helm uninstall lighthouse-beacon
+helm uninstall lighthouse-validator
+
+```
+
+
+```
+helm install genesis-generator genesis-generator
+helm uninstall genesis-generator
+```
+
 Startup configs tested
 
 ##### Start 66+% single node, wait 32 slots. Once finalizing, start remainder 33%.
@@ -318,6 +337,15 @@ kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
 kubectl --namespace monitoring port-forward svc/grafana 3000
 ```
 
+```
+kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333
+```
+
+
+```
+kubectl port-forward svc/beacon-prysm 8080
+```
+
 ### Prom queries
 
 Head slot, beacon nodes
@@ -338,3 +366,42 @@ restarts
 
 attestation processing rate
 `rate(process_attestations_milliseconds_count[5m])`
+
+
+### Chaos controller
+
+##### register CRDs
+```
+kubectl create -f chaos-controller/deploy/chaosmonkey.yaml
+kubectl create -f chaos-controller/deploy/crash.yaml
+kubectl create -f chaos-controller/deploy/networkpartition.yaml
+kubectl create -f chaos-controller/deploy/stress.yaml
+```
+
+
+```
+kubectl delete -f chaos-controller/deploy/chaosmonkey.yaml
+kubectl delete -f chaos-controller/deploy/crash.yaml
+kubectl delete -f chaos-controller/deploy/networkpartition.yaml
+kubectl delete -f chaos-controller/deploy/stress.yaml
+```
+
+helm install chaos-controller helm --wait
+
+kubectl create -f chaos-controller/example/stress_network.yaml
+kubectl delete -f chaos-controller/example/stress_network.yaml
+
+
+```
+helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false
+
+helm uninstall chaos-mesh
+```
+
+
+k delete clusterrolebinding chaos-mesh-chaos-controller-manager-cluster-level      ClusterRole/chaos-mesh-chaos-controller-manager-cluster-level                      19m
+k delete clusterrolebinding chaos-mesh-chaos-controller-manager-target-namespace   ClusterRole/chaos-mesh-chaos-controller-manager-target-namespace                   19m
+k delete clusterrolebinding chaos-mesh-chaos-dashboard-cluster-level               ClusterRole/chaos-mesh-chaos-dashboard-cluster-level                               19m
+k delete clusterrolebinding chaos-mesh-chaos-dashboard-target-namespace            ClusterRole/chaos-mesh-chaos-dashboard-target-namespace                            19m
+k delete clusterrolebinding chaos-mesh-chaos-dns-server-cluster-level              ClusterRole/chaos-mesh-chaos-dns-server-cluster-level                              19m
+k delete clusterrolebinding chaos-mesh-chaos-dns-server-target-namespace           ClusterRole/chaos-mesh-chaos-dns-server-target-namespace                           19m

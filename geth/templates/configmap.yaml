@@ -20,5 +20,7 @@ data:
     {{ $.Files.Get "execution/boot.key" | nindent 4}}
   network-keys: |-
     {{- $.Files.Get "execution/consensus-p2p.key" | nindent 4}}
+  config-lighthouse.yml: |-
+    {{ $.Files.Get "execution/config-lighthouse.yml" | nindent 4}}
   geth_password.txt: |-
 
