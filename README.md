@@ -116,8 +116,8 @@ helm install validator prysm --values ./prysm/values-multi-leader-validator.yaml
 follower
 ```
 helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
-helm install validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
+helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
+helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
 ```
 
 followerN
@@ -147,7 +147,7 @@ helm install beacon-follower6 prysm  --values ./prysm/values-multi-follower-beac
 helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
 
 ```
-
+genesis state root from prysm genesisStateRoot=a79c5f12491e1a4008c24bf1e2e86746fe14267aacbe20e57e420ae337ae60cd
 
 ```
 upgrade
@@ -183,39 +183,7 @@ helm upgrade validator-follower6 prysm  --values ./prysm/values-multi-follower-v
 
 ```
 
-```
-helm uninstall geth
-helm uninstall beacon
-helm uninstall validator
 
-helm uninstall geth-follower
-helm uninstall beacon-follower
-helm uninstall validator-follower
-
-helm uninstall geth-follower1
-helm uninstall beacon-follower1
-helm uninstall validator-follower1
-
-helm uninstall geth-follower2
-helm uninstall beacon-follower2
-helm uninstall validator-follower2
-
-helm uninstall geth-follower3
-helm uninstall beacon-follower3
-helm uninstall validator-follower3
-
-helm uninstall geth-follower4
-helm uninstall beacon-follower4
-helm uninstall validator-follower4
-
-helm uninstall geth-follower5
-helm uninstall beacon-follower5
-helm uninstall validator-follower5
-
-helm uninstall geth-follower6
-helm uninstall beacon-follower6
-helm uninstall validator-follower6
-```
 
 
 
@@ -232,8 +200,19 @@ helm uninstall lighthouse-validator
 
 
 ```
-helm install genesis-generator genesis-generator
+helm install genesis-generator genesis-generator --wait
 helm uninstall genesis-generator
+```
+
+
+```
+
+```
+helm install geth geth --values ./geth/values-bootnode.yaml
+helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml
+helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
 ```
 
 Startup configs tested
