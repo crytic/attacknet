@@ -6,7 +6,7 @@ fullnameOverride: ""
 
 image:
   # -- genesis-generator container image repository
-  repository: skylenet/ethereum-genesis-generator
+  repository: bensamstob/ethereum-genesis-generator
   # -- genesis-generator container image tag
   tag: latest
   # -- genesis-generator container pull policy
@@ -37,8 +37,10 @@ config:
       genesis_delay: 300
       terminal_total_difficulty: 0
       slot_duration_in_seconds: 12
+      deneb_fork_epoch: 9999999999
+      capella_fork_epoch: 0
       clique:
-        enabled: true
+        enabled: false
         signers:
           - 36d56343bc308d4ffaac2f793d121aba905fa6cc
           - 5e762d4a3847cadaf40a4b0c39574b0ff6698c78
@@ -48,8 +50,8 @@ config:
     config.yaml: |
       PRESET_BASE: 'mainnet'
       CONFIG_NAME: testnet
-      MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 16384
-      NUMBER_OF_VALIDATORS: 16384
+      MIN_GENESIS_ACTIVE_VALIDATOR_COUNT: 2048
+      NUMBER_OF_VALIDATORS: 2048
       MIN_GENESIS_TIME: 0
       GENESIS_FORK_VERSION: 0x13001020
       GENESIS_DELAY: 300
@@ -62,6 +64,7 @@ config:
 
       CAPELLA_FORK_VERSION: 0x03001020
       CAPELLA_FORK_EPOCH: 0
+
 
       # Time parameters
       # ---------------------------------------------------------------
@@ -94,7 +97,7 @@ config:
       DEPOSIT_CONTRACT_ADDRESS: 0x4242424242424242424242424242424242424242
     mnemonics.yaml: |
       - mnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"  # a 24 word BIP 39 mnemonic
-        count: 20000
+        count: 2048
 
 ingress:
   # -- Ingress resource for the HTTP API
