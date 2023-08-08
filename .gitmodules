@@ -10,3 +10,6 @@
 [submodule "kurtosis/eth2-package"]
 	path = kurtosis/eth2-package
 	url = git@github.com:crytic/eth2-package.git
+[submodule "kurtosis/eth-network-package"]
+	path = kurtosis/eth-network-package
+	url = https://github.com/kurtosis-tech/eth-network-package.git
