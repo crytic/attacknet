@@ -20,7 +20,13 @@ image:
   pullPolicy: IfNotPresent
 
 # -- Extra args for the geth container
-extraArgs:  []
+extraArgs: 
+  - --allow-insecure-unlock
+  - --unlock=0x123463a4b065722e99115d6c222f267d9cabb524
+ # - --nodiscover
+  - --syncmode=full
+  - --password /config/geth_password.txt
+  - --nodekeyhex a2bd0f92786c5b35643761c33dbdcdc412e525602244048d0893d4669b2b5d85
 
 # -- TOML config file
 # @default -- See `values.yaml` for example

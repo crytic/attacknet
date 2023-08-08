@@ -53,6 +53,16 @@ initContainers:
     - name: storage
       mountPath: "/data"
 
+ - name: init-prepare-genesis3
+   image: busybox:latest
+   command: ['cp', '/config/config-lighthouse.yml','/data']
+   volumeMounts:
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+    - name: storage
+      mountPath: "/data"
+
  - name: init-cleanup-ssz
    image: busybox:latest
    command: ['rm','-f', '/data/genesis.ssz']
@@ -66,12 +76,12 @@ initContainers:
     'testnet',
     'generate-genesis',
     '--fork=bellatrix',
-    '--num-validators=16384',
+    '--num-validators=4096',
     '--output-ssz=/data/genesis.ssz',
     '--chain-config-file=/data/config.yml',
     '--geth-genesis-json-in=/data/genesis.json',
     '--geth-genesis-json-out=/data/genesis.json',
-    '--genesis-time=1690474401'
+    '--genesis-time=1691091716'
     ]
    volumeMounts:
     - name: storage

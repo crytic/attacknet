@@ -116,8 +116,8 @@ helm install validator prysm --values ./prysm/values-multi-leader-validator.yaml
 follower
 ```
 helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
-helm install validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
+helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
+helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
 ```
 
 followerN
@@ -147,7 +147,7 @@ helm install beacon-follower6 prysm  --values ./prysm/values-multi-follower-beac
 helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
 
 ```
-
+genesis state root from prysm genesisStateRoot=a79c5f12491e1a4008c24bf1e2e86746fe14267aacbe20e57e420ae337ae60cd
 
 ```
 upgrade
@@ -183,38 +183,36 @@ helm upgrade validator-follower6 prysm  --values ./prysm/values-multi-follower-v
 
 ```
 
+
+
+
+
 ```
-helm uninstall geth
-helm uninstall beacon
-helm uninstall validator
+helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
+helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
+helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
 
 helm uninstall geth-follower
-helm uninstall beacon-follower
-helm uninstall validator-follower
+helm uninstall lighthouse-beacon
+helm uninstall lighthouse-validator
 
-helm uninstall geth-follower1
-helm uninstall beacon-follower1
-helm uninstall validator-follower1
+```
 
-helm uninstall geth-follower2
-helm uninstall beacon-follower2
-helm uninstall validator-follower2
 
-helm uninstall geth-follower3
-helm uninstall beacon-follower3
-helm uninstall validator-follower3
+```
+helm install genesis-generator genesis-generator --wait
+helm uninstall genesis-generator
+```
 
-helm uninstall geth-follower4
-helm uninstall beacon-follower4
-helm uninstall validator-follower4
 
-helm uninstall geth-follower5
-helm uninstall beacon-follower5
-helm uninstall validator-follower5
+```
 
-helm uninstall geth-follower6
-helm uninstall beacon-follower6
-helm uninstall validator-follower6
+```
+helm install geth geth --values ./geth/values-bootnode.yaml
+helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml
+helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
+```
+
 ```
 
 Startup configs tested
@@ -318,6 +316,15 @@ kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
 kubectl --namespace monitoring port-forward svc/grafana 3000
 ```
 
+```
+kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333
+```
+
+
+```
+kubectl port-forward svc/beacon-prysm 8080
+```
+
 ### Prom queries
 
 Head slot, beacon nodes
@@ -338,3 +345,42 @@ restarts
 
 attestation processing rate
 `rate(process_attestations_milliseconds_count[5m])`
+
+
+### Chaos controller
+
+##### register CRDs
+```
+kubectl create -f chaos-controller/deploy/chaosmonkey.yaml
+kubectl create -f chaos-controller/deploy/crash.yaml
+kubectl create -f chaos-controller/deploy/networkpartition.yaml
+kubectl create -f chaos-controller/deploy/stress.yaml
+```
+
+
+```
+kubectl delete -f chaos-controller/deploy/chaosmonkey.yaml
+kubectl delete -f chaos-controller/deploy/crash.yaml
+kubectl delete -f chaos-controller/deploy/networkpartition.yaml
+kubectl delete -f chaos-controller/deploy/stress.yaml
+```
+
+helm install chaos-controller helm --wait
+
+kubectl create -f chaos-controller/example/stress_network.yaml
+kubectl delete -f chaos-controller/example/stress_network.yaml
+
+
+```
+helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false
+
+helm uninstall chaos-mesh
+```
+
+
+k delete clusterrolebinding chaos-mesh-chaos-controller-manager-cluster-level      ClusterRole/chaos-mesh-chaos-controller-manager-cluster-level                      19m
+k delete clusterrolebinding chaos-mesh-chaos-controller-manager-target-namespace   ClusterRole/chaos-mesh-chaos-controller-manager-target-namespace                   19m
+k delete clusterrolebinding chaos-mesh-chaos-dashboard-cluster-level               ClusterRole/chaos-mesh-chaos-dashboard-cluster-level                               19m
+k delete clusterrolebinding chaos-mesh-chaos-dashboard-target-namespace            ClusterRole/chaos-mesh-chaos-dashboard-target-namespace                            19m
+k delete clusterrolebinding chaos-mesh-chaos-dns-server-cluster-level              ClusterRole/chaos-mesh-chaos-dns-server-cluster-level                              19m
+k delete clusterrolebinding chaos-mesh-chaos-dns-server-target-namespace           ClusterRole/chaos-mesh-chaos-dns-server-target-namespace                           19m

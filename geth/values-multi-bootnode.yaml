@@ -1,0 +1,151 @@
+
+
+# -- Additional init containers
+initContainers:
+ - name: init-create-keystore
+   image: busybox:latest
+   command: ['mkdir', '/data/keystore']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+ - name: init-copy-key
+   image: busybox:latest
+   command: ['cp', '/config/key','/data/keystore']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+
+ - name: init-prepare-genesis1
+   image: busybox:latest
+   command: ["wget", "http://genesis-generator.default:8000/custom_config_data/genesis.json", "--directory-prefix", "/data"]
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+ - name: init-prepare-genesis2
+   image: busybox:latest
+   command: ["wget", "http://genesis-generator.default:8000/custom_config_data/config.yaml", "--directory-prefix", "/data"]
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+ #- name: init-prepare-genesis1
+ #  image: busybox:latest
+ #  command: ['cp', '/config/genesis.json','/data']
+ #  volumeMounts:
+ #   - name: config
+ #     mountPath: "/config"
+ #     readOnly: true
+ #   - name: storage
+ #     mountPath: "/data"
+
+ #- name: init-prepare-genesis2
+ #  image: busybox:latest
+ #  command: ['cp', '/config/config.yml','/data']
+ #  volumeMounts:
+ #   - name: config
+ #     mountPath: "/config"
+ #     readOnly: true
+ #   - name: storage
+ #     mountPath: "/data"
+
+ - name: init-cleanup-ssz
+   image: busybox:latest
+   command: ['rm','-f', '/data/genesis.ssz']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+ - name: init-prepare-genesis3
+   image: busybox:latest
+   command: ["wget", "http://genesis-generator.default:8000/custom_config_data/genesis.ssz", "--directory-prefix", "/data"]
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+# - name: init-create-genesis
+#   image: gcr.io/prysmaticlabs/prysm/cmd/prysmctl:latest
+#   args: [
+#    'testnet',
+#    'generate-genesis',
+#    '--fork=bellatrix',
+#    '--num-validators=16384',
+#    '--output-ssz=/data/genesis.ssz',
+#    '--chain-config-file=/data/config.yml',
+#    '--geth-genesis-json-in=/data/genesis.json',
+#    '--geth-genesis-json-out=/data/genesis.json',
+#    '--genesis-time=1691091056'
+#    ]
+#   volumeMounts:
+#    - name: storage
+#      mountPath: "/data"
+
+
+ - name: init-create-genesis-block
+   image: ethereum/client-go:stable
+   command: ['geth', '--datadir=/data', 'init', '/data/genesis.json']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+
+ - name: init-copy-bootkey
+   image: busybox:latest
+   command: ['cp','/config/boot.key', '/data']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+
+
+ - name: init-copy-consensus-p2p
+   image: busybox:latest
+   command: ['cp','/config/network-keys', '/data']
+   volumeMounts:
+    - name: storage
+      mountPath: "/data"
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+
+# -- Additional containers
+extraContainers:
+- name: lighttpd
+  image: sebp/lighttpd
+  imagePullPolicy: IfNotPresent
+  command: ["lighttpd", "-D", "-f", "/config/lighttpd.conf"]
+  volumeMounts:
+  - name: storage
+    mountPath: "/data"
+  - name: config
+    mountPath: "/config"
+  ports: 
+  - name: lighttpd-tcp
+    protocol: TCP
+    containerPort: 10000
+
+# -- Additional ports. Useful when using extraContainers or extraContainerPorts
+extraPorts:
+- port: 10000
+  targetPort: lighttpd-tcp
+  protocol: TCP
+  name: lighttpd
+
+
+serviceMonitor:
+  # -- If true, a ServiceMonitor CRD is created for a prometheus operator
+  # https://github.com/coreos/prometheus-operator
+  enabled: true
+
+resources:
+  requests:
+    memory: "1Gi"
+  limits:
+    memory: "1Gi"

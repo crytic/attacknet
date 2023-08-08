@@ -1,3 +1,15 @@
 [submodule "eth2-val-tools"]
 	path = eth2-val-tools
 	url = git@github.com:bsamuels453/eth2-val-tools.git
+[submodule "chaos-controller"]
+	path = chaos-controller
+	url = git@github.com:bsamuels453/chaos-controller.git
+[submodule "ethereum-genesis-generator"]
+	path = ethereum-genesis-generator
+	url = git@github.com:crytic/ethereum-genesis-generator.git
+[submodule "kurtosis/eth2-package"]
+	path = kurtosis/eth2-package
+	url = git@github.com:crytic/eth2-package.git
+[submodule "kurtosis/eth-network-package"]
+	path = kurtosis/eth-network-package
+	url = https://github.com/kurtosis-tech/eth-network-package.git
