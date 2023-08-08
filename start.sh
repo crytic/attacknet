@@ -1,5 +1,9 @@
 #!/bin/bash
 
+install_genesis() {
+    helm install genesis-generator genesis-generator --wait
+}
+
 install_boot_node() {
     helm install geth geth --values ./geth/values-multi-bootnode.yaml --wait
     helm install beacon prysm --values ./prysm/values-multi-leader-beacon.yaml --wait
@@ -18,7 +22,9 @@ install_lighthouse_node() {
     helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
 }
 
-install_boot_node
+install_genesis;
+
+install_boot_node;
 
 #install_lighthouse_node &
 

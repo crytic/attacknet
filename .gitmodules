@@ -7,3 +7,6 @@
 [submodule "ethereum-genesis-generator"]
 	path = ethereum-genesis-generator
 	url = git@github.com:crytic/ethereum-genesis-generator.git
+[submodule "kurtosis/eth2-package"]
+	path = kurtosis/eth2-package
+	url = git@github.com:crytic/eth2-package.git
