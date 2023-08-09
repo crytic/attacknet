@@ -2,26 +2,43 @@
     "participants": [
       {
         "el_client_type": "geth",
-        "el_client_image": "ethpandaops/geth:4844-devnet-6",
+        "el_client_image": "ethereum/client-go:v1.11.6",
         "cl_client_type": "lighthouse",
         "cl_client_image": "sigp/lighthouse:v4.1.0"
       },
       {
         "el_client_type": "geth",
-        "el_client_image": "ethpandaops/geth:4844-devnet-6",
+        "el_client_image": "ethereum/client-go:v1.11.6",
         "cl_client_type": "prysm",
         "cl_client_image": "ethpandaops/prysm:v4.0.3,gcr.io/prysmaticlabs/prysm/validator:v4.0.3"
       },
       {
         "el_client_type": "geth",
-        "el_client_image": "ethpandaops/geth:4844-devnet-6",
+        "el_client_image": "ethereum/client-go:v1.11.6",
+        "cl_client_type": "prysm",
+        "cl_client_image": "ethpandaops/prysm:v4.0.3,gcr.io/prysmaticlabs/prysm/validator:v4.0.3"
+      },
+      {
+        "el_client_type": "geth",
+        "el_client_image": "ethereum/client-go:v1.11.6",
+        "cl_client_type": "prysm",
+        "cl_client_image": "ethpandaops/prysm:v4.0.3,gcr.io/prysmaticlabs/prysm/validator:v4.0.3"
+      },
+      {
+        "el_client_type": "geth",
+        "el_client_image": "ethereum/client-go:v1.11.6",
+        "cl_client_type": "prysm",
+        "cl_client_image": "ethpandaops/prysm:v4.0.3,gcr.io/prysmaticlabs/prysm/validator:v4.0.3"
+      },
+      {
+        "el_client_type": "geth",
+        "el_client_image": "ethereum/client-go:v1.11.6",
         "cl_client_type": "prysm",
         "cl_client_image": "ethpandaops/prysm:v4.0.3,gcr.io/prysmaticlabs/prysm/validator:v4.0.3"
       }
     ],
     "network_params": {
-      "capella_fork_epoch": 2,
-      "deneb_fork_epoch": 5
+      "capella_fork_epoch": 2
     },
     "launch_additional_services": true,
     "wait_for_finalization": false,
