@@ -27,5 +27,11 @@ kurtosis engine start --enclave-pool-size {pool-size-number}
 kurtosis run --enclave ethTestnet ./eth2-package  "$(cat ./example.json)"
 
 kubectl  port-forward svc/grafana 3000
+kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333
 
 kurtosis enclave inspect ethTestnet
+
+kubectl get pod cl-4-prysm-geth -o yaml | kubectl replace --force -f -
+
+kubectl get pod cl-2-lighthouse-geth -o yaml | kubectl replace --force -f -
+kubectl get pod el-2-geth-lighthouse -o yaml | kubectl replace --force -f -

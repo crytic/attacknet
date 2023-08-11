@@ -8,12 +8,12 @@ export FROM=0x123463a4b065722e99115d6c222f267d9cabb524
 export SELECTOR="deposit(bytes,bytes,bytes,bytes32)"
 export KEYSTORE=./geth/execution/keys.json
 export CHAIN_ID=3151908
-export VALIDATOR_START=0
-export VALIDATOR_END=10000
+export VALIDATOR_START=30000
+export VALIDATOR_END=60000
 export PRIVKEY="2e0834786285daccd064ca17f1654f67b4aef298acbb82cef9ec422fb4975622"
 export MANIFEST_FILE=deposit_manifest.json
 
-export KUBE_EXECUTION_SERVICE=el-2-geth-prysm
+export KUBE_EXECUTION_SERVICE=el-1-geth-lighthouse
 export EXEC_POD_PORT=8545
 
 rm -f $MANIFEST_FILE
