@@ -22,3 +22,5 @@ For this run, I'd like to try -40m clock skew. I think the easiest way to do thi
 Start @ 10:03am
 
 Replay blocks rate hit 1.25, which is kinda in line with the previous -10m test. This suggests there may be limitations as to how well this attack works.
+
+todo: we should set min peers to 1 for lighthouse
