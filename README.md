@@ -1,30 +1,29 @@
+# Attacknet
 
-### Prereq
+## Getting started
 
-1. install prysmctl
-2. set up cluster
-3. auth to cluster
-
-
-### Run goreli nodes
-`helm install geth geth --values ./geth/values-goreli.yaml`
-`helm install prysm prysm --values ./prysm/values-goreli.yaml`
-
-### Private Devnet, single node
-
-Start execution client (runs until merge):
-
-`helm install geth geth --values ./geth/values-singlenode-64-validators.yaml --wait`
-
-Start beacon chain client
-`helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait`
-
-Start becon client/validator
-
-`helm install validator prysm --values ./prysm/values-singlenode-validator.yaml`
+1. Set up a containerd k8s cluster.
+2. Authenticate to the cluster for kubectl
+3. Install chaos-mesh
+   1. `kubectl create ns chaos-mesh`
+   2. `helm repo add chaos-mesh https://charts.chaos-mesh.org`
+   3. `helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false`
+   4. To access chaos dashboard, use `kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333`
+4. Install kurtosis locally.
+5. Run `kurtosis cluster set cloud`
+6. In a separate terminal, run `kurtosis gateway`
+7. `cd kurtosis`
+8. Run `make genesis` to start the network
+9. Add chaos using the gui for now.
 
 
-### Docs
+
+
+Ignore everything below this line, it's for the old helm deploy
+
+
+
+### References
 
 https://ethresear.ch/t/cascading-network-effects-on-ethereums-finality/15871
 
@@ -38,22 +37,7 @@ https://github.com/snuspl/fluffy
 https://github.com/jepsen-io/tendermint
 
 
-### Notes
-
-suspected repro requirements:
-1. correct version of the prysm client
-
-Actual live env:
-2. enough validators in set (mainnet had 600k at time of incident)
-3. deposit queue (30k?) (read: big spike in deposits)
-4. byzantine fault is 0.2% 
-
-Potential repro env:
-2. enough validators in set
-3. deposit queue present w/ spike
-4. drop packets from CL -> EL
-
-
+### Notes (ignore)
 
 prometheus setup
 ```
@@ -66,216 +50,8 @@ kubectl apply -f manifests/
 
 
 kubectl delete --ignore-not-found=true -f manifests/ -f manifests/setup
-
-use for grafana: https://github.com/metanull-operator/eth2-grafana/blob/master/eth2-grafana-dashboard-multiple-sources.json
 ```
 
-
-### commands for single-node devnet
-
-`k logs --follow geth-0`
-`k logs --follow beacon-prysm-0`
-`k logs --follow validator-prysm-0`
-
-```
-helm install geth geth --values ./geth/values-singlenode-64-validators.yaml --wait && helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml --wait && helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
-```
-
-
-```
-helm upgrade geth geth --values ./geth/values-singlenode-64-validators.yaml 
-helm upgrade beacon prysm --values ./prysm/values-singlenode-beacon.yaml
-helm upgrade validator prysm --values ./prysm/values-singlenode-validator.yaml
-```
-
-
-```
-helm uninstall geth
-helm uninstall beacon
-helm uninstall validator
-
-```
-
-```
-helm diff upgrade geth geth --values ./geth/values-singlenode-64-validators.yaml
-helm diff upgrade beacon prysm --values ./prysm/values-singlenode-beacon.yaml
-helm diff upgrade validator prysm --values ./prysm/values-singlenode-validator.yaml
-```
-
-
-
-### commands for multi-node devnet
-
-leader
-```
-helm install geth geth --values ./geth/values-multi-leader.yaml --wait
-helm install beacon prysm --values ./prysm/values-multi-leader-beacon.yaml --wait
-helm install validator prysm --values ./prysm/values-multi-leader-validator.yaml
-```
-
-follower
-```
-helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
-helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
-```
-
-followerN
-```
-helm install geth-follower1 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
-helm install validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
-
-helm install geth-follower2 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower2 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/2-beacon.yaml --wait
-helm install validator-follower2 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/2-validator.yaml
-
-helm install geth-follower3 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower3 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/3-beacon.yaml --wait
-helm install validator-follower3 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/3-validator.yaml
-
-helm install geth-follower4 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower4 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/4-beacon.yaml --wait
-helm install validator-follower4 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/4-validator.yaml
-
-helm install geth-follower5 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower5 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/5-beacon.yaml --wait
-helm install validator-follower5 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/5-validator.yaml
-
-helm install geth-follower6 geth --values ./geth/values-multi-follower.yaml --wait
-helm install beacon-follower6 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/6-beacon.yaml --wait
-helm install validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
-
-```
-genesis state root from prysm genesisStateRoot=a79c5f12491e1a4008c24bf1e2e86746fe14267aacbe20e57e420ae337ae60cd
-
-```
-upgrade
-helm upgrade geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower prysm  --values ./prysm/values-multi-follower-beacon.yaml --wait
-helm upgrade validator-follower prysm  --values ./prysm/values-multi-follower-validator.yaml 
-
-
-helm upgrade geth-follower1 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower1 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/1-beacon.yaml --wait
-helm upgrade validator-follower1 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/1-validator.yaml
-k delete po geth-follower1-0 beacon-follower1-prysm-0 validator-follower1-prysm-0
-
-helm upgrade geth-follower2 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower2 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/2-beacon.yaml --wait
-helm upgrade validator-follower2 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/2-validator.yaml
-
-helm upgrade geth-follower3 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower3 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/3-beacon.yaml --wait
-helm upgrade validator-follower3 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/3-validator.yaml
-
-helm upgrade geth-follower4 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower4 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/4-beacon.yaml --wait
-helm upgrade validator-follower4 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/4-validator.yaml
-
-helm upgrade geth-follower5 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower5 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/5-beacon.yaml --wait
-helm upgrade validator-follower5 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/5-validator.yaml
-
-helm upgrade geth-follower6 geth --values ./geth/values-multi-follower.yaml --wait
-helm upgrade beacon-follower6 prysm  --values ./prysm/values-multi-follower-beacon.yaml --values ./prysm/follower/6-beacon.yaml --wait
-helm upgrade validator-follower6 prysm  --values ./prysm/values-multi-follower-validator.yaml --values  ./prysm/follower/6-validator.yaml
-
-```
-
-
-
-
-
-```
-helm install geth-follower geth  --values ./geth/values-multi-follower.yaml --wait
-helm install lighthouse-beacon lighthouse  --values ./lighthouse/values-beacon.yaml --wait
-helm install lighthouse-validator lighthouse  --values ./lighthouse/values-validator.yaml 
-
-helm uninstall geth-follower
-helm uninstall lighthouse-beacon
-helm uninstall lighthouse-validator
-
-```
-
-
-```
-helm install genesis-generator genesis-generator --wait
-helm uninstall genesis-generator
-```
-
-
-```
-
-```
-helm install geth geth --values ./geth/values-bootnode.yaml
-helm install beacon prysm --values ./prysm/values-singlenode-beacon.yaml
-helm install validator prysm --values ./prysm/values-singlenode-validator.yaml
-```
-
-```
-
-Startup configs tested
-
-##### Start 66+% single node, wait 32 slots. Once finalizing, start remainder 33%.
-Result: network terminates around slot 682
-```
-time="2023-07-10 17:52:38" level=error msg="Failed to find peers" error="unable to find requisite number of peers for topic /eth2/ca17b34f/beacon_attestation_5/ssz_snappy - only 0 out of 1 peers were able to be found" prefix=p2p
-time="2023-07-10 17:52:38" level=warning msg="Attestation is too old to broadcast, discarding it. Current Slot: 682 , Attestation Slot: 5" prefix=p2p
-```
-Notably, the follower mode kept submitting attestations and stopped at slot 1200
-
-Start 100% validators on single node.
-
-Next test, we'll set the beacon leader's min sync peers to 1.
-
-##### Same as before, but with leader beacon's minpeers set to 1
-
-Follower beacon chain could not join network, was waiting for suitiable peers that did not show up.
-
-##### Start with genesis 5 mins in future
-
-still terminated eventually. slot 155ish.
-```
-time="2023-07-10 21:45:15" level=warning msg="voting period before genesis + follow distance, using eth1data from head" genesisTime=1689023139 latestValidTime=1688994467 prefix="rpc/validator"
-time="2023-07-10 21:45:18" level=warning msg="Execution client is not syncing" prefix=powchain
-time="2023-07-10 21:45:18" level=error msg="Beacon node is not respecting the follow distance" prefix=powchain
-time="2023-07-10 21:45:23" level=info msg="Got interrupt, shutting down..." prefix=node
-time="2023-07-10 21:45:23" level=info msg="Stopping beacon node" prefix=node
-time="2023-07-10 21:45:27" level=error msg="Failed to find peers" error="unable to find requisite number of peers for topic /eth2/ca17b34f/beacon_attestation_0/ssz_snappy - only 0 out of 1 peers were able to be found" prefix=p2p
-time="2023-07-10 21:45:27" level=warning msg="Attestation is too old to broadcast, discarding it. Current Slot: 199 , Attestation Slot: 0" prefix=p2p
-time="2023-07-10 21:45:27" level=error msg="Could not register validator for topic" error="context canceled" prefix=sync topic="/eth2/ca17b34f/sync_committee_1/ssz_snappy"
-```
-
-##### start with genesis 5 mins in future, single, 64 validator node
-todo: undo --nodiscover in values-multi-leader
-undo peers=0 in values-multi-leader
-
-terminated eventually, both beacon and execution clients waiting on each other
-
-trying again, this time disabling k8s restarts.
-
-trying again, this time upping the per-node ram to 16gb. we saw memory-based evictions atound slot 600 last run.
-also undoing the genesis timestamp setting. allowing auto-config.
-
-
-^ terminated 16 hours later, out of memory again
-adding memory request/limits to node
-
-^^ was okay after 4 hrs, but mem still going up.
-adding --minimum-peers-per-subnet=0
-
-##### testing with multi-node now
-- set validator count to 80
-- unset --nodiscover in values-multi-leader
-- set follower promethus=true
-- re-enable genesis-time
-
-Theories:
-- there's a minpeers requirement somewhere that's screwing the node up
-- we actually need more nodes on the network for it to work
-- genesis time in past is a problem [discard]
-- --minimum-peers-per-subnet
 ### Create PVC Inspector pod
 ```
 cat <<EOF | kubectl apply -f -
@@ -345,42 +121,3 @@ restarts
 
 attestation processing rate
 `rate(process_attestations_milliseconds_count[5m])`
-
-
-### Chaos controller
-
-##### register CRDs
-```
-kubectl create -f chaos-controller/deploy/chaosmonkey.yaml
-kubectl create -f chaos-controller/deploy/crash.yaml
-kubectl create -f chaos-controller/deploy/networkpartition.yaml
-kubectl create -f chaos-controller/deploy/stress.yaml
-```
-
-
-```
-kubectl delete -f chaos-controller/deploy/chaosmonkey.yaml
-kubectl delete -f chaos-controller/deploy/crash.yaml
-kubectl delete -f chaos-controller/deploy/networkpartition.yaml
-kubectl delete -f chaos-controller/deploy/stress.yaml
-```
-
-helm install chaos-controller helm --wait
-
-kubectl create -f chaos-controller/example/stress_network.yaml
-kubectl delete -f chaos-controller/example/stress_network.yaml
-
-
-```
-helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false
-
-helm uninstall chaos-mesh
-```
-
-
-k delete clusterrolebinding chaos-mesh-chaos-controller-manager-cluster-level      ClusterRole/chaos-mesh-chaos-controller-manager-cluster-level                      19m
-k delete clusterrolebinding chaos-mesh-chaos-controller-manager-target-namespace   ClusterRole/chaos-mesh-chaos-controller-manager-target-namespace                   19m
-k delete clusterrolebinding chaos-mesh-chaos-dashboard-cluster-level               ClusterRole/chaos-mesh-chaos-dashboard-cluster-level                               19m
-k delete clusterrolebinding chaos-mesh-chaos-dashboard-target-namespace            ClusterRole/chaos-mesh-chaos-dashboard-target-namespace                            19m
-k delete clusterrolebinding chaos-mesh-chaos-dns-server-cluster-level              ClusterRole/chaos-mesh-chaos-dns-server-cluster-level                              19m
-k delete clusterrolebinding chaos-mesh-chaos-dns-server-target-namespace           ClusterRole/chaos-mesh-chaos-dns-server-target-namespace                           19m
