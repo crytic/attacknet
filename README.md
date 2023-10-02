@@ -2,7 +2,7 @@
 
 ## Getting started
 
-1. Set up a containerd k8s cluster.
+1. Set up a containerd k8s cluster. (1.25 or older) (todo: recommended resourcing.)
 2. Authenticate to the cluster for kubectl
 3. Install chaos-mesh
    1. `kubectl create ns chaos-mesh`

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/eth2-val-tools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/kurtosis/eth2-package" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/kurtosis/eth2-package/eth-network-package" vcs="Git" />
+  </component>
+</project>
