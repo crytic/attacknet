@@ -1,0 +1,16 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  parallelism: 1
+
+harnessConfig:
+  networkPackage: github.com/crytic/ethereum-package
+  networkConfig: capella.json
+
+tests:
+- testName: latency-1
+  targetPodRegex: "regex[]dsaads[]"
+  faultType: clock-skew
+  faultSpec:
+    timeOffset: -5m
+    duration: 10m

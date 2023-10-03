@@ -115,6 +115,9 @@
       "parallel_keystore_generation": true
     },
     "launch_additional_services": true,
+    "additional_services":  [
+              "prometheus_grafana"
+            ],
     "wait_for_finalization": false,
     "wait_for_verifications": false,
     "global_client_log_level": "info"
