@@ -4,6 +4,7 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 	"gopkg.in/yaml.v2"
 	"os"
+	"path/filepath"
 )
 
 type AttacknetConfig struct {
@@ -41,20 +42,26 @@ type ConfigParsed struct {
 	Tests           []TestConfig
 }
 
-func LoadConfig(path string) (*ConfigParsed, error) {
+func LoadTestSuite(path string) (*ConfigParsed, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Could not read file config file on path %s", path)
+		return nil, stacktrace.Propagate(err, "Could not read test suite on %s. is the project initialized?", path)
 	}
 	cfg := Config{}
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Could not unmarshal the main config file")
+		return nil, stacktrace.Propagate(err, "Could not unmarshal the suite definition file")
 	}
 
-	packageConfig, err := os.ReadFile(cfg.HarnessConfig.NetworkConfigPath)
+	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Could not read the NetworkConfigPath file at %s", cfg.HarnessConfig.NetworkConfigPath)
+		return nil, stacktrace.Propagate(err, "Could not get working directory")
+	}
+	networkConfigPathFull := filepath.Join(cwd, networkConfigDirectory, cfg.HarnessConfig.NetworkConfigPath)
+
+	packageConfig, err := os.ReadFile(networkConfigPathFull)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "Could not read the NetworkConfigPath file at %s", networkConfigPathFull)
 	}
 
 	cfgParsed := &ConfigParsed{

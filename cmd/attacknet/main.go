@@ -3,40 +3,48 @@ package main
 import (
 	"attacknet/cmd/pkg"
 	"context"
+	"github.com/alecthomas/kong"
 	"log"
+	"os"
 )
+
+var CLI struct {
+	Init struct {
+		Force bool   `arg:"force" optional:"" default:"false" name:"force" help:"Overwrite existing project"`
+		Path  string `arg:"" optional:"" type:"existingdir" name:"path" help:"Path to initialize project on. Defaults to current working directory."`
+	} `cmd:"" help:"Initialize an attacknet project"`
+	Start struct {
+		Suite string `arg:"" name:"suite name" help:"The test suite to run. These are located in ./test-suites"`
+	} `cmd:"" help:"Run a specified test suite"`
+}
 
 func main() {
 	// todo: use flag for arg parse
 
-	ctx, cancelCtxFunc := context.WithCancel(context.Background())
-	defer cancelCtxFunc()
+	c := kong.Parse(&CLI)
 
-	configFile := "/Users/bsamuels/projects/attacknet/config.yaml"
-
-	cfg, err := pkg.LoadConfig(configFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// todo: spawn kurtosis gateway?
-
-	kurtosisCtx, err := pkg.GetKurtosisContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	enclaveCtx, err := pkg.CreateEnclaveContext(ctx, kurtosisCtx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer func() {
-		err := kurtosisCtx.DestroyEnclave(ctx, enclaveCtx.GetEnclaveName())
+	b := c.Command()
+	switch b {
+	case "init":
+		dir, err := os.Getwd()
 		if err != nil {
 			log.Fatal(err)
 		}
-	}()
-
-	pkg.StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
+		err = pkg.InitializeProject(dir, CLI.Init.Force)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "init <path>":
+		err := pkg.InitializeProject(CLI.Init.Path, CLI.Init.Force)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "start <suite name>":
+		ctx, cancelCtxFunc := context.WithCancel(context.Background())
+		defer cancelCtxFunc()
+		err := pkg.StartTestSuite(ctx, CLI.Start.Suite)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
