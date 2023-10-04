@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,6 +30,7 @@ func StartTestSuite(ctx context.Context, suiteName string) error {
 	}
 
 	enclaveCtx, err := CreateEnclaveContext(ctx, kurtosisCtx)
+	namespace := fmt.Sprintf("kt-%s", enclaveCtx.GetEnclaveName())
 	if err != nil {
 		return err
 	}
@@ -41,5 +43,11 @@ func StartTestSuite(ctx context.Context, suiteName string) error {
 	}()
 
 	StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
-	return nil
+
+	//namespace := "kt-attacknet-1696449504"
+	stopCh, err := createGrafanaClient(ctx, namespace, cfg.AttacknetConfig)
+	defer func() {
+		close(stopCh)
+	}()
+	return err
 }
