@@ -1,11 +1,9 @@
-package pkg
+package kubernetes
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -18,7 +16,7 @@ import (
 	"time"
 )
 
-func createKubeClient() (*rest.Config, *kubernetes.Clientset, error) {
+func CreateKubeClient() (*rest.Config, *kubernetes.Clientset, error) {
 	kubeConfigPath := filepath.Join(os.Getenv("HOME"), ".kube", "config")
 
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -33,7 +31,7 @@ func createKubeClient() (*rest.Config, *kubernetes.Clientset, error) {
 	return kubeConfig, kubeClient, nil
 }
 
-func startPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Config) (stopCh chan struct{}, err error) {
+func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Config) (stopCh chan struct{}, err error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(kubeConfig)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to create roundtripper")
@@ -72,24 +70,4 @@ func startPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Co
 	}
 
 	return stopCh, nil
-}
-
-func createGrafanaClient(ctx context.Context, namespace string, config AttacknetConfig) (chan struct{}, error) {
-	kubeConfig, kubeClient, err := createKubeClient()
-	if err != nil {
-		return nil, err
-	}
-
-	pod, err := kubeClient.CoreV1().Pods(namespace).Get(ctx, config.GrafanaPodName, metav1.GetOptions{})
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "Unable to locate grafana pod %s", config.GrafanaPodName)
-	}
-	var port uint16
-	_, err = fmt.Sscan(config.GrafanaPodPort, &port)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "Unable to decode port number %s", config.GrafanaPodPort)
-	}
-
-	stopCh, err := startPortForwarding(pod.Name, pod.Namespace, port, kubeConfig)
-	return stopCh, err
 }

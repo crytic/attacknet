@@ -45,7 +45,7 @@ func StartTestSuite(ctx context.Context, suiteName string) error {
 	StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
 
 	//namespace := "kt-attacknet-1696449504"
-	stopCh, err := createGrafanaClient(ctx, namespace, cfg.AttacknetConfig)
+	stopCh, err := CreateGrafanaClient(ctx, namespace, cfg.AttacknetConfig)
 	defer func() {
 		close(stopCh)
 	}()
