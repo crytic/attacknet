@@ -1,10 +1,11 @@
 package pkg
 
 import (
-	"github.com/kurtosis-tech/stacktrace"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+
+	"github.com/kurtosis-tech/stacktrace"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type AttacknetConfig struct {

@@ -40,7 +40,6 @@ func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Co
 	go func() {
 		if err = portForward.ForwardPorts(); err != nil {
 			panic(stacktrace.Propagate(err, "unable to start port forward session"))
-			return
 		}
 	}()
 
