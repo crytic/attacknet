@@ -1,7 +1,7 @@
 linters-settings:
   errcheck:
-    check-type-assertions: false
-    check-blank: false
+    check-type-assertions: true
+    check-blank: true
 
 linters:
   enable:
@@ -9,4 +9,4 @@ linters:
     - govet
     - staticcheck
     - ineffassign
-#    - gosec
+    - gosec

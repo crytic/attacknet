@@ -1,7 +1,5 @@
 {
     "sarif-viewer.connectToGithubCodeScanning": "off",
     "go.lintTool": "golangci-lint",
-    "go.lintFlags": [
-        "--fast"
-    ]
+
 }
