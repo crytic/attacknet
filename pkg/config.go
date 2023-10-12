@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/kurtosis-tech/stacktrace"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 type AttacknetConfig struct {
@@ -25,10 +25,8 @@ type HarnessConfigParsed struct {
 }
 
 type TestConfig struct {
-	Name        string      `yaml:"testName"`
-	TargetRegex string      `yaml:"targetPodRegex"`
-	FaultType   string      `yaml:"faultType"`
-	FaultSpec   interface{} `yaml:"faultSpec"`
+	Name      string                 `yaml:"testName"`
+	FaultSpec map[string]interface{} `yaml:"chaosFaultSpec"`
 }
 
 type Config struct {

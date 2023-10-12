@@ -21,5 +21,6 @@ func CreateKubeClient() (*rest.Config, *kubernetes.Clientset, error) {
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default config")
 	}
+
 	return kubeConfig, kubeClient, nil
 }

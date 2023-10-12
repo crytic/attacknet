@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"context"
 	"fmt"
 	"log"
@@ -58,10 +59,30 @@ func StartTestSuite(ctx context.Context, suiteName string) error {
 		close(grafanaTunnel.PortForwardStopCh)
 	}()
 
+	// todo: set up grafana health checks/alerting here
+
+	// todo: wait for finality or other network pre-conditions here.
+	// probably check for initial health checks here too.
+
 	//ds, err := grafanaTunnel.Client.GetDatasource(ctx, 1)
 
 	//grafanaTunnel.Client.CreateAlertNotification()
 
 	//_ = ds
-	return nil
+
+	// create chaos-mesh client
+	chaosClient, err := chaos_mesh.CreateClient(namespace)
+	if err != nil {
+		return err
+	}
+
+	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
+	//time.Sleep(5 * time.Second)
+	_, _ = faultSession.GetStatus(ctx)
+
+	_, _ = faultSession.GetStatus(ctx)
+
+	_, _ = faultSession.GetStatus(ctx)
+
+	return err
 }

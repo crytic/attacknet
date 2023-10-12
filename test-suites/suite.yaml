@@ -9,8 +9,17 @@ harnessConfig:
 
 tests:
 - testName: latency-1
-  targetPodRegex: "regex[]dsaads[]"
-  faultType: clock-skew
-  faultSpec:
-    timeOffset: -5m
-    duration: 10m
+  chaosFaultSpec:
+    kind: NetworkChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com/id: cl-1-lighthouse-geth-validator
+      mode: all
+      action: loss
+      duration: 5m
+      loss:
+        loss: '10'
+        correlation: '0'
+      direction: to
