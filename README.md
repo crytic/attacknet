@@ -2,7 +2,11 @@
 
 ## Getting started
 
-1. Set up a containerd k8s cluster. (1.25 or older) (todo: recommended resourcing.)
+### Installation/Building
+
+### Setting up the other bits
+
+1. Set up a containerd k8s cluster. (1.25 or older) (todo: recommended resourcing. Also note that auto-scaling can sometimes be too slow, and kurtosis will time-out before the nodes for its workload can be provisioned.)
 2. Authenticate to the cluster for kubectl
 3. Install chaos-mesh
    1. `kubectl create ns chaos-mesh`
@@ -11,21 +15,32 @@
    4. To access chaos dashboard, use `kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333`
 4. Install kurtosis locally.
 5. Run `kurtosis cluster set cloud`
-6. In a separate terminal, run `kurtosis gateway`
-7. `cd kurtosis`
-8. Run `make genesis` to start the network
-9. Add chaos using the gui for now.
+6. In a separate terminal, run `kurtosis engine start`
+7. In a separate terminal, run `kurtosis gateway`. This process needs to stay alive during all attacknet testing and cannot be started via SDK.
+
+## Configuration
+
+### Test Suite Configuration
+
+
+
+
+
+
+
+
+
+
+
+
+
+Everything below this line is old and can be ignored. It'll be deleted when I have time to do a pass.
+
 
 10. Wait for network to hit finality (30ish mins), then run chaos test for clock skew. Skew should be -10m, duration: 30m. Apply it to only one lighthouse EL/CL/Validator. 
 11. 10 mins after attack starts, the lighthouse BN should start emitting stale attestations
 12. Depending on the proposer schedule, the prysm nodes should start calling replay_blocks and running out a memory a few minutes later, no more than 10.
 13. If you actually want the prysm nodes to OOM and crash, set their memory requirement to 1024mb before genesis'ing the network.
-
-
-
-Ignore everything below this line, it's for the old helm deploy
-
-
 
 ### References
 
