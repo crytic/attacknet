@@ -54,7 +54,7 @@ func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, er
 	return records, nil
 }
 
-// todo: we need a much better way of monitoring fault injection status. There's a ton of statefulness represented in
+// todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
 func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {

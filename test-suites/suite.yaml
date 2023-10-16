@@ -1,7 +1,8 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  parallelism: 1
+  waitBeforeInjectionSeconds: 10
+  existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
   networkPackage: github.com/crytic/ethereum-package
@@ -18,7 +19,7 @@ tests:
           kurtosistech.com/id: cl-1-lighthouse-geth-validator
       mode: all
       action: loss
-      duration: 5m
+      duration: 1m
       loss:
         loss: '10'
         correlation: '0'

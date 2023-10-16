@@ -42,7 +42,11 @@ func main() {
 	case "start <suite name>":
 		ctx, cancelCtxFunc := context.WithCancel(context.Background())
 		defer cancelCtxFunc()
-		err := pkg.StartTestSuite(ctx, CLI.Start.Suite)
+		cfg, err := pkg.LoadSuiteConfigFromName(CLI.Start.Suite)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = pkg.StartTestSuite(ctx, cfg)
 		if err != nil {
 			log.Fatal(err)
 		}
