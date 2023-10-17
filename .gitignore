@@ -4,3 +4,5 @@ geth/execution/geth
 deposit_manifest.json
 /attacknet
 /.DS_Store
+.idea
+.vscode
