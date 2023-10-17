@@ -2,3 +2,4 @@ prysm/consensus/genesis.ssz
 geth/execution/geth
 .test/
 deposit_manifest.json
+/attacknet
