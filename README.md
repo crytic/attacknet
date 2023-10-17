@@ -75,7 +75,8 @@ Once you've got your configuration set up, you can run Attacknet:
 
 `attacknet start <suitename>`
 
-If your suite config is located at `./test-suites/finalitysuite.yaml`, you would run `attacknet start finalitysuite`. This will probably be changed.
+If your suite config is located at `./test-suites/suite.yaml`, you would run `attacknet start suite`. This will 
+probably be changed.
 
 
 
