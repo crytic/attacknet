@@ -3,3 +3,4 @@ geth/execution/geth
 .test/
 deposit_manifest.json
 /attacknet
+/.DS_Store
