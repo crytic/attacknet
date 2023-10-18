@@ -1,6 +1,0 @@
-[submodule "eth2-val-tools"]
-	path = eth2-val-tools
-	url = git@github.com:bsamuels453/eth2-val-tools.git
-[submodule "kurtosis/eth2-package"]
-	path = kurtosis/eth2-package
-	url = git@github.com:crytic/eth2-package.git

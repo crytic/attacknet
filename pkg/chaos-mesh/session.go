@@ -7,6 +7,7 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 type FaultPhase string
@@ -32,7 +33,7 @@ type FaultSession struct {
 	Name      string
 }
 
-func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, error) {
+func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, error) {
 	key := client.ObjectKey{
 		Namespace: f.client.chaosNamespace,
 		Name:      f.Name,
@@ -42,6 +43,14 @@ func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, er
 	err := f.client.kubeApiClient.Get(ctx, key, resource)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to query for resource %s in namespace %s", key.Name, key.Namespace)
+	}
+	return resource, nil
+}
+
+func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, error) {
+	resource, err := f.getKubeResource(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	// Feel free to figure out a better way to do this. These fields are part of every Chaos status struct we support,
@@ -97,4 +106,17 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 	msg := fmt.Sprintf("invalid state, podsInjectedNotRecovered: %s, podsInjectedAndRecovered: %s", podsInjectedNotRecovered, podsInjectedAndRecovered)
 	panic(msg)
 	return Error, nil
+}
+
+// todo: memoize or enshrine
+func (f *FaultSession) GetDuration(ctx context.Context) (*time.Duration, error) {
+	resource, err := f.getKubeResource(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	durationVal := reflect.ValueOf(resource).Elem().FieldByName("Spec").FieldByName("Duration")
+	durationStr := durationVal.Interface().(*string)
+	duration, err := time.ParseDuration(*durationStr)
+	return &duration, err
 }
