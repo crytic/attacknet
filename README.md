@@ -41,6 +41,7 @@ attacknetConfig:
   grafanaPodPort: 3000 # the port grafana is listening to in the pod
   waitBeforeInjectionSeconds: 10 
   # the number of seconds to wait between the genesis of the network and the injection of faults. To wait for finality, use 25 mins (1500 secs)
+  keepEnclaveAfterFault: true # Whether attacknet should skip enclave deletion after the fault concludes. Defaults to false.
   existingDevnetNamespace: kt-ethereum # If you don't want to genesis a new network, you can specify an existing namespace that contains a Kurtosis enclave and run tests against it instead. I'm expecting this to only be useful for dev/tool testing. Exclude this parameter for normal operation.
 
 harnessConfig:
@@ -50,7 +51,7 @@ harnessConfig:
 
 # The list of tests to be run. As of right now, the first test is run and the tool terminates. In the future, we will genesis single-use devnets for each test, run the test, and terminate once all the tests are completed and all the enclaves are cleaned up.
 tests:
-- testName: latency-1 # Name of the test. Used for logging/artifacts.
+- testName: packetdrop-1 # Name of the test. Used for logging/artifacts.
   chaosFaultSpec: # The chaosFaultSpec is basically a pass-thru object for Chaos Mesh fault resources. This means we can support every possible fault out-of-the-box, but slightly complicates generating the configuration. To determine the schema for each fault type, check the Chaos Mesh docs: https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/. One issue with this method is that Attacknet can't verify whether your faultSpec is valid until it tries to create the resource in Kubernetes, and that comes after genesis which takes a long time on its own. If you run into schema validation issues, try creating these objects directly in Kubernetes to hasten the debug cycle. 
     kind: NetworkChaos
     apiVersion: chaos-mesh.org/v1alpha1
