@@ -3,11 +3,10 @@ attacknetConfig:
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 10
   keepEnclaveAfterFault: true
-  #existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
-  networkPackage: github.com/crytic/ethereum-package
-  networkConfig: capella.json
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.json
 
 tests:
 - testName: packetdrop-1
