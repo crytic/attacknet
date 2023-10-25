@@ -6,7 +6,7 @@ attacknetConfig:
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.json
+  networkConfig: default.yaml
 
 tests:
 - testName: packetdrop-1
