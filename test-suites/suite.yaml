@@ -6,8 +6,8 @@ attacknetConfig:
   #existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
-  networkPackage: github.com/crytic/ethereum-package
-  networkConfig: capella.json
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: capella.yaml
 
 tests:
 - testName: packetdrop-1
