@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/kong v0.8.0
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230927082628-87b6322f9b46
 	github.com/grafana-tools/sdk v0.0.0-20220919052116-6562121319fc
-	github.com/kurtosis-tech/kurtosis/api/golang v0.84.8
+	github.com/kurtosis-tech/kurtosis/api/golang v0.85.9
 	github.com/kurtosis-tech/stacktrace v0.0.0-20211028211901-1c67a77b5409
 	github.com/sirupsen/logrus v1.9.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -50,6 +50,7 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/kurtosis-tech/kurtosis-portal/api/golang v0.0.0-20230818182330-1a86869414d2 // indirect
+	github.com/kurtosis-tech/kurtosis-sdk/api/golang v0.0.0-20230320165822-a879bee5162c // indirect
 	github.com/kurtosis-tech/kurtosis/contexts-config-store v0.0.0-20230818184218-f4e3e773463b // indirect
 	github.com/kurtosis-tech/kurtosis/grpc-file-transfer/golang v0.0.0-20230803130419-099ee7a4e3dc // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
@@ -75,11 +76,11 @@ require (
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
-	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
