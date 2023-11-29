@@ -1,0 +1,48 @@
+participants:
+  - el_client_type: geth
+    el_client_image: ethpandaops/geth:master-5b57727
+    el_extra_labels: {"ethereum-package.partition": "1"}
+    cl_client_type: lighthouse
+    cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-c6be31c
+    beacon_extra_labels: {"ethereum-package.partition": "bootnode"}
+    validator_extra_labels: {"ethereum-package.partition": "bootnode"}
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    bn_min_cpu: 2000
+    bn_max_cpu: 3000
+    bn_min_mem: 2048
+    bn_max_mem: 2048
+    v_min_cpu: 1000
+    v_max_cpu: 1000
+    v_min_mem: 1028
+    v_max_mem: 1028
+    count: 2
+  - el_client_type: geth
+    el_client_image: ethpandaops/geth:master-5b57727
+    el_extra_labels: {"ethereum-package.partition": "2"}
+    cl_client_type: lighthouse
+    cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-c6be31c
+    beacon_extra_labels: {"ethereum-package.partition": "separated"}
+    validator_extra_labels: {"ethereum-package.partition": "separated"}
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    bn_min_cpu: 2000
+    bn_max_cpu: 3000
+    bn_min_mem: 2048
+    bn_max_mem: 2048
+    v_min_cpu: 1000
+    v_max_cpu: 1000
+    v_min_mem: 1028
+    v_max_mem: 1028
+    count: 1
+network_params:
+  deneb_fork_epoch: 1
+  num_validator_keys_per_node: 32
+additional_services:
+  - prometheus_grafana
+  - dora
+parallel_keystore_generation: true

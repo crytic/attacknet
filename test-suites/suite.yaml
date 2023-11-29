@@ -1,27 +1,49 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
+  waitBeforeInjectionSeconds: 20
   keepEnclaveAfterFault: true
   #existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
 
 tests:
-- testName: packetdrop-1
+- testName: network-split
   chaosFaultSpec:
     kind: NetworkChaos
     apiVersion: chaos-mesh.org/v1alpha1
     spec:
+      action: partition
+      duration: 2m
+      mode: all
       selector:
         labelSelectors:
-          kurtosistech.com/id: cl-1-lighthouse-geth-validator
-      mode: all
-      action: loss
-      duration: 1m
-      loss:
-        loss: '10'
-        correlation: '0'
-      direction: to
+          kurtosistech.com.custom/ethereum-package.partition: bootnode
+      direction: both
+      target:
+        mode: all
+        selector:
+          labelSelectors:
+            kurtosistech.com.custom/ethereum-package.partition: separated
+
+#kind: NetworkChaos
+#metadata:
+#  name: partition
+#spec:
+#  action: partition
+#  mode: all
+#  selector:
+#    namespaces:
+#      - default
+#    labelSelectors:
+#      'app': 'app1'
+#  direction: to
+#  target:
+#    mode: all
+#    selector:
+#      namespaces:
+#        - default
+#      labelSelectors:
+#        'app': 'app2'
