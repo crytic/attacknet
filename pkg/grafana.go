@@ -6,12 +6,14 @@ import (
 	"fmt"
 	grafanaSdk "github.com/grafana-tools/sdk"
 	"github.com/kurtosis-tech/stacktrace"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type GrafanaTunnel struct {
-	Client            *grafanaSdk.Client
-	PortForwardStopCh chan struct{}
+	Client                   *grafanaSdk.Client
+	portForwardStopCh        chan struct{}
+	allowPostFaultInspection bool
 }
 
 func CreateGrafanaClient(ctx context.Context, namespace string, config AttacknetConfig) (*GrafanaTunnel, error) {
@@ -40,5 +42,14 @@ func CreateGrafanaClient(ctx context.Context, namespace string, config Attacknet
 		return nil, stacktrace.Propagate(err, "unable to create Grafana client")
 	}
 
-	return &GrafanaTunnel{client, stopCh}, nil
+	return &GrafanaTunnel{client, stopCh, config.AllowPostFaultInspection}, nil
+}
+
+func (t *GrafanaTunnel) Cleanup() {
+	if t.allowPostFaultInspection {
+		log.Info("Attacknet has completed, but since allowPostFaultInspection is set to true, the program will continue to run to facilitate the Grafana port-forward connection.")
+		log.Info("Press enter to terminate the port-forward connection.")
+		_, _ = fmt.Scanln()
+	}
+	close(t.portForwardStopCh)
 }

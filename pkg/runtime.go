@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func setupDevnet(ctx context.Context, keepEnclaveAfterFault bool, harnessCfg HarnessConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+func setupDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	// todo: spawn kurtosis gateway?
 	kurtosisCtx, err := GetKurtosisContext()
 	if err != nil {
@@ -17,40 +17,55 @@ func setupDevnet(ctx context.Context, keepEnclaveAfterFault bool, harnessCfg Har
 	}
 
 	log.Infof("Creating a new Kurtosis enclave")
-	enclaveCtx, err := CreateEnclaveContext(ctx, kurtosisCtx, keepEnclaveAfterFault)
+	enclaveCtx, _, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
 	log.Infof("New enclave created under namespace %s", enclaveCtx.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Infof("Starting the blockchain genesis")
-	err = StartNetwork(ctx, enclaveCtx, harnessCfg)
+	err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
 	if err != nil {
 		return nil, err
 	}
 	return enclaveCtx, nil
 }
 
-func loadEnclaveFromExistingDevnet(ctx context.Context, attacknetCfg AttacknetConfig) (enclave *EnclaveContextWrapper, err error) {
+func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	kurtosisCtx, err := GetKurtosisContext()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Infof("Looking for existing enclave identified by namespace %s", attacknetCfg.ExistingDevnetNamespace)
-	enclaveCtx, err := CreateEnclaveFromExisting(ctx, kurtosisCtx, attacknetCfg.ExistingDevnetNamespace)
+	namespace := cfg.AttacknetConfig.ExistingDevnetNamespace
+	log.Infof("Looking for existing enclave identified by namespace %s", namespace)
+	enclaveCtx, enclaveCreated, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
 	if err != nil {
 		return nil, err
-	} else {
-		return enclaveCtx, nil
 	}
+
+	if enclaveCreated {
+		// we need to genesis a new devnet regardless
+		log.Info("Since we created a new kurtosis enclave, we must now genesis the blockchain.")
+		err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Info("An active enclave matching %s was found", namespace)
+	}
+
+	return enclaveCtx, nil
 }
 
 func setupEnclave(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
-		enclave, err = setupDevnet(ctx, cfg.AttacknetConfig.KeepEnclaveAfterFault, cfg.HarnessConfig)
+		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
+			log.Warn("Could not re-use an existing devnet because no existingDevnetNamespace was set.")
+		}
+		enclave, err = setupDevnet(ctx, cfg)
 	} else {
-		enclave, err = loadEnclaveFromExistingDevnet(ctx, cfg.AttacknetConfig)
+		enclave, err = loadEnclaveFromExistingDevnet(ctx, cfg)
 	}
 	return enclave, err
 }
@@ -71,7 +86,7 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		return err
 	}
 	defer func() {
-		close(grafanaTunnel.PortForwardStopCh)
+		grafanaTunnel.Cleanup()
 	}()
 
 	// todo: set up grafana health checks/alerting here

@@ -8,21 +8,21 @@ import (
 	"github.com/kurtosis-tech/kurtosis/api/golang/engine/lib/kurtosis_context"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	"os"
 	"strings"
 	"time"
 )
 
 type EnclaveContextWrapper struct {
-	Namespace             string
-	kurtosisCtx           *kurtosis_context.KurtosisContext
-	enclaveCtxInner       *enclaves.EnclaveContext
-	keepEnclaveAfterFault bool
+	Namespace              string
+	kurtosisCtx            *kurtosis_context.KurtosisContext
+	enclaveCtxInner        *enclaves.EnclaveContext
+	reuseDevnetBetweenRuns bool
 }
 
 func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
-	if e.keepEnclaveAfterFault {
+	if e.reuseDevnetBetweenRuns {
 		log.Infof("Skipping enclave deletion, enclave in namespace %s was flagged to be skip deletion", e.Namespace)
-		return
 	} else {
 		log.Infof("Destroying enclave")
 		err := e.kurtosisCtx.DestroyEnclave(ctx, e.enclaveCtxInner.GetEnclaveName())
@@ -30,6 +30,7 @@ func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}
+	return
 }
 
 // pass-thru func. Figure out how to remove eventually.
@@ -53,40 +54,61 @@ func GetKurtosisContext() (*kurtosis_context.KurtosisContext, error) {
 	return kurtosisCtx, nil
 }
 
-func CreateEnclaveContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, keepEnclaveAfterFault bool) (*EnclaveContextWrapper, error) {
-	enclaveName := fmt.Sprintf("attacknet-%d", time.Now().Unix())
-	enclaveCtx, err := kurtosisCtx.CreateEnclave(ctx, enclaveName)
-	if err != nil {
-		return nil, err
+func getEnclaveName(namespace string) string {
+	var enclaveName string
+	if namespace != "" {
+		enclaveName = namespace[3:]
+	} else {
+		enclaveName = fmt.Sprintf("attacknet-%d", time.Now().Unix())
 	}
-
-	enclaveCtxWrapper := &EnclaveContextWrapper{
-		Namespace:             fmt.Sprintf("kt-%s", enclaveCtx.GetEnclaveName()),
-		kurtosisCtx:           kurtosisCtx,
-		enclaveCtxInner:       enclaveCtx,
-		keepEnclaveAfterFault: keepEnclaveAfterFault,
-	}
-
-	return enclaveCtxWrapper, nil
+	return enclaveName
 }
 
-func CreateEnclaveFromExisting(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, namespace string) (*EnclaveContextWrapper, error) {
-	// strip the first 3 characters from the namespace ("kt-") to get the enclave name
-	enclaveName := namespace[3:]
+func isErrorNoEnclaveFound(err error) bool {
+	rootCause := stacktrace.RootCause(err)
+	if strings.Contains(rootCause.Error(), "Couldn't find an enclave for identifier") {
+		return true
+	} else {
+		return false
+	}
+}
 
+func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, cfg *ConfigParsed) (*EnclaveContextWrapper, bool, error) {
+	enclaveName := getEnclaveName(cfg.AttacknetConfig.ExistingDevnetNamespace)
+
+	// first check for existing enclave
 	enclaveCtx, err := kurtosisCtx.GetEnclaveContext(ctx, enclaveName)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to locate kurtosis context by namespace %s", namespace)
-	}
+	if err == nil {
+		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns == false {
+			log.Errorf("An existing enclave was found with the name %s, but ReuseDevnetBetweenRuns is set to false. Todo: add tear-down logic here.", enclaveName)
+			os.Exit(1)
+		}
+		enclaveCtxWrapper := &EnclaveContextWrapper{
+			Namespace:              fmt.Sprintf("kt-%s", enclaveCtx.GetEnclaveName()),
+			kurtosisCtx:            kurtosisCtx,
+			enclaveCtxInner:        enclaveCtx,
+			reuseDevnetBetweenRuns: true,
+		}
+		return enclaveCtxWrapper, false, nil
+	} else {
+		// check if no enclave found
+		if !isErrorNoEnclaveFound(err) {
+			return nil, false, err
+		}
 
-	enclaveCtxWrapper := &EnclaveContextWrapper{
-		Namespace:             namespace,
-		kurtosisCtx:           kurtosisCtx,
-		enclaveCtxInner:       enclaveCtx,
-		keepEnclaveAfterFault: true,
+		log.Infof("No existing kurtosis enclave by the name of %s was found. Creating a new one.", enclaveName)
+		enclaveCtxNew, err := kurtosisCtx.CreateEnclave(ctx, enclaveName)
+		if err != nil {
+			return nil, false, err
+		}
+		enclaveCtxWrapper := &EnclaveContextWrapper{
+			Namespace:              fmt.Sprintf("kt-%s", enclaveCtxNew.GetEnclaveName()),
+			kurtosisCtx:            kurtosisCtx,
+			enclaveCtxInner:        enclaveCtxNew,
+			reuseDevnetBetweenRuns: cfg.AttacknetConfig.ReuseDevnetBetweenRuns,
+		}
+		return enclaveCtxWrapper, true, nil
 	}
-
-	return enclaveCtxWrapper, nil
 }
 
 func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnessConfig HarnessConfigParsed) error {

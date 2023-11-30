@@ -1,9 +1,9 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 300
-  keepEnclaveAfterFault: true
-  #existingDevnetNamespace: kt-ethereum
+  waitBeforeInjectionSeconds: 10
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
