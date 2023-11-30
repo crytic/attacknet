@@ -1,0 +1,49 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 300
+  keepEnclaveAfterFault: true
+  #existingDevnetNamespace: kt-ethereum
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: devnet-12.yaml
+
+tests:
+- testName: network-split
+  chaosFaultSpec:
+    kind: NetworkChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      action: partition
+      duration: 30s
+      mode: all
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.partition: partA
+      direction: both
+      target:
+        mode: all
+        selector:
+          labelSelectors:
+            kurtosistech.com.custom/ethereum-package.partition: partB
+
+#kind: NetworkChaos
+#metadata:
+#  name: partition
+#spec:
+#  action: partition
+#  mode: all
+#  selector:
+#    namespaces:
+#      - default
+#    labelSelectors:
+#      'app': 'app1'
+#  direction: to
+#  target:
+#    mode: all
+#    selector:
+#      namespaces:
+#        - default
+#      labelSelectors:
+#        'app': 'app2'

@@ -12,9 +12,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"log"
+	"os"
 	"reflect"
 	pkgclient "sigs.k8s.io/controller-runtime/pkg/client"
+    "sigs.k8s.io/controller-runtime/pkg/log"
+    "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"time"
 )
 
@@ -25,6 +27,7 @@ type ChaosClient struct {
 }
 
 func CreateClient(namespace string) (*ChaosClient, error) {
+    log.SetLogger(zap.New(zap.UseDevMode(true)))
 	scheme := runtime.NewScheme()
 	err := api.AddToScheme(scheme)
 	if err != nil {
@@ -112,7 +115,9 @@ func Test(ctx context.Context) error {
 
 	//dynamicClient, err := dynamic.NewForConfig(kubeConfig)
 	if err != nil {
-		log.Fatal(err)
+		log.Log.Error(err,"See error")
+        // Handle the fatal error explicitly after logging
+        os.Exit(1)
 	}
 
 	//c := &v1alpha1.NetworkChaos{}
@@ -120,7 +125,9 @@ func Test(ctx context.Context) error {
 
 	client, err := pkgclient.New(kubeConfig, pkgclient.Options{})
 	if err != nil {
-		log.Fatal(err)
+		log.Log.Error(err,"See error")
+        // Handle the fatal error explicitly after logging
+        os.Exit(1)
 	}
 
 	myresourceInstance := &unstructured.Unstructured{
@@ -139,7 +146,9 @@ func Test(ctx context.Context) error {
 
 	err = client.Create(ctx, myresourceInstance)
 	if err != nil {
-		log.Fatal(err)
+		log.Log.Error(err,"See error")
+        // Handle the fatal error explicitly after logging
+        os.Exit(1)
 	}
 
 	_ = crd
