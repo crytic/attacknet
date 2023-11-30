@@ -4,8 +4,8 @@ participants:
     el_extra_labels: {"ethereum-package.partition": "1"}
     cl_client_type: lighthouse
     cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-c6be31c
-    beacon_extra_labels: {"ethereum-package.partition": "bootnode"}
-    validator_extra_labels: {"ethereum-package.partition": "bootnode"}
+    beacon_extra_labels: {"ethereum-package.partition": "test"}
+    validator_extra_labels: {"ethereum-package.partition": "test"}
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -24,8 +24,8 @@ participants:
     el_extra_labels: {"ethereum-package.partition": "2"}
     cl_client_type: lighthouse
     cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-c6be31c
-    beacon_extra_labels: {"ethereum-package.partition": "separated"}
-    validator_extra_labels: {"ethereum-package.partition": "separated"}
+    beacon_extra_labels: {"ethereum-package.partition": "hi"}
+    validator_extra_labels: {"ethereum-package.partition": "hi"}
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -42,6 +42,8 @@ participants:
 network_params:
   deneb_fork_epoch: 1
   num_validator_keys_per_node: 32
+  seconds_per_slot: 6
+  genesis_delay: 120
 additional_services:
   - prometheus_grafana
   - dora

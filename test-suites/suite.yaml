@@ -1,7 +1,7 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 20
+  waitBeforeInjectionSeconds: 300
   keepEnclaveAfterFault: true
   #existingDevnetNamespace: kt-ethereum
 
@@ -16,17 +16,17 @@ tests:
     apiVersion: chaos-mesh.org/v1alpha1
     spec:
       action: partition
-      duration: 2m
+      duration: 30s
       mode: all
       selector:
         labelSelectors:
-          kurtosistech.com.custom/ethereum-package.partition: bootnode
+          kurtosistech.com.custom/ethereum-package.partition: test
       direction: both
       target:
         mode: all
         selector:
           labelSelectors:
-            kurtosistech.com.custom/ethereum-package.partition: separated
+            kurtosistech.com.custom/ethereum-package.partition: hi
 
 #kind: NetworkChaos
 #metadata:
