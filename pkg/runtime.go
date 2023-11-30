@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func setupDevnet(ctx context.Context, keepEnclaveAfterFault bool, harnessCfg HarnessConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+func setupDevnet(ctx context.Context, reuseDevnetBetweenRuns bool, harnessCfg HarnessConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	// todo: spawn kurtosis gateway?
 	kurtosisCtx, err := GetKurtosisContext()
 	if err != nil {
@@ -17,7 +17,7 @@ func setupDevnet(ctx context.Context, keepEnclaveAfterFault bool, harnessCfg Har
 	}
 
 	log.Infof("Creating a new Kurtosis enclave")
-	enclaveCtx, err := CreateEnclaveContext(ctx, kurtosisCtx, keepEnclaveAfterFault)
+	enclaveCtx, err := CreateEnclaveContext(ctx, kurtosisCtx, reuseDevnetBetweenRuns)
 	log.Infof("New enclave created under namespace %s", enclaveCtx.Namespace)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func loadEnclaveFromExistingDevnet(ctx context.Context, attacknetCfg AttacknetCo
 
 func setupEnclave(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
-		enclave, err = setupDevnet(ctx, cfg.AttacknetConfig.KeepEnclaveAfterFault, cfg.HarnessConfig)
+		enclave, err = setupDevnet(ctx, cfg.AttacknetConfig.ReuseDevnetBetweenRuns, cfg.HarnessConfig)
 	} else {
 		enclave, err = loadEnclaveFromExistingDevnet(ctx, cfg.AttacknetConfig)
 	}

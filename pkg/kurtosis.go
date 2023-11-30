@@ -13,14 +13,14 @@ import (
 )
 
 type EnclaveContextWrapper struct {
-	Namespace             string
-	kurtosisCtx           *kurtosis_context.KurtosisContext
-	enclaveCtxInner       *enclaves.EnclaveContext
-	keepEnclaveAfterFault bool
+	Namespace              string
+	kurtosisCtx            *kurtosis_context.KurtosisContext
+	enclaveCtxInner        *enclaves.EnclaveContext
+	reuseDevnetBetweenRuns bool
 }
 
 func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
-	if e.keepEnclaveAfterFault {
+	if e.reuseDevnetBetweenRuns {
 		log.Infof("Skipping enclave deletion, enclave in namespace %s was flagged to be skip deletion", e.Namespace)
 		return
 	} else {
@@ -53,7 +53,7 @@ func GetKurtosisContext() (*kurtosis_context.KurtosisContext, error) {
 	return kurtosisCtx, nil
 }
 
-func CreateEnclaveContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, keepEnclaveAfterFault bool) (*EnclaveContextWrapper, error) {
+func CreateEnclaveContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, reuseDevnetBetweenRuns bool) (*EnclaveContextWrapper, error) {
 	enclaveName := fmt.Sprintf("attacknet-%d", time.Now().Unix())
 	enclaveCtx, err := kurtosisCtx.CreateEnclave(ctx, enclaveName)
 	if err != nil {
@@ -61,10 +61,10 @@ func CreateEnclaveContext(ctx context.Context, kurtosisCtx *kurtosis_context.Kur
 	}
 
 	enclaveCtxWrapper := &EnclaveContextWrapper{
-		Namespace:             fmt.Sprintf("kt-%s", enclaveCtx.GetEnclaveName()),
-		kurtosisCtx:           kurtosisCtx,
-		enclaveCtxInner:       enclaveCtx,
-		keepEnclaveAfterFault: keepEnclaveAfterFault,
+		Namespace:              fmt.Sprintf("kt-%s", enclaveCtx.GetEnclaveName()),
+		kurtosisCtx:            kurtosisCtx,
+		enclaveCtxInner:        enclaveCtx,
+		reuseDevnetBetweenRuns: reuseDevnetBetweenRuns,
 	}
 
 	return enclaveCtxWrapper, nil
@@ -80,10 +80,10 @@ func CreateEnclaveFromExisting(ctx context.Context, kurtosisCtx *kurtosis_contex
 	}
 
 	enclaveCtxWrapper := &EnclaveContextWrapper{
-		Namespace:             namespace,
-		kurtosisCtx:           kurtosisCtx,
-		enclaveCtxInner:       enclaveCtx,
-		keepEnclaveAfterFault: true,
+		Namespace:              namespace,
+		kurtosisCtx:            kurtosisCtx,
+		enclaveCtxInner:        enclaveCtx,
+		reuseDevnetBetweenRuns: true,
 	}
 
 	return enclaveCtxWrapper, nil

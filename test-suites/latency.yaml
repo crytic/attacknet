@@ -2,7 +2,7 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 240
-  keepEnclaveAfterFault: true
+  reuseDevnetBetweenRuns: true
   #existingDevnetNamespace: kt-ethereum # if no genesis found, create one
   #reuseGenesisDeployment: true
 

@@ -41,7 +41,7 @@ attacknetConfig:
   grafanaPodPort: 3000 # the port grafana is listening to in the pod
   waitBeforeInjectionSeconds: 10 
   # the number of seconds to wait between the genesis of the network and the injection of faults. To wait for finality, use 25 mins (1500 secs)
-  keepEnclaveAfterFault: true # Whether attacknet should skip enclave deletion after the fault concludes. Defaults to false.
+  reuseDevnetBetweenRuns: true # Whether attacknet should skip enclave deletion after the fault concludes. Defaults to false.
   existingDevnetNamespace: kt-ethereum # If you don't want to genesis a new network, you can specify an existing namespace that contains a Kurtosis enclave and run tests against it instead. I'm expecting this to only be useful for dev/tool testing. Exclude this parameter for normal operation.
 
 harnessConfig:
