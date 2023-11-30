@@ -1,0 +1,28 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 60
+  keepEnclaveAfterFault: true
+  #existingDevnetNamespace: kt-ethereum
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: packetdrop-geth-prysm
+  chaosFaultSpec:
+    kind: NetworkChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.client: prysm
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+      mode: all
+      action: loss
+      duration: 5m
+      loss:
+        loss: '50'
+        correlation: '100'
+      direction: to

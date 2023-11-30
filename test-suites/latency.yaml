@@ -1,0 +1,29 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 240
+  keepEnclaveAfterFault: true
+  #existingDevnetNamespace: kt-ethereum # if no genesis found, create one
+  #reuseGenesisDeployment: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: latency-geth-prysm
+  chaosFaultSpec:
+    kind: NetworkChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.client: prysm
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+      mode: all
+      action: delay
+      duration: 5m
+      delay:
+        latency: '500ms'
+        correlation: '100'
+        jitter: '0ms'

@@ -1,7 +1,7 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
+  waitBeforeInjectionSeconds: 240
   keepEnclaveAfterFault: true
   #existingDevnetNamespace: kt-ethereum
 
@@ -10,18 +10,23 @@ harnessConfig:
   networkConfig: default.yaml
 
 tests:
-- testName: packetdrop-1
+- testName: corrupt-geth-prysm
   chaosFaultSpec:
     kind: NetworkChaos
     apiVersion: chaos-mesh.org/v1alpha1
     spec:
       selector:
         labelSelectors:
-          kurtosistech.com/id: cl-1-lighthouse-geth-validator
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+
+      target:
+        mode: all
+        labelSelectors:
+          kurtosistech.com/id: cl-2-prysm-geth
       mode: all
-      action: loss
-      duration: 1m
-      loss:
-        loss: '10'
-        correlation: '0'
-      direction: to
+      action: corrupt
+      duration: 5m
+      direction: from
+      corrupt:
+        corrupt: '90'
+        correlation: '100'

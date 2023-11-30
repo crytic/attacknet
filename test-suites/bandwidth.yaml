@@ -1,0 +1,33 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 240
+  keepEnclaveAfterFault: true
+  #existingDevnetNamespace: kt-ethereum
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: bandwidth-geth-prysm
+  chaosFaultSpec:
+    kind: NetworkChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+
+      target:
+        mode: all
+        labelSelectors:
+          kurtosistech.com/id: cl-2-prysm-geth
+      mode: all
+      action: bandwidth
+      duration: 1m
+      direction: from
+      bandwidth:
+        rate: '10kbps'
+        limit:  20000
+        buffer: 500

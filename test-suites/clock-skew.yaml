@@ -1,0 +1,27 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 60
+  keepEnclaveAfterFault: true
+  #existingDevnetNamespace:
+  #reuseExistingDevnet: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: clock-skew-lighthouse-geth
+  chaosFaultSpec:
+    kind: TimeChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.client: lighthouse
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+      mode: all
+      action: delay
+      timeOffset: '-5m'
+      duration: 10m
+
