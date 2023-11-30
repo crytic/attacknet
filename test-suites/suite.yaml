@@ -20,13 +20,13 @@ tests:
       mode: all
       selector:
         labelSelectors:
-          kurtosistech.com.custom/ethereum-package.partition: test
+          kurtosistech.com.custom/ethereum-package.partition: partA
       direction: both
       target:
         mode: all
         selector:
           labelSelectors:
-            kurtosistech.com.custom/ethereum-package.partition: hi
+            kurtosistech.com.custom/ethereum-package.partition: partB
 
 #kind: NetworkChaos
 #metadata:
