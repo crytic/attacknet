@@ -71,7 +71,7 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		return err
 	}
 	defer func() {
-		close(grafanaTunnel.PortForwardStopCh)
+		grafanaTunnel.Cleanup()
 	}()
 
 	// todo: set up grafana health checks/alerting here

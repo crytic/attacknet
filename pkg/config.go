@@ -12,6 +12,7 @@ import (
 type AttacknetConfig struct {
 	GrafanaPodName             string `yaml:"grafanaPodName"`
 	GrafanaPodPort             string `yaml:"grafanaPodPort"`
+	AllowPostFaultInspection   bool   `yaml:"allowPostFaultInspection"`
 	WaitBeforeInjectionSeconds uint32 `yaml:"waitBeforeInjectionSeconds"`
 	ReuseDevnetBetweenRuns     bool   `yaml:"reuseDevnetBetweenRuns"`
 	ExistingDevnetNamespace    string `yaml:"existingDevnetNamespace"`
@@ -50,6 +51,7 @@ func defaultConfig() *Config {
 			WaitBeforeInjectionSeconds: 0,
 			ExistingDevnetNamespace:    "",
 			ReuseDevnetBetweenRuns:     false,
+			AllowPostFaultInspection:   true,
 		},
 	}
 	return &cfg

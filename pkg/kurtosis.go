@@ -22,7 +22,6 @@ type EnclaveContextWrapper struct {
 func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
 	if e.reuseDevnetBetweenRuns {
 		log.Infof("Skipping enclave deletion, enclave in namespace %s was flagged to be skip deletion", e.Namespace)
-		return
 	} else {
 		log.Infof("Destroying enclave")
 		err := e.kurtosisCtx.DestroyEnclave(ctx, e.enclaveCtxInner.GetEnclaveName())
@@ -30,6 +29,7 @@ func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}
+	return
 }
 
 // pass-thru func. Figure out how to remove eventually.

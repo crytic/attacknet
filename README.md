@@ -43,6 +43,7 @@ attacknetConfig:
   # the number of seconds to wait between the genesis of the network and the injection of faults. To wait for finality, use 25 mins (1500 secs)
   reuseDevnetBetweenRuns: true # Whether attacknet should skip enclave deletion after the fault concludes. Defaults to false.
   existingDevnetNamespace: kt-ethereum # If you don't want to genesis a new network, you can specify an existing namespace that contains a Kurtosis enclave and run tests against it instead. I'm expecting this to only be useful for dev/tool testing. Exclude this parameter for normal operation.
+  allowPostFaultInspection: true # When set to true, Attacknet will maintain the port-forward connection to Grafana once the fault has concluded to allow the operator to inspect metrics. Default: true
 
 harnessConfig:
   networkPackage: github.com/crytic/ethereum-package # The Kurtosis package to deploy to instrument the devnet.
