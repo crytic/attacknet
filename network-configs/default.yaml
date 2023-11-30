@@ -32,7 +32,7 @@ participants:
     v_max_cpu: 1000
     v_min_mem: 1028
     v_max_mem: 1028
-    count: 1
+    count: 2
 network_params:
   # This needs to be set to ensure that path based storage is disabled on geth (older version doesn't yet support it)
   capella_fork_epoch: 1
