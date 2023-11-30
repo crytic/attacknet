@@ -4,9 +4,10 @@ import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"context"
 	"errors"
+	"time"
+
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 func setupDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
@@ -52,7 +53,7 @@ func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *ConfigParsed) (encl
 			return nil, err
 		}
 	} else {
-		log.Info("An active enclave matching %s was found", namespace)
+		log.Infof("An active enclave matching %s was found", namespace)
 	}
 
 	return enclaveCtx, nil
