@@ -2,7 +2,9 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/kurtosis-tech/kurtosis/api/golang/core/kurtosis_core_rpc_api_bindings"
 	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/enclaves"
 	"github.com/kurtosis-tech/kurtosis/api/golang/core/lib/starlark_run_config"
 	"github.com/kurtosis-tech/kurtosis/api/golang/engine/lib/kurtosis_context"
@@ -40,6 +42,15 @@ func (e *EnclaveContextWrapper) RunStarlarkRemotePackageBlocking(
 	cfg *starlark_run_config.StarlarkRunConfig,
 ) (*enclaves.StarlarkRunResult, error) {
 	return e.enclaveCtxInner.RunStarlarkRemotePackageBlocking(ctx, packageId, cfg)
+}
+
+// pass-thru func. Figure out how to remove eventually.
+func (e *EnclaveContextWrapper) RunStarlarkRemotePackage(
+	ctx context.Context,
+	packageRootPath string,
+	runConfig *starlark_run_config.StarlarkRunConfig,
+) (chan *kurtosis_core_rpc_api_bindings.StarlarkRunResponseLine, context.CancelFunc, error) {
+	return e.enclaveCtxInner.RunStarlarkRemotePackage(ctx, packageRootPath, runConfig)
 }
 
 func GetKurtosisContext() (*kurtosis_context.KurtosisContext, error) {
@@ -116,10 +127,59 @@ func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnes
 	cfg := &starlark_run_config.StarlarkRunConfig{
 		SerializedParams: string(harnessConfig.NetworkConfig),
 	}
-	_, err := enclaveCtx.RunStarlarkRemotePackageBlocking(ctx, harnessConfig.NetworkPackage, cfg)
+	a, _, err := enclaveCtx.RunStarlarkRemotePackage(ctx, harnessConfig.NetworkPackage, cfg)
 	if err != nil {
-		return stacktrace.Propagate(err, "error occurred while running starklark package")
-	} else {
-		return nil
+		return stacktrace.Propagate(err, "error running Starklark script")
+	}
+
+	// todo: clean this up when we decide to add log filtering
+	progressIndex := 0
+	for {
+		t := <-a
+		progress := t.GetProgressInfo()
+		if progress != nil {
+			progressMsgs := progress.CurrentStepInfo
+			for i := progressIndex; i < len(progressMsgs); i++ {
+				log.Infof("Kurtosis: %s", progressMsgs[i])
+			}
+			progressIndex = len(progressMsgs)
+		}
+
+		info := t.GetInfo()
+		if info != nil {
+			log.Infof("Kurtosis: %s", info.InfoMessage)
+		}
+
+		warn := t.GetWarning()
+		if warn != nil {
+			log.Warnf("Kurtosis: %s", warn.WarningMessage)
+		}
+
+		e := t.GetError()
+		if e != nil {
+			log.Errorf("Kurtosis: %s", e.String())
+			return stacktrace.Propagate(errors.New("kurtosis deployment failed during execution"), "%s", e.String())
+		}
+
+		ins := t.GetInstruction()
+		if ins != nil {
+		}
+
+		insRes := t.GetInstructionResult()
+		if insRes != nil {
+			log.Infof("Kurtosis: %s", insRes.SerializedInstructionResult)
+		}
+
+		finishRes := t.GetRunFinishedEvent()
+		if finishRes != nil {
+			log.Infof("Kurtosis: %s", finishRes.GetSerializedOutput())
+			if finishRes.IsRunSuccessful {
+				log.Info("Kurtosis: Devnet genesis successful. Passing back to Attacknet")
+				return nil
+			} else {
+				log.Error("Kurtosis: There was an error during genesis.")
+				return stacktrace.Propagate(errors.New("kurtosis deployment failed"), "%s", finishRes.GetSerializedOutput())
+			}
+		}
 	}
 }
