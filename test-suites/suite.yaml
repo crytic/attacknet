@@ -4,6 +4,7 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 10
   reuseDevnetBetweenRuns: true
   existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package

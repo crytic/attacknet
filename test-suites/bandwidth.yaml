@@ -2,7 +2,8 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 240
-  reuseDevnetBetweenRuns: true
+  reuseDevnetBetweenRuns: false
+  allowPostFaultInspection: true
   #existingDevnetNamespace: kt-ethereum
 
 harnessConfig:

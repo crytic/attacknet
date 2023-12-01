@@ -2,9 +2,9 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 240
-  reuseDevnetBetweenRuns: true
+  reuseDevnetBetweenRuns: false
   #existingDevnetNamespace: kt-ethereum # if no genesis found, create one
-  #reuseGenesisDeployment: true
+  allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
