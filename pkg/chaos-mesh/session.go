@@ -5,6 +5,7 @@ import (
 	"fmt"
 	api "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/kurtosis-tech/stacktrace"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -27,10 +28,11 @@ const (
 // time out?
 
 type FaultSession struct {
-	client    *ChaosClient
-	faultKind *api.ChaosKind
-	faultSpec map[string]interface{}
-	Name      string
+	client              *ChaosClient
+	faultKind           *api.ChaosKind
+	faultSpec           map[string]interface{}
+	Name                string
+	podsFailingRecovery map[string]*api.Record
 }
 
 func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, error) {
@@ -63,6 +65,34 @@ func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, er
 	return records, nil
 }
 
+func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []string) {
+	messages := map[string]string{}
+	for i := len(record.Events) - 1; i >= 0; i-- {
+		if record.Events[i].Type == api.TypeFailed {
+			msg := record.Events[i].Message
+			if record.Events[i].Operation == api.Recover {
+				if _, exists := f.podsFailingRecovery[msg]; !exists {
+					messages[msg] = msg
+					f.podsFailingRecovery[msg] = record
+				}
+			} else {
+				log.Errorf("Did not expect operation to be apply for record with message %s", msg)
+			}
+		}
+	}
+	if len(messages) == 0 {
+		return false, make([]string, 0)
+	}
+
+	distinctMessages := make([]string, 0, len(messages))
+	for key := range messages {
+		distinctMessages = append(distinctMessages, key)
+	}
+	return true, distinctMessages
+}
+
+//1].Operation = "Recover", Type="Failed". Emit Message
+
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
@@ -87,8 +117,18 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 			podsInjectedAndRecovered += 1
 		} else {
 			podsInjectedNotRecovered += 1
+
+			failing, messages := f.checkForFailedRecovery(podRecord)
+			if failing {
+				log.Warn("One or more pods failed to recover from the fault and may have crashed:")
+				for _, msg := range messages {
+					log.Warnf("Error message: %s", msg)
+				}
+			}
 		}
 	}
+
+	// todo: check if unrecovered pods are failing to recover ^^ up here PodRecord.Events[-1].Operation = "Recover", Type="Failed". Emit Message
 
 	if podsNotInjected > 0 {
 		return Starting, nil
@@ -96,11 +136,11 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered == 0 {
 		return InProgress, nil
 	}
+	if podsInjectedAndRecovered+len(f.podsFailingRecovery) == len(records) {
+		return Completed, nil
+	}
 	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered > 0 {
 		return Stopping, nil
-	}
-	if podsInjectedAndRecovered == len(records) {
-		return Completed, nil
 	}
 	// should be impossible to get here
 	msg := fmt.Sprintf("invalid state, podsInjectedNotRecovered: %s, podsInjectedAndRecovered: %s", podsInjectedNotRecovered, podsInjectedAndRecovered)

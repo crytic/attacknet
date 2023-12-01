@@ -15,8 +15,8 @@ import (
 	"os"
 	"reflect"
 	pkgclient "sigs.k8s.io/controller-runtime/pkg/client"
-    "sigs.k8s.io/controller-runtime/pkg/log"
-    "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"time"
 )
 
@@ -27,7 +27,7 @@ type ChaosClient struct {
 }
 
 func CreateClient(namespace string) (*ChaosClient, error) {
-    log.SetLogger(zap.New(zap.UseDevMode(true)))
+	log.SetLogger(zap.New(zap.UseDevMode(true)))
 	scheme := runtime.NewScheme()
 	err := api.AddToScheme(scheme)
 	if err != nil {
@@ -69,7 +69,7 @@ func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]inter
 		if err != nil {
 			return nil, stacktrace.Propagate(err, "could not create custom resource")
 		}
-		return &FaultSession{client: c, faultSpec: faultSpec, Name: faultName, faultKind: chaosKind}, nil
+		return &FaultSession{client: c, faultSpec: faultSpec, Name: faultName, faultKind: chaosKind, podsFailingRecovery: map[string]*api.Record{}}, nil
 
 	} else {
 		return nil, stacktrace.Propagate(errors.New("invalid fault kind"), "invalid fault kind: %s", kind)
@@ -115,9 +115,9 @@ func Test(ctx context.Context) error {
 
 	//dynamicClient, err := dynamic.NewForConfig(kubeConfig)
 	if err != nil {
-		log.Log.Error(err,"See error")
-        // Handle the fatal error explicitly after logging
-        os.Exit(1)
+		log.Log.Error(err, "See error")
+		// Handle the fatal error explicitly after logging
+		os.Exit(1)
 	}
 
 	//c := &v1alpha1.NetworkChaos{}
@@ -125,9 +125,9 @@ func Test(ctx context.Context) error {
 
 	client, err := pkgclient.New(kubeConfig, pkgclient.Options{})
 	if err != nil {
-		log.Log.Error(err,"See error")
-        // Handle the fatal error explicitly after logging
-        os.Exit(1)
+		log.Log.Error(err, "See error")
+		// Handle the fatal error explicitly after logging
+		os.Exit(1)
 	}
 
 	myresourceInstance := &unstructured.Unstructured{
@@ -146,9 +146,9 @@ func Test(ctx context.Context) error {
 
 	err = client.Create(ctx, myresourceInstance)
 	if err != nil {
-		log.Log.Error(err,"See error")
-        // Handle the fatal error explicitly after logging
-        os.Exit(1)
+		log.Log.Error(err, "See error")
+		// Handle the fatal error explicitly after logging
+		os.Exit(1)
 	}
 
 	_ = crd
