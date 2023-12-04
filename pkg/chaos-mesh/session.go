@@ -17,10 +17,10 @@ type FaultStatus string
 
 const (
 	Starting   FaultStatus = "Starting"
-	InProgress             = "In Progress"
-	Stopping               = "Stopping"
-	Completed              = "Completed"
-	Error                  = "Error"
+	InProgress FaultStatus = "In Progress"
+	Stopping   FaultStatus = "Stopping"
+	Completed  FaultStatus = "Completed"
+	Error      FaultStatus = "Error"
 )
 
 // succeeded (inject worked, now back to normal)
@@ -61,7 +61,10 @@ func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, er
 	// that will ignore the fault-specific fields.
 	// This section also can't handle errors. The code will panic if the resource isn't compliant, which isn't great.
 	recordsVal := reflect.ValueOf(resource).Elem().FieldByName("Status").FieldByName("ChaosStatus").FieldByName("Experiment").FieldByName("Records")
-	records := recordsVal.Interface().([]*api.Record)
+	records, ok := recordsVal.Interface().([]*api.Record)
+	if !ok {
+		return nil, stacktrace.NewError("unable to cast chaos experiment status")
+	}
 	return records, nil
 }
 
@@ -90,8 +93,6 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 	}
 	return true, distinctMessages
 }
-
-//1].Operation = "Recover", Type="Failed". Emit Message
 
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
@@ -143,9 +144,8 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 		return Stopping, nil
 	}
 	// should be impossible to get here
-	msg := fmt.Sprintf("invalid state, podsInjectedNotRecovered: %s, podsInjectedAndRecovered: %s", podsInjectedNotRecovered, podsInjectedAndRecovered)
+	msg := fmt.Sprintf("invalid state, podsInjectedNotRecovered: %d, podsInjectedAndRecovered: %d", podsInjectedNotRecovered, podsInjectedAndRecovered)
 	panic(msg)
-	return Error, nil
 }
 
 // todo: memoize or enshrine
@@ -156,7 +156,13 @@ func (f *FaultSession) GetDuration(ctx context.Context) (*time.Duration, error) 
 	}
 
 	durationVal := reflect.ValueOf(resource).Elem().FieldByName("Spec").FieldByName("Duration")
-	durationStr := durationVal.Interface().(*string)
+	durationStr, ok := durationVal.Interface().(*string)
+	if !ok {
+		return nil, stacktrace.NewError("unable to cast durationVal to string")
+	}
 	duration, err := time.ParseDuration(*durationStr)
+	if err != nil {
+		return nil, err
+	}
 	return &duration, err
 }

@@ -8,11 +8,8 @@ import (
 	"fmt"
 	api "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/kurtosis-tech/stacktrace"
-	apiextensionclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"os"
 	"reflect"
 	pkgclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -35,9 +32,13 @@ func CreateClient(namespace string) (*ChaosClient, error) {
 	}
 
 	kubeConfig, _, err := kubernetes.CreateKubeClient()
-	client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: scheme})
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create a kubernetes client")
+	}
+
+	client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: scheme})
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "unable to create a kubernetes API client")
 	}
 
 	// todo: validate chaos-mesh is installed
@@ -46,7 +47,15 @@ func CreateClient(namespace string) (*ChaosClient, error) {
 }
 
 func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]interface{}) (*FaultSession, error) {
-	kind := faultSpec["kind"].(string)
+	kindObj, exists := faultSpec["kind"]
+	if !exists {
+		return nil, stacktrace.NewError("unable to find 'kind' within fault spec")
+	}
+
+	kind, ok := kindObj.(string)
+	if !ok {
+		return nil, stacktrace.NewError("unable to cast faultSpec.Kind to string")
+	}
 
 	if chaosKind, ok := api.AllKinds()[kind]; ok {
 		chaos := chaosKind.SpawnObject()
@@ -76,6 +85,7 @@ func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]inter
 	}
 }
 
+/*
 func Test(ctx context.Context) error {
 
 	kubeConfig, _, err := kubernetes.CreateKubeClient()
@@ -162,7 +172,7 @@ func Test(ctx context.Context) error {
 		for _, crd := range crds.Items {
 			fmt.Printf("Found CRD: %s\n", crd.Name)
 		}
-	*/
+*/
 
-	return nil
-}
+//	return nil
+//}

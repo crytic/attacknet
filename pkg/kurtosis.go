@@ -32,7 +32,6 @@ func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}
-	return
 }
 
 // pass-thru func. Figure out how to remove eventually.
@@ -90,7 +89,7 @@ func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.Ku
 	// first check for existing enclave
 	enclaveCtx, err := kurtosisCtx.GetEnclaveContext(ctx, enclaveName)
 	if err == nil {
-		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns == false {
+		if !cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
 			log.Errorf("An existing enclave was found with the name %s, but ReuseDevnetBetweenRuns is set to false. Todo: add tear-down logic here.", enclaveName)
 			os.Exit(1)
 		}
@@ -161,9 +160,9 @@ func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnes
 			return stacktrace.Propagate(errors.New("kurtosis deployment failed during execution"), "%s", e.String())
 		}
 
-		ins := t.GetInstruction()
-		if ins != nil {
-		}
+		// ins := t.GetInstruction()
+		// if ins != nil {
+		// }
 
 		insRes := t.GetInstructionResult()
 		if insRes != nil {
