@@ -33,6 +33,29 @@ type FaultSession struct {
 	faultSpec           map[string]interface{}
 	Name                string
 	podsFailingRecovery map[string]*api.Record
+	TestStartTime       time.Time
+	TestDuration        *time.Duration
+	TestEndTime         time.Time
+}
+
+func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
+	now := time.Now()
+
+	partial := &FaultSession{
+		client:              client,
+		faultKind:           faultKind,
+		faultSpec:           faultSpec,
+		Name:                name,
+		podsFailingRecovery: map[string]*api.Record{},
+		TestStartTime:       now,
+	}
+	duration, err := partial.getDuration(ctx)
+	if err != nil {
+		return nil, err
+	}
+	partial.TestDuration = duration
+	partial.TestEndTime = now.Add(*duration)
+	return partial, nil
 }
 
 func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, error) {
@@ -148,8 +171,7 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 	panic(msg)
 }
 
-// todo: memoize or enshrine
-func (f *FaultSession) GetDuration(ctx context.Context) (*time.Duration, error) {
+func (f *FaultSession) getDuration(ctx context.Context) (*time.Duration, error) {
 	resource, err := f.getKubeResource(ctx)
 	if err != nil {
 		return nil, err

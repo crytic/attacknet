@@ -78,8 +78,8 @@ func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]inter
 		if err != nil {
 			return nil, stacktrace.Propagate(err, "could not create custom resource")
 		}
-		return &FaultSession{client: c, faultSpec: faultSpec, Name: faultName, faultKind: chaosKind, podsFailingRecovery: map[string]*api.Record{}}, nil
 
+		return NewFaultSession(ctx, c, chaosKind, faultSpec, faultName)
 	} else {
 		return nil, stacktrace.Propagate(errors.New("invalid fault kind"), "invalid fault kind: %s", kind)
 	}
