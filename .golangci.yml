@@ -11,5 +11,3 @@ linters:
     - ineffassign
     - gosec
 
-run:
-  modules-download-mode: vendor
