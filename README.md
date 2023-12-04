@@ -191,6 +191,7 @@ restarts
 `beacondb_pending_deposits`
 `beacon_processed_deposits_total`
 
+
 attestation processing rate
 `rate(process_attestations_milliseconds_count[5m])`
  passport or identification card (if resident in the UE) number
