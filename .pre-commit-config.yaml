@@ -1,0 +1,5 @@
+repos:
+  -   repo: https://github.com/golangci/golangci-lint
+      rev: v1.41.1  # Use the ref you want to point at
+      hooks:
+        -   id: golangci-lint

@@ -78,6 +78,12 @@ Once you've got your configuration set up, you can run Attacknet:
 If your suite config is located at `./test-suites/suite.yaml`, you would run `attacknet start suite`. This will 
 probably be changed.
 
+## Developing (wip)
+
+1. Install pre-commit
+   - `brew install pre-commit`
+   - `pre-commit install`
+
 
 ## Other stuff
 

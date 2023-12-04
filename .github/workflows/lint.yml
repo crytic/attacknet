@@ -1,0 +1,22 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.41.1
