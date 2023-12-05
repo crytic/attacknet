@@ -10,6 +10,3 @@ linters:
     - staticcheck
     - ineffassign
     - gosec
-
-issues:
-  new: true
