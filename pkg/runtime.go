@@ -146,11 +146,17 @@ func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSes
 	case chaos_mesh.InProgress:
 		return nil
 	case chaos_mesh.Stopping:
-		return stacktrace.NewError("fault changed to 'stopping' status after 10 seconds. faults must last longer than 10s")
+		errmsg := "fault changed to 'stopping' status after 10 seconds. faults must last longer than 10s"
+		log.Error(errmsg)
+		return stacktrace.NewError(errmsg)
 	case chaos_mesh.Starting:
-		return stacktrace.NewError("chaos-mesh is still in a 'starting' state after 10 seconds. Something is probably wrong. Terminating")
+		errmsg := "chaos-mesh is still in a 'starting' state after 10 seconds. Something is probably wrong. Terminating"
+		log.Error(errmsg)
+		return stacktrace.NewError(errmsg)
 	case chaos_mesh.Error:
-		return stacktrace.NewError("there was an unspecified error returned by chaos-mesh. inspect the fault resource")
+		errmsg := "there was an unspecified error returned by chaos-mesh. inspect the fault resource"
+		log.Error(errmsg)
+		return stacktrace.NewError(errmsg)
 	default:
 		return stacktrace.NewError("unknown chaos session state %s", status)
 	}
