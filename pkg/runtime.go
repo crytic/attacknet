@@ -115,6 +115,9 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 	log.Infof("Starting fault injection")
 
 	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
+	if err != nil {
+		return err
+	}
 
 	// start core logic loop here.
 	err = waitForInjectionCompleted(ctx, faultSession)
