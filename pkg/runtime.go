@@ -115,57 +115,70 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 	log.Infof("Starting fault injection")
 
 	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
-
 	if err != nil {
 		return err
-	}
-	status, err := faultSession.GetStatus(ctx)
-	if err != nil {
-		return err
-	}
-	if status == chaos_mesh.Starting || status == chaos_mesh.InProgress {
-		duration, err := faultSession.GetDuration(ctx)
-		if err != nil {
-			return err
-		}
-		log.Infof("Fault injected successfully. Fault will run for %s before recovering.", duration)
-	} else {
-		return stacktrace.Propagate(errors.New("something went wrong during fault injection that didn't raise any Go errors"), "status: %s", status)
 	}
 
 	// start core logic loop here.
+	err = waitForInjectionCompleted(ctx, faultSession)
+	if err != nil {
+		return err
+	}
+
+	durationSeconds := int(faultSession.TestDuration.Seconds())
+	log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
+	time.Sleep(*faultSession.TestDuration)
+
+	return waitForFaultRecovery(ctx, faultSession)
+}
+
+func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
+	// First, wait 10 seconds to allow chaos-mesh to inject into the cluster.
+	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.
+	time.Sleep(10 * time.Second)
+
+	status, err := session.GetStatus(ctx)
+	if err != nil {
+		return err
+	}
+
+	switch status {
+	case chaos_mesh.InProgress:
+		return nil
+	case chaos_mesh.Stopping:
+		return stacktrace.NewError("fault changed to 'stopping' status after 10 seconds. faults must last longer than 10s")
+	case chaos_mesh.Starting:
+		return stacktrace.NewError("chaos-mesh is still in a 'starting' state after 10 seconds. Something is probably wrong. Terminating")
+	case chaos_mesh.Error:
+		return stacktrace.NewError("there was an unspecified error returned by chaos-mesh. inspect the fault resource")
+	default:
+		return stacktrace.NewError("unknown chaos session state %s", status)
+	}
+}
+
+func waitForFaultRecovery(ctx context.Context, session *chaos_mesh.FaultSession) error {
 	for {
-		time.Sleep(10 * time.Second)
-		status, err := faultSession.GetStatus(ctx)
+		status, err := session.GetStatus(ctx)
 		if err != nil {
 			return err
 		}
 
-		if status == chaos_mesh.InProgress {
-			log.Infof("The fault is still running. Sleeping for 10s")
-
-		}
-
-		if status == chaos_mesh.Stopping {
-			log.Infof("The fault is being stopped")
-		}
-
-		if status == chaos_mesh.Completed {
-			log.Infof("The fault terminated successfully!")
-			break
-		}
-
-		if status == chaos_mesh.Starting {
-			msg := "chaos-mesh is still in a 'starting' state after 10 seconds. Something is probably wrong. Terminating"
-			log.Errorf(msg)
-			return errors.New(msg)
-		}
-		if status == chaos_mesh.Error {
+		switch status {
+		case chaos_mesh.InProgress:
+			log.Infof("The fault is still finishing up. Sleeping for 10s")
+			time.Sleep(10 * time.Second)
+		case chaos_mesh.Stopping:
+			log.Infof("The fault is being stopped. Sleeping for 10s")
+			time.Sleep(10 * time.Second)
+		case chaos_mesh.Error:
 			log.Errorf("there was an error returned by chaos-mesh")
 			return errors.New("there was an unspecified error returned by chaos-mesh. inspect the fault resource")
+		case chaos_mesh.Completed:
+			log.Infof("The fault terminated successfully!")
+			return nil
+		default:
+			return stacktrace.NewError("unknown chaos session state %s", status)
 		}
 		// todo: add timeout break if no changes in k8s resource after fault duration elapses
 	}
-
-	return nil
 }
