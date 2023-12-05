@@ -11,3 +11,5 @@ linters:
     - ineffassign
     - gosec
 
+issues:
+  new: true
