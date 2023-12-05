@@ -72,7 +72,7 @@ func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, erro
 	return resource, nil
 }
 
-func (f *FaultSession) GetDetailedStatus(ctx context.Context) ([]*api.Record, error) {
+func (f *FaultSession) getDetailedStatus(ctx context.Context) ([]*api.Record, error) {
 	resource, err := f.getKubeResource(ctx)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
 func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
-	records, err := f.GetDetailedStatus(ctx)
+	records, err := f.getDetailedStatus(ctx)
 	if err != nil {
 		return Error, err
 	}
