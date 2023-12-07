@@ -180,13 +180,18 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 	return true, distinctMessages
 }
 
+/*
+Determines whether the fault will leave some pods in a terminated state, and how many pods will be impacted.
+This must be run after the fault manifest has been applied and the handler webhook has run.
+*/
 func (f *FaultSession) checkForMissingPods(records []*api.Record) error {
 	if !f.checkedForMissingPods {
 		f.checkedForMissingPods = true
 		// we expect missing pods when the fault is pod kill.
 
+		podsInjected := countInjectedPods(records)
+		log.Infof("Chaos-mesh has identified %d pods matching the targeting criteria", podsInjected)
 		if f.faultType == "PodChaos" && f.faultAction == "pod-kill" {
-			podsInjected := countInjectedPods(records)
 			f.podsExpectedMissing = podsInjected
 			log.Infof("We're expecting %d pods to be terminated from the selected fault", f.podsExpectedMissing)
 		}
