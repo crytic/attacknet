@@ -124,10 +124,13 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 	if err != nil {
 		return err
 	}
-
-	durationSeconds := int(faultSession.TestDuration.Seconds())
-	log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-	time.Sleep(*faultSession.TestDuration)
+	if faultSession.TestDuration != nil {
+		durationSeconds := int(faultSession.TestDuration.Seconds())
+		log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
+		time.Sleep(*faultSession.TestDuration)
+	} else {
+		log.Infof("Fault injected successfully. This fault has no specific duration.")
+	}
 
 	return waitForFaultRecovery(ctx, faultSession)
 }

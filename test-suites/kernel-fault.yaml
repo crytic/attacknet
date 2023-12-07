@@ -1,0 +1,37 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 0
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: kernel-fault
+  # note: Not working at this time. Impacted by https://github.com/chaos-mesh/chaos-mesh/issues/4059 https://github.com/chaos-mesh/chaos-mesh/pull/4149
+  # We also need a way for attacknet to figure out the status of the fault since it has no duration.
+  chaosFaultSpec:
+    kind: KernelChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      mode: all
+      selector:
+        labelSelectors:
+          # kurtosistech.com.custom/ethereum-package.client-type: beacon
+          # kurtosistech.com.custom/ethereum-package.client-type: execution
+          #kurtosistech.com/id: cl-3-prysm-geth
+          kurtosistech.com/id: cl-2-prysm-geth
+      failKernRequest:
+        callchain:
+        - funcname: '__x64_sys_mount'
+        failtype: 0
+
+      probability: 100
+      times: 1
+
+
+

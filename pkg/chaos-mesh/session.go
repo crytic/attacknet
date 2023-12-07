@@ -23,6 +23,8 @@ const (
 	Error      FaultStatus = "Error"
 )
 
+var FaultHasNoDurationErr = fmt.Errorf("this fault has no expected duration")
+
 // succeeded (inject worked, now back to normal)
 // failure?
 // time out?
@@ -35,7 +37,7 @@ type FaultSession struct {
 	podsFailingRecovery map[string]*api.Record
 	TestStartTime       time.Time
 	TestDuration        *time.Duration
-	TestEndTime         time.Time
+	TestEndTime         *time.Time
 }
 
 func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
@@ -51,10 +53,18 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 	}
 	duration, err := partial.getDuration(ctx)
 	if err != nil {
-		return nil, err
+		if err == FaultHasNoDurationErr {
+			partial.TestDuration = nil
+			partial.TestEndTime = nil
+		} else {
+			return nil, err
+		}
+	} else {
+		partial.TestDuration = duration
+		endTime := now.Add(*duration)
+		partial.TestEndTime = &endTime
 	}
-	partial.TestDuration = duration
-	partial.TestEndTime = now.Add(*duration)
+
 	return partial, nil
 }
 
@@ -182,6 +192,10 @@ func (f *FaultSession) getDuration(ctx context.Context) (*time.Duration, error) 
 	if !ok {
 		return nil, stacktrace.NewError("unable to cast durationVal to string")
 	}
+	if durationStr == nil {
+		return nil, FaultHasNoDurationErr
+	}
+
 	duration, err := time.ParseDuration(*durationStr)
 	if err != nil {
 		return nil, err
