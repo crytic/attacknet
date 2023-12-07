@@ -156,24 +156,22 @@ func (f *FaultSession) checkForMissingPods(records []*api.Record) error {
 		// we expect missing pods when the fault is pod kill.
 
 		if f.faultType == "PodChaos" && f.faultAction == "pod-kill" {
-			latestRecord, err := getLatestInjectedRecord(records)
-			if err != nil {
-				return err
-			}
-			f.podsExpectedMissing = latestRecord.InjectedCount
+			podsInjected := countInjectedPods(records)
+			f.podsExpectedMissing = podsInjected
 			log.Infof("We're expecting %d pods to be terminated from the selected fault", f.podsExpectedMissing)
 		}
 	}
 	return nil
 }
 
-func getLatestInjectedRecord(records []*api.Record) (*api.Record, error) {
-	for i := len(records) - 1; i >= 0; i-- {
-		if records[i].Phase == "Injected" {
-			return records[i], nil
+func countInjectedPods(records []*api.Record) int {
+	podsInjected := 0
+	for _, record := range records {
+		if record.Phase == "Injected" {
+			podsInjected += 1
 		}
 	}
-	return nil, stacktrace.NewError("no latest injection record found")
+	return podsInjected
 }
 
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
