@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -31,11 +31,16 @@ func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Co
 
 	stopCh = make(chan struct{}, 1)
 	readyCh := make(chan struct{}, 1)
-	portForward, err := portforward.New(dialer, []string{portFwd}, stopCh, readyCh, os.Stdout, os.Stderr)
+	logger := log.New()
+
+	errLogger := CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
+	stdLogger := CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
+
+	portForward, err := portforward.New(dialer, []string{portFwd}, stopCh, readyCh, stdLogger, errLogger)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create port forward dialer")
 	}
-	fmt.Print("Starting port-forward to grafana pod")
+	log.Info("Starting port-forward to grafana pod")
 
 	go func() {
 		if err = portForward.ForwardPorts(); err != nil {
@@ -45,7 +50,7 @@ func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Co
 
 	select {
 	case <-readyCh:
-		fmt.Print("Port-forward established.")
+		log.Info("Port-forward established.")
 	case <-time.After(time.Minute):
 		return nil, errors.New("timed out after waiting to establish port forward")
 	}

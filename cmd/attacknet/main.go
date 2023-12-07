@@ -49,6 +49,7 @@ func main() {
 		err = pkg.StartTestSuite(ctx, cfg)
 		if err != nil {
 			log.Fatal(err)
+			os.Exit(1)
 		}
 	}
 }

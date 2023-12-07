@@ -6,6 +6,7 @@ import (
 	api "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -23,38 +24,73 @@ const (
 	Error      FaultStatus = "Error"
 )
 
+var FaultHasNoDurationErr = fmt.Errorf("this fault has no expected duration")
+
 // succeeded (inject worked, now back to normal)
 // failure?
 // time out?
 
 type FaultSession struct {
-	client              *ChaosClient
-	faultKind           *api.ChaosKind
-	faultSpec           map[string]interface{}
-	Name                string
-	podsFailingRecovery map[string]*api.Record
-	TestStartTime       time.Time
-	TestDuration        *time.Duration
-	TestEndTime         time.Time
+	client                   *ChaosClient
+	faultKind                *api.ChaosKind
+	faultType                string
+	faultAction              string
+	faultSpec                map[string]interface{}
+	Name                     string
+	podsFailingRecovery      map[string]*api.Record
+	checkedForMissingPods    bool
+	podsExpectedMissing      int
+	TestStartTime            time.Time
+	TestDuration             *time.Duration
+	TestEndTime              *time.Time
+	TargetSelectionCompleted bool
 }
 
 func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
 	now := time.Now()
 
+	faultKindStr, ok := faultSpec["kind"].(string)
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.kind to string: %s", faultSpec["kind"])
+	}
+
+	spec, ok := faultSpec["spec"].(map[string]interface{})
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.spec to map[string]interface{}")
+	}
+
+	faultAction, ok := spec["action"].(string)
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.spec.action to string: %s", spec["action"])
+	}
+
 	partial := &FaultSession{
-		client:              client,
-		faultKind:           faultKind,
-		faultSpec:           faultSpec,
-		Name:                name,
-		podsFailingRecovery: map[string]*api.Record{},
-		TestStartTime:       now,
+		client:                   client,
+		faultKind:                faultKind,
+		faultType:                faultKindStr,
+		faultSpec:                spec,
+		faultAction:              faultAction,
+		Name:                     name,
+		podsFailingRecovery:      map[string]*api.Record{},
+		TestStartTime:            now,
+		podsExpectedMissing:      0,
+		checkedForMissingPods:    false,
+		TargetSelectionCompleted: false,
 	}
 	duration, err := partial.getDuration(ctx)
 	if err != nil {
-		return nil, err
+		if err == FaultHasNoDurationErr {
+			partial.TestDuration = nil
+			partial.TestEndTime = nil
+		} else {
+			return nil, err
+		}
+	} else {
+		partial.TestDuration = duration
+		endTime := now.Add(*duration)
+		partial.TestEndTime = &endTime
 	}
-	partial.TestDuration = duration
-	partial.TestEndTime = now.Add(*duration)
+
 	return partial, nil
 }
 
@@ -72,8 +108,35 @@ func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, erro
 	return resource, nil
 }
 
-func (f *FaultSession) getDetailedStatus(ctx context.Context) ([]*api.Record, error) {
+func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) error {
+	if f.TargetSelectionCompleted {
+		return nil
+	}
+	conditionsVal := reflect.ValueOf(resource).Elem().FieldByName("Status").FieldByName("ChaosStatus").FieldByName("Conditions")
+	conditions, ok := conditionsVal.Interface().([]api.ChaosCondition)
+	if !ok || conditions == nil {
+		return stacktrace.NewError("Unable to decode status.chaosstatus.conditions")
+	}
+	for _, condition := range conditions {
+		if condition.Type != api.ConditionSelected {
+			continue
+		}
+		if condition.Status == v1.ConditionTrue {
+			log.Info("chaos-mesh has identified pods to inject into")
+			f.TargetSelectionCompleted = true
+		}
+		break
+	}
+	return nil
+}
+
+func (f *FaultSession) getFaultRecords(ctx context.Context) ([]*api.Record, error) {
 	resource, err := f.getKubeResource(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.checkTargetSelectionCompleted(resource)
 	if err != nil {
 		return nil, err
 	}
@@ -117,17 +180,50 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 	return true, distinctMessages
 }
 
+/*
+Determines whether the fault will leave some pods in a terminated state, and how many pods will be impacted.
+This must be run after the fault manifest has been applied and the handler webhook has run.
+*/
+func (f *FaultSession) checkForMissingPods(records []*api.Record) error {
+	if !f.checkedForMissingPods {
+		f.checkedForMissingPods = true
+		// we expect missing pods when the fault is pod kill.
+
+		podsInjected := countInjectedPods(records)
+		log.Infof("Chaos-mesh has identified %d pods matching the targeting criteria", podsInjected)
+		if f.faultType == "PodChaos" && f.faultAction == "pod-kill" {
+			f.podsExpectedMissing = podsInjected
+			log.Infof("We're expecting %d pods to be terminated from the selected fault", f.podsExpectedMissing)
+		}
+	}
+	return nil
+}
+
+func countInjectedPods(records []*api.Record) int {
+	podsInjected := 0
+	for _, record := range records {
+		if record.Phase == "Injected" {
+			podsInjected += 1
+		}
+	}
+	return podsInjected
+}
+
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
 func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
-	records, err := f.getDetailedStatus(ctx)
+	records, err := f.getFaultRecords(ctx)
 	if err != nil {
 		return Error, err
 	}
 
 	if records == nil {
 		return Starting, nil
+	}
+	err = f.checkForMissingPods(records)
+	if err != nil {
+		return Error, err
 	}
 
 	podsInjectedAndRecovered := 0
@@ -152,15 +248,13 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 		}
 	}
 
-	// todo: check if unrecovered pods are failing to recover ^^ up here PodRecord.Events[-1].Operation = "Recover", Type="Failed". Emit Message
-
 	if podsNotInjected > 0 {
 		return Starting, nil
 	}
-	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered == 0 {
+	if podsInjectedNotRecovered-f.podsExpectedMissing > 0 && podsInjectedAndRecovered == 0 {
 		return InProgress, nil
 	}
-	if podsInjectedAndRecovered+len(f.podsFailingRecovery) == len(records) {
+	if podsInjectedAndRecovered+len(f.podsFailingRecovery)+f.podsExpectedMissing == len(records) {
 		return Completed, nil
 	}
 	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered > 0 {
@@ -182,6 +276,10 @@ func (f *FaultSession) getDuration(ctx context.Context) (*time.Duration, error) 
 	if !ok {
 		return nil, stacktrace.NewError("unable to cast durationVal to string")
 	}
+	if durationStr == nil {
+		return nil, FaultHasNoDurationErr
+	}
+
 	duration, err := time.ParseDuration(*durationStr)
 	if err != nil {
 		return nil, err

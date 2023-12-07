@@ -16,7 +16,7 @@
 3. Install chaos-mesh
    1. `kubectl create ns chaos-mesh`
    2. `helm repo add chaos-mesh https://charts.chaos-mesh.org`
-   3. `helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false`
+   3. `helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false --set bpfki.create=true`
    4. To access chaos dashboard, use `kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333`
 4. Install kurtosis locally.
 5. Run `kurtosis cluster set cloud`

@@ -139,24 +139,24 @@ func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnes
 		if progress != nil {
 			progressMsgs := progress.CurrentStepInfo
 			for i := progressIndex; i < len(progressMsgs); i++ {
-				log.Infof("Kurtosis: %s", progressMsgs[i])
+				log.Infof("[Kurtosis] %s", progressMsgs[i])
 			}
 			progressIndex = len(progressMsgs)
 		}
 
 		info := t.GetInfo()
 		if info != nil {
-			log.Infof("Kurtosis: %s", info.InfoMessage)
+			log.Infof("[Kurtosis] %s", info.InfoMessage)
 		}
 
 		warn := t.GetWarning()
 		if warn != nil {
-			log.Warnf("Kurtosis: %s", warn.WarningMessage)
+			log.Warnf("[Kurtosis] %s", warn.WarningMessage)
 		}
 
 		e := t.GetError()
 		if e != nil {
-			log.Errorf("Kurtosis: %s", e.String())
+			log.Errorf("[Kurtosis] %s", e.String())
 			return stacktrace.Propagate(errors.New("kurtosis deployment failed during execution"), "%s", e.String())
 		}
 
@@ -166,17 +166,17 @@ func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnes
 
 		insRes := t.GetInstructionResult()
 		if insRes != nil {
-			log.Infof("Kurtosis: %s", insRes.SerializedInstructionResult)
+			log.Infof("[Kurtosis] %s", insRes.SerializedInstructionResult)
 		}
 
 		finishRes := t.GetRunFinishedEvent()
 		if finishRes != nil {
-			log.Infof("Kurtosis: %s", finishRes.GetSerializedOutput())
+			log.Infof("[Kurtosis] %s", finishRes.GetSerializedOutput())
 			if finishRes.IsRunSuccessful {
-				log.Info("Kurtosis: Devnet genesis successful. Passing back to Attacknet")
+				log.Info("[Kurtosis] Devnet genesis successful. Passing back to Attacknet")
 				return nil
 			} else {
-				log.Error("Kurtosis: There was an error during genesis.")
+				log.Error("[Kurtosis] There was an error during genesis.")
 				return stacktrace.Propagate(errors.New("kurtosis deployment failed"), "%s", finishRes.GetSerializedOutput())
 			}
 		}
