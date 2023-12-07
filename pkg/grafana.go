@@ -14,6 +14,7 @@ type GrafanaTunnel struct {
 	Client                   *grafanaSdk.Client
 	portForwardStopCh        chan struct{}
 	allowPostFaultInspection bool
+	cleanedUp                bool
 }
 
 func CreateGrafanaClient(ctx context.Context, namespace string, config AttacknetConfig) (*GrafanaTunnel, error) {
@@ -42,14 +43,16 @@ func CreateGrafanaClient(ctx context.Context, namespace string, config Attacknet
 		return nil, stacktrace.Propagate(err, "unable to create Grafana client")
 	}
 
-	return &GrafanaTunnel{client, stopCh, config.AllowPostFaultInspection}, nil
+	return &GrafanaTunnel{client, stopCh, config.AllowPostFaultInspection, false}, nil
 }
 
-func (t *GrafanaTunnel) Cleanup() {
-	if t.allowPostFaultInspection {
-		log.Info("Attacknet has completed, but since allowPostFaultInspection is set to true, the program will continue to run to facilitate the Grafana port-forward connection.")
-		log.Info("Press enter to terminate the port-forward connection.")
-		_, _ = fmt.Scanln()
+func (t *GrafanaTunnel) Cleanup(skipInspection bool) {
+	if !t.cleanedUp {
+		if t.allowPostFaultInspection && !skipInspection {
+			log.Info("Press enter to terminate the port-forward connection.")
+			_, _ = fmt.Scanln()
+		}
+		close(t.portForwardStopCh)
+		t.cleanedUp = true
 	}
-	close(t.portForwardStopCh)
 }

@@ -87,7 +87,7 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		return err
 	}
 	defer func() {
-		grafanaTunnel.Cleanup()
+		grafanaTunnel.Cleanup(false)
 	}()
 
 	// todo: set up grafana health checks/alerting here
@@ -102,6 +102,7 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 	log.Infof("Creating a chaos-mesh client")
 	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace)
 	if err != nil {
+		grafanaTunnel.Cleanup(true)
 		return err
 	}
 
@@ -116,12 +117,14 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 
 	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
 	if err != nil {
+		grafanaTunnel.Cleanup(true)
 		return err
 	}
 
 	// start core logic loop here.
 	err = waitForInjectionCompleted(ctx, faultSession)
 	if err != nil {
+		grafanaTunnel.Cleanup(true)
 		return err
 	}
 	if faultSession.TestDuration != nil {
@@ -132,7 +135,13 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		log.Infof("Fault injected successfully. This fault has no specific duration.")
 	}
 
-	return waitForFaultRecovery(ctx, faultSession)
+	err = waitForFaultRecovery(ctx, faultSession)
+	if err != nil {
+		grafanaTunnel.Cleanup(true)
+		return err
+	}
+
+	return nil
 }
 
 func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
