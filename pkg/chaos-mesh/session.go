@@ -6,6 +6,7 @@ import (
 	api "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -30,18 +31,19 @@ var FaultHasNoDurationErr = fmt.Errorf("this fault has no expected duration")
 // time out?
 
 type FaultSession struct {
-	client                *ChaosClient
-	faultKind             *api.ChaosKind
-	faultType             string
-	faultAction           string
-	faultSpec             map[string]interface{}
-	Name                  string
-	podsFailingRecovery   map[string]*api.Record
-	checkedForMissingPods bool
-	podsExpectedMissing   int
-	TestStartTime         time.Time
-	TestDuration          *time.Duration
-	TestEndTime           *time.Time
+	client                   *ChaosClient
+	faultKind                *api.ChaosKind
+	faultType                string
+	faultAction              string
+	faultSpec                map[string]interface{}
+	Name                     string
+	podsFailingRecovery      map[string]*api.Record
+	checkedForMissingPods    bool
+	podsExpectedMissing      int
+	TestStartTime            time.Time
+	TestDuration             *time.Duration
+	TestEndTime              *time.Time
+	TargetSelectionCompleted bool
 }
 
 func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
@@ -63,16 +65,17 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 	}
 
 	partial := &FaultSession{
-		client:                client,
-		faultKind:             faultKind,
-		faultType:             faultKindStr,
-		faultSpec:             spec,
-		faultAction:           faultAction,
-		Name:                  name,
-		podsFailingRecovery:   map[string]*api.Record{},
-		TestStartTime:         now,
-		podsExpectedMissing:   0,
-		checkedForMissingPods: false,
+		client:                   client,
+		faultKind:                faultKind,
+		faultType:                faultKindStr,
+		faultSpec:                spec,
+		faultAction:              faultAction,
+		Name:                     name,
+		podsFailingRecovery:      map[string]*api.Record{},
+		TestStartTime:            now,
+		podsExpectedMissing:      0,
+		checkedForMissingPods:    false,
+		TargetSelectionCompleted: false,
 	}
 	duration, err := partial.getDuration(ctx)
 	if err != nil {
@@ -105,8 +108,35 @@ func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, erro
 	return resource, nil
 }
 
-func (f *FaultSession) getDetailedStatus(ctx context.Context) ([]*api.Record, error) {
+func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) error {
+	if f.TargetSelectionCompleted {
+		return nil
+	}
+	conditionsVal := reflect.ValueOf(resource).Elem().FieldByName("Status").FieldByName("ChaosStatus").FieldByName("Conditions")
+	conditions, ok := conditionsVal.Interface().([]api.ChaosCondition)
+	if !ok || conditions == nil {
+		return stacktrace.NewError("Unable to decode status.chaosstatus.conditions")
+	}
+	for _, condition := range conditions {
+		if condition.Type != api.ConditionSelected {
+			continue
+		}
+		if condition.Status == v1.ConditionTrue {
+			log.Info("chaos-mesh has identified pods to inject into")
+			f.TargetSelectionCompleted = true
+		}
+		break
+	}
+	return nil
+}
+
+func (f *FaultSession) getFaultRecords(ctx context.Context) ([]*api.Record, error) {
 	resource, err := f.getKubeResource(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = f.checkTargetSelectionCompleted(resource)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +208,7 @@ func countInjectedPods(records []*api.Record) int {
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
 func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
-	records, err := f.getDetailedStatus(ctx)
+	records, err := f.getFaultRecords(ctx)
 	if err != nil {
 		return Error, err
 	}

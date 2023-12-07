@@ -162,8 +162,14 @@ func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSes
 		log.Error(errmsg)
 		return stacktrace.NewError(errmsg)
 	case chaos_mesh.Starting:
-		errmsg := "chaos-mesh is still in a 'starting' state after 10 seconds. Something is probably wrong. Terminating"
-		log.Error(errmsg)
+		var errmsg string
+		if !session.TargetSelectionCompleted {
+			errmsg = "chaos-mesh was unable to identify any pods for injection based on the configured criteria"
+			log.Error(errmsg)
+		} else {
+			errmsg = "chaos-mesh is still in a 'starting' state after 10 seconds. Check kubernetes events to see what's wrong."
+			log.Error(errmsg)
+		}
 		return stacktrace.NewError(errmsg)
 	case chaos_mesh.Error:
 		errmsg := "there was an unspecified error returned by chaos-mesh. inspect the fault resource"
