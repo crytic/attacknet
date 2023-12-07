@@ -1,0 +1,31 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 0
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+
+tests:
+- testName: pod-kill
+  # This fault kills the pod and prevents it from being restarted.
+  chaosFaultSpec:
+    kind: PodChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      action: pod-kill
+      mode: all
+      selector:
+        labelSelectors:
+          # kurtosistech.com.custom/ethereum-package.client-type: beacon
+          # kurtosistech.com.custom/ethereum-package.client-type: execution
+          #kurtosistech.com/id: cl-3-prysm-geth
+          kurtosistech.com/id: cl-3-prysm-geth
+
+
+
+

@@ -169,6 +169,9 @@ func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSes
 		errmsg := "there was an unspecified error returned by chaos-mesh. inspect the fault resource"
 		log.Error(errmsg)
 		return stacktrace.NewError(errmsg)
+	case chaos_mesh.Completed:
+		// occurs for faults that perform an action immediately then terminate. (killing pods, etc)
+		return nil
 	default:
 		return stacktrace.NewError("unknown chaos session state %s", status)
 	}

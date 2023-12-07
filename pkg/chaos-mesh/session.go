@@ -30,26 +30,49 @@ var FaultHasNoDurationErr = fmt.Errorf("this fault has no expected duration")
 // time out?
 
 type FaultSession struct {
-	client              *ChaosClient
-	faultKind           *api.ChaosKind
-	faultSpec           map[string]interface{}
-	Name                string
-	podsFailingRecovery map[string]*api.Record
-	TestStartTime       time.Time
-	TestDuration        *time.Duration
-	TestEndTime         *time.Time
+	client                *ChaosClient
+	faultKind             *api.ChaosKind
+	faultType             string
+	faultAction           string
+	faultSpec             map[string]interface{}
+	Name                  string
+	podsFailingRecovery   map[string]*api.Record
+	checkedForMissingPods bool
+	podsExpectedMissing   int
+	TestStartTime         time.Time
+	TestDuration          *time.Duration
+	TestEndTime           *time.Time
 }
 
 func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
 	now := time.Now()
 
+	faultKindStr, ok := faultSpec["kind"].(string)
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.kind to string: %s", faultSpec["kind"])
+	}
+
+	spec, ok := faultSpec["spec"].(map[string]interface{})
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.spec to map[string]interface{}")
+	}
+
+	faultAction, ok := spec["action"].(string)
+	if !ok {
+		return nil, stacktrace.NewError("failed to decode faultSpec.spec.action to string: %s", spec["action"])
+	}
+
 	partial := &FaultSession{
-		client:              client,
-		faultKind:           faultKind,
-		faultSpec:           faultSpec,
-		Name:                name,
-		podsFailingRecovery: map[string]*api.Record{},
-		TestStartTime:       now,
+		client:                client,
+		faultKind:             faultKind,
+		faultType:             faultKindStr,
+		faultSpec:             spec,
+		faultAction:           faultAction,
+		Name:                  name,
+		podsFailingRecovery:   map[string]*api.Record{},
+		TestStartTime:         now,
+		podsExpectedMissing:   0,
+		checkedForMissingPods: false,
 	}
 	duration, err := partial.getDuration(ctx)
 	if err != nil {
@@ -127,6 +150,32 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 	return true, distinctMessages
 }
 
+func (f *FaultSession) checkForMissingPods(records []*api.Record) error {
+	if !f.checkedForMissingPods {
+		f.checkedForMissingPods = true
+		// we expect missing pods when the fault is pod kill.
+
+		if f.faultType == "PodChaos" && f.faultAction == "pod-kill" {
+			latestRecord, err := getLatestInjectedRecord(records)
+			if err != nil {
+				return err
+			}
+			f.podsExpectedMissing = latestRecord.InjectedCount
+			log.Infof("We're expecting %d pods to be terminated from the selected fault", f.podsExpectedMissing)
+		}
+	}
+	return nil
+}
+
+func getLatestInjectedRecord(records []*api.Record) (*api.Record, error) {
+	for i := len(records) - 1; i >= 0; i-- {
+		if records[i].Phase == "Injected" {
+			return records[i], nil
+		}
+	}
+	return nil, stacktrace.NewError("no latest injection record found")
+}
+
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
 // chaos-mesh that we're glancing over. Situations such as a pod crashing during a fault may produce unexpected behavior
 // in this code as it currently stands.
@@ -138,6 +187,10 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 
 	if records == nil {
 		return Starting, nil
+	}
+	err = f.checkForMissingPods(records)
+	if err != nil {
+		return Error, err
 	}
 
 	podsInjectedAndRecovered := 0
@@ -162,15 +215,13 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 		}
 	}
 
-	// todo: check if unrecovered pods are failing to recover ^^ up here PodRecord.Events[-1].Operation = "Recover", Type="Failed". Emit Message
-
 	if podsNotInjected > 0 {
 		return Starting, nil
 	}
-	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered == 0 {
+	if podsInjectedNotRecovered-f.podsExpectedMissing > 0 && podsInjectedAndRecovered == 0 {
 		return InProgress, nil
 	}
-	if podsInjectedAndRecovered+len(f.podsFailingRecovery) == len(records) {
+	if podsInjectedAndRecovered+len(f.podsFailingRecovery)+f.podsExpectedMissing == len(records) {
 		return Completed, nil
 	}
 	if podsInjectedNotRecovered > 0 && podsInjectedAndRecovered > 0 {
