@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"attacknet/cmd/pkg/kubernetes"
+	"attacknet/cmd/pkg/project"
 	"context"
 	"fmt"
 	grafanaSdk "github.com/grafana-tools/sdk"
@@ -17,7 +18,7 @@ type GrafanaTunnel struct {
 	cleanedUp                bool
 }
 
-func CreateGrafanaClient(ctx context.Context, namespace string, config AttacknetConfig) (*GrafanaTunnel, error) {
+func CreateGrafanaClient(ctx context.Context, namespace string, config project.AttacknetConfig) (*GrafanaTunnel, error) {
 	kubeConfig, kubeClient, err := kubernetes.CreateKubeClient()
 	if err != nil {
 		return nil, err

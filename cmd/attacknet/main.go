@@ -2,6 +2,7 @@ package main
 
 import (
 	"attacknet/cmd/pkg"
+	"attacknet/cmd/pkg/project"
 	"context"
 	"github.com/alecthomas/kong"
 	"log"
@@ -30,19 +31,19 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = pkg.InitializeProject(dir, CLI.Init.Force)
+		err = project.InitializeProject(dir, CLI.Init.Force)
 		if err != nil {
 			log.Fatal(err)
 		}
 	case "init <path>":
-		err := pkg.InitializeProject(CLI.Init.Path, CLI.Init.Force)
+		err := project.InitializeProject(CLI.Init.Path, CLI.Init.Force)
 		if err != nil {
 			log.Fatal(err)
 		}
 	case "start <suite name>":
 		ctx, cancelCtxFunc := context.WithCancel(context.Background())
 		defer cancelCtxFunc()
-		cfg, err := pkg.LoadSuiteConfigFromName(CLI.Start.Suite)
+		cfg, err := project.LoadSuiteConfigFromName(CLI.Start.Suite)
 		if err != nil {
 			log.Fatal(err)
 		}

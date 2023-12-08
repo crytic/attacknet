@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
 	"fmt"
@@ -83,7 +84,7 @@ func isErrorNoEnclaveFound(err error) bool {
 	}
 }
 
-func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, cfg *ConfigParsed) (*EnclaveContextWrapper, bool, error) {
+func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.KurtosisContext, cfg *project.ConfigParsed) (*EnclaveContextWrapper, bool, error) {
 	enclaveName := getEnclaveName(cfg.AttacknetConfig.ExistingDevnetNamespace)
 
 	// first check for existing enclave
@@ -121,7 +122,7 @@ func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.Ku
 	}
 }
 
-func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnessConfig HarnessConfigParsed) error {
+func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnessConfig project.HarnessConfigParsed) error {
 	log.Infof("------------ EXECUTING PACKAGE ---------------")
 	cfg := &starlark_run_config.StarlarkRunConfig{
 		SerializedParams: string(harnessConfig.NetworkConfig),

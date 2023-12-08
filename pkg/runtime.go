@@ -2,6 +2,8 @@ package pkg
 
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
+	"attacknet/cmd/pkg/health"
+	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
 	"time"
@@ -10,7 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func setupDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+func setupDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+
+	hc := health.BuildHealthChecker(nil, nil)
+	_ = hc
 	// todo: spawn kurtosis gateway?
 	kurtosisCtx, err := GetKurtosisContext()
 	if err != nil {
@@ -32,7 +37,7 @@ func setupDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContex
 	return enclaveCtx, nil
 }
 
-func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	kurtosisCtx, err := GetKurtosisContext()
 	if err != nil {
 		return nil, err
@@ -59,7 +64,7 @@ func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *ConfigParsed) (encl
 	return enclaveCtx, nil
 }
 
-func setupEnclave(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
+func setupEnclave(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
 	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
 		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
 			log.Warn("Could not re-use an existing devnet because no existingDevnetNamespace was set.")
@@ -71,7 +76,7 @@ func setupEnclave(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveConte
 	return enclave, err
 }
 
-func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
+func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	enclave, err := setupEnclave(ctx, cfg)
 	if err != nil {
 		return err
