@@ -23,12 +23,6 @@ type EnclaveContextWrapper struct {
 	reuseDevnetBetweenRuns bool
 }
 
-type PodUnderTest struct {
-	Name        string
-	Labels      map[string]string
-	ExpectDeath bool
-}
-
 func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {
 	if e.reuseDevnetBetweenRuns {
 		log.Infof("Skipping enclave deletion, enclave in namespace %s was flagged to be skip deletion", e.Namespace)

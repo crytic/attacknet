@@ -9,8 +9,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 	"time"
 )
+
+type PodUnderTest struct {
+	Name        string
+	Labels      map[string]string
+	ExpectDeath bool
+}
 
 type FaultPhase string
 
@@ -44,6 +51,7 @@ type FaultSession struct {
 	TestDuration             *time.Duration
 	TestEndTime              *time.Time
 	TargetSelectionCompleted bool
+	PodsUnderTest            []*PodUnderTest
 }
 
 func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.ChaosKind, faultSpec map[string]interface{}, name string) (*FaultSession, error) {
@@ -76,6 +84,7 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 		podsExpectedMissing:      0,
 		checkedForMissingPods:    false,
 		TargetSelectionCompleted: false,
+		PodsUnderTest:            nil,
 	}
 	duration, err := partial.getDuration(ctx)
 	if err != nil {
@@ -94,7 +103,7 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 	return partial, nil
 }
 
-func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, error) {
+func (f *FaultSession) getKubeFaultResource(ctx context.Context) (client.Object, error) {
 	key := client.ObjectKey{
 		Namespace: f.client.chaosNamespace,
 		Name:      f.Name,
@@ -108,14 +117,15 @@ func (f *FaultSession) getKubeResource(ctx context.Context) (client.Object, erro
 	return resource, nil
 }
 
-func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) error {
+// returns True if TargetSelectionCompleted becomes true
+func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) (bool, error) {
 	if f.TargetSelectionCompleted {
-		return nil
+		return false, nil
 	}
 	conditionsVal := reflect.ValueOf(resource).Elem().FieldByName("Status").FieldByName("ChaosStatus").FieldByName("Conditions")
 	conditions, ok := conditionsVal.Interface().([]api.ChaosCondition)
 	if !ok || conditions == nil {
-		return stacktrace.NewError("Unable to decode status.chaosstatus.conditions")
+		return false, stacktrace.NewError("Unable to decode status.chaosstatus.conditions")
 	}
 	for _, condition := range conditions {
 		if condition.Type != api.ConditionSelected {
@@ -125,18 +135,20 @@ func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) err
 			log.Info("chaos-mesh has identified pods to inject into")
 			f.TargetSelectionCompleted = true
 		}
-		break
+
+		return true, nil
 	}
-	return nil
+	return false, nil
 }
 
 func (f *FaultSession) getFaultRecords(ctx context.Context) ([]*api.Record, error) {
-	resource, err := f.getKubeResource(ctx)
+	resource, err := f.getKubeFaultResource(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = f.checkTargetSelectionCompleted(resource)
+	// note: we may be able to move this somewhere else once we get a better idea of fault lifecycle management.
+	targetsSelected, err := f.checkTargetSelectionCompleted(resource)
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +163,18 @@ func (f *FaultSession) getFaultRecords(ctx context.Context) ([]*api.Record, erro
 	if !ok {
 		return nil, stacktrace.NewError("unable to cast chaos experiment status")
 	}
+
+	if targetsSelected && records != nil {
+		err = f.populatePodsUnderTest(ctx, records)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return records, nil
 }
 
+// todo: check which pods are actually expected to die instead of the number of pods.
 func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []string) {
 	messages := map[string]string{}
 	for i := len(record.Events) - 1; i >= 0; i-- {
@@ -181,32 +202,40 @@ func (f *FaultSession) checkForFailedRecovery(record *api.Record) (bool, []strin
 }
 
 /*
-Determines whether the fault will leave some pods in a terminated state, and how many pods will be impacted.
 This must be run after the fault manifest has been applied and the handler webhook has run.
 */
-func (f *FaultSession) checkForMissingPods(records []*api.Record) error {
+func (f *FaultSession) populatePodsUnderTest(ctx context.Context, records []*api.Record) error {
 	if !f.checkedForMissingPods {
 		f.checkedForMissingPods = true
 		// we expect missing pods when the fault is pod kill.
 
-		podsInjected := countInjectedPods(records)
-		log.Infof("Chaos-mesh has identified %d pods matching the targeting criteria", podsInjected)
+		podsInjected, err := filterInjectedPods(records)
+		if err != nil {
+			return err
+		}
+		log.Infof("Chaos-mesh has identified %d pods matching the targeting criteria", len(podsInjected))
 		if f.faultType == "PodChaos" && f.faultAction == "pod-kill" {
-			f.podsExpectedMissing = podsInjected
+			f.podsExpectedMissing = len(podsInjected)
 			log.Infof("We're expecting %d pods to be terminated from the selected fault", f.podsExpectedMissing)
 		}
+
+		// populate f.PodsUnderTest
+		var podsUnderTest []*PodUnderTest
+		if f.podsExpectedMissing > 0 {
+			podsUnderTest, err = buildPodsUnderTestSlice(ctx, f.client, podsInjected, true)
+		} else {
+			podsUnderTest, err = buildPodsUnderTestSlice(ctx, f.client, podsInjected, false)
+		}
+		if err != nil {
+			return err
+		}
+		f.PodsUnderTest = podsUnderTest
+
+	} else {
+		// suspect unreachable
+		log.Error("this code is supposed to be unreachable")
 	}
 	return nil
-}
-
-func countInjectedPods(records []*api.Record) int {
-	podsInjected := 0
-	for _, record := range records {
-		if record.Phase == "Injected" {
-			podsInjected += 1
-		}
-	}
-	return podsInjected
 }
 
 // todo: we need a better way of monitoring fault injection status. There's a ton of statefulness represented in
@@ -220,10 +249,6 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 
 	if records == nil {
 		return Starting, nil
-	}
-	err = f.checkForMissingPods(records)
-	if err != nil {
-		return Error, err
 	}
 
 	podsInjectedAndRecovered := 0
@@ -266,7 +291,7 @@ func (f *FaultSession) GetStatus(ctx context.Context) (FaultStatus, error) {
 }
 
 func (f *FaultSession) getDuration(ctx context.Context) (*time.Duration, error) {
-	resource, err := f.getKubeResource(ctx)
+	resource, err := f.getKubeFaultResource(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -285,4 +310,41 @@ func (f *FaultSession) getDuration(ctx context.Context) (*time.Duration, error) 
 		return nil, err
 	}
 	return &duration, err
+}
+
+func buildPodsUnderTestSlice(ctx context.Context, client *ChaosClient, podNames []string, expectDeath bool) ([]*PodUnderTest, error) {
+	podsUnderTest := make([]*PodUnderTest, len(podNames))
+
+	for i, podName := range podNames {
+		labels, err := client.GetPodLabels(ctx, podName)
+		if err != nil {
+			return nil, err
+		}
+		if labels == nil {
+			return nil, stacktrace.NewError("pod %s had no labels", podName)
+		}
+
+		podsUnderTest[i] = &PodUnderTest{
+			Name:        podName,
+			Labels:      labels,
+			ExpectDeath: expectDeath,
+		}
+	}
+	return podsUnderTest, nil
+}
+
+// filterInjectedPods takes a list of chaos mesh records and returns a list of pod names that are currently in
+// the injected phase.
+func filterInjectedPods(records []*api.Record) ([]string, error) {
+	var injectedPods []string
+	for _, record := range records {
+		if record.Phase == "Injected" {
+			parts := strings.Split(record.Id, "/")
+			if len(parts) != 2 {
+				return nil, stacktrace.NewError("fault record id was split into more than 2 parts")
+			}
+			injectedPods = append(injectedPods, parts[1])
+		}
+	}
+	return injectedPods, nil
 }

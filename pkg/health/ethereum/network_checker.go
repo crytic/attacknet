@@ -1,23 +1,23 @@
 package ethereum
 
 import (
+	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/kubernetes"
-	"attacknet/cmd/pkg/kurtosis"
 	log "github.com/sirupsen/logrus"
 )
 import "attacknet/cmd/pkg/health/types"
 
 type EthNetworkChecker struct {
 	namespace     string
-	podsUnderTest []*kurtosis.PodUnderTest
+	podsUnderTest []*chaos_mesh.PodUnderTest
 }
 
-func CreateEthNetworkChecker(namespace string, podsUnderTest []*kurtosis.PodUnderTest) *EthNetworkChecker {
+func CreateEthNetworkChecker(namespace string, podsUnderTest []*chaos_mesh.PodUnderTest) *EthNetworkChecker {
 	return &EthNetworkChecker{namespace: namespace, podsUnderTest: podsUnderTest}
 }
 
 func (e *EthNetworkChecker) RunAllChecks() ([]*types.CheckResult, error) {
-	var alivePods []*kurtosis.PodUnderTest
+	var alivePods []*chaos_mesh.PodUnderTest
 	var alivePodNames []string
 
 	// filter out pods expected dead
@@ -37,7 +37,7 @@ func (e *EthNetworkChecker) RunAllChecks() ([]*types.CheckResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info("port forward sessions established")
+	log.Info("Ready to query for health checks")
 
 	for _, session := range portForwardSessions {
 		session.Close()

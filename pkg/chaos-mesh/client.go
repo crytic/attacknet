@@ -8,6 +8,7 @@ import (
 	"fmt"
 	api "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/kurtosis-tech/stacktrace"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
@@ -25,10 +26,15 @@ type ChaosClient struct {
 
 func CreateClient(namespace string) (*ChaosClient, error) {
 	log.SetLogger(zap.New(zap.UseDevMode(true)))
-	scheme := runtime.NewScheme()
-	err := api.AddToScheme(scheme)
+	chaosScheme := runtime.NewScheme()
+	err := api.AddToScheme(chaosScheme)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to add chaos-mesh v1alpha1 to scheme")
+	}
+
+	err = corev1.AddToScheme(chaosScheme)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "unable to add kubernetes core to scheme")
 	}
 
 	kubeConfig, _, err := kubernetes.CreateKubeClient()
@@ -36,7 +42,7 @@ func CreateClient(namespace string) (*ChaosClient, error) {
 		return nil, stacktrace.Propagate(err, "unable to create a kubernetes client")
 	}
 
-	client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: scheme})
+	client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: chaosScheme})
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create a kubernetes API client")
 	}
@@ -83,6 +89,22 @@ func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]inter
 	} else {
 		return nil, stacktrace.Propagate(errors.New("invalid fault kind"), "invalid fault kind: %s", kind)
 	}
+}
+
+func (c *ChaosClient) GetPodLabels(ctx context.Context, podName string) (map[string]string, error) {
+	key := pkgclient.ObjectKey{
+		Namespace: c.chaosNamespace,
+		Name:      podName,
+	}
+	pod := &corev1.Pod{}
+
+	err := c.kubeApiClient.Get(ctx, key, pod)
+	if err != nil {
+		return nil, err
+	}
+	labels := pod.GetLabels()
+
+	return labels, nil
 }
 
 /*

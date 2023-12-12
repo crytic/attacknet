@@ -3,8 +3,6 @@ package pkg
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
-	"attacknet/cmd/pkg/kurtosis"
-
 	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
@@ -22,15 +20,6 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	defer func() {
 		enclave.Destroy(ctx)
 	}()
-
-	a := make([]*kurtosis.PodUnderTest, 1)
-	a[0] = &kurtosis.PodUnderTest{Name: "cl-3-prysm-geth", ExpectDeath: false, Labels: nil}
-	log.Info("creating health checker")
-	hc, err := health.BuildHealthChecker(cfg, enclave.Namespace, a)
-	if err != nil {
-		return err
-	}
-	_ = hc
 
 	// todo: move these into setupServices or something.
 	log.Infof("Creating a Grafana client")
@@ -79,13 +68,23 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 		grafanaTunnel.Cleanup(true)
 		return err
 	}
+	var timeToSleep time.Duration
 	if faultSession.TestDuration != nil {
 		durationSeconds := int(faultSession.TestDuration.Seconds())
 		log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-		time.Sleep(*faultSession.TestDuration)
+		timeToSleep = *faultSession.TestDuration
 	} else {
 		log.Infof("Fault injected successfully. This fault has no specific duration.")
 	}
+	time.Sleep(timeToSleep)
+
+	// we can build the health checker once the fault is injected
+	log.Info("creating health checker")
+	hc, err := health.BuildHealthChecker(cfg, enclave.Namespace, faultSession.PodsUnderTest)
+	if err != nil {
+		return err
+	}
+	_ = hc
 
 	err = waitForFaultRecovery(ctx, faultSession)
 	if err != nil {
@@ -98,6 +97,7 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	return err
 }
 
+// todo: move to fault session?
 func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
 	// First, wait 10 seconds to allow chaos-mesh to inject into the cluster.
 	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.
