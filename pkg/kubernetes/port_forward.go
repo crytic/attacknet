@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net"
@@ -16,7 +15,7 @@ import (
 
 type PortForwardsSession struct {
 	stopCh     chan struct{}
-	PodName    string
+	Pod        KubePod
 	TargetPort int
 	LocalPort  int
 }
@@ -25,22 +24,38 @@ func (session *PortForwardsSession) Close() {
 	close(session.stopCh)
 }
 
-func StartMultiPortForwards(pods []string, namespace string, targetPort int, kubeConfig *rest.Config) ([]*PortForwardsSession, error) {
+func (c *KubeClient) StartMultiPortForwardToLabeledPods(
+	pods []KubePod,
+	labelKey, labelValue string,
+	targetPort int) ([]*PortForwardsSession, error) {
+	var podsToForward []KubePod
+
+	for _, pod := range pods {
+		if pod.MatchesLabel(labelKey, labelValue) {
+			podsToForward = append(podsToForward, pod)
+		}
+	}
+
+	portForwardSessions, err := c.StartMultiPortForwards(podsToForward, targetPort)
+	return portForwardSessions, err
+}
+
+func (c *KubeClient) StartMultiPortForwards(pods []KubePod, targetPort int) ([]*PortForwardsSession, error) {
 	sessions := make([]*PortForwardsSession, len(pods))
 
-	for i, podName := range pods {
+	for i, pod := range pods {
 		localPort, err := getFreeEphemeralPort()
 		if err != nil {
 			return nil, err
 		}
-		stopCh, err := StartPortForwarding(podName, namespace, localPort, targetPort, kubeConfig)
+		stopCh, err := c.StartPortForwarding(pod.GetName(), localPort, targetPort)
 		if err != nil {
 			return nil, err
 		}
 
 		sessions[i] = &PortForwardsSession{
 			stopCh:     stopCh,
-			PodName:    podName,
+			Pod:        pod,
 			TargetPort: targetPort,
 			LocalPort:  localPort,
 		}
@@ -63,16 +78,16 @@ func getFreeEphemeralPort() (int, error) {
 	return port, nil
 }
 
-func StartPortForwarding(pod, namespace string, localPort, remotePort int, kubeConfig *rest.Config) (stopCh chan struct{}, err error) {
-	roundTripper, upgrader, err := spdy.RoundTripperFor(kubeConfig)
+func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int) (stopCh chan struct{}, err error) {
+	roundTripper, upgrader, err := spdy.RoundTripperFor(c.clientInternal)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to create roundtripper")
 	}
 
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, pod)
-	serverURL, err := url.Parse(kubeConfig.Host)
+	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", c.namespace, pod)
+	serverURL, err := url.Parse(c.clientInternal.Host)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to decode kubeconfig.Host: %s", kubeConfig.Host)
+		return nil, stacktrace.Propagate(err, "unable to decode kubeconfig.Host: %s", c.clientInternal.Host)
 	}
 	serverURL.Path = path
 

@@ -1,7 +1,9 @@
 package types
 
+import "context"
+
 type GenericNetworkChecker interface {
-	RunAllChecks() ([]*CheckResult, error)
+	RunAllChecks(context.Context) ([]*CheckResult, error)
 }
 
 type CheckResult struct {

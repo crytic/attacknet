@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-type PodUnderTest struct {
-	Name        string
-	Labels      map[string]string
-	ExpectDeath bool
-}
-
 type FaultPhase string
 
 type FaultStatus string

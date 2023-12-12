@@ -24,7 +24,7 @@ type ChaosClient struct {
 	chaosNamespace string
 }
 
-func CreateClient(namespace string) (*ChaosClient, error) {
+func CreateClient(namespace string, kubeClient *kubernetes.KubeClient) (*ChaosClient, error) {
 	log.SetLogger(zap.New(zap.UseDevMode(true)))
 	chaosScheme := runtime.NewScheme()
 	err := api.AddToScheme(chaosScheme)
@@ -37,12 +37,7 @@ func CreateClient(namespace string) (*ChaosClient, error) {
 		return nil, stacktrace.Propagate(err, "unable to add kubernetes core to scheme")
 	}
 
-	kubeConfig, _, err := kubernetes.CreateKubeClient()
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to create a kubernetes client")
-	}
-
-	client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: chaosScheme})
+	client, err := kubeClient.CreateDerivedClientWithSchema(chaosScheme)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create a kubernetes API client")
 	}

@@ -8,7 +8,6 @@ import (
 	grafanaSdk "github.com/grafana-tools/sdk"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // note: we may move the grafana logic to the health module if we move towards grafana-based health alerts
@@ -19,23 +18,23 @@ type GrafanaTunnel struct {
 	cleanedUp                bool
 }
 
-func CreateGrafanaClient(ctx context.Context, namespace string, config project.AttacknetConfig) (*GrafanaTunnel, error) {
-	kubeConfig, kubeClient, err := kubernetes.CreateKubeClient()
+func CreateGrafanaClient(ctx context.Context, kubeClient *kubernetes.KubeClient, config project.AttacknetConfig) (*GrafanaTunnel, error) {
+	podName := config.GrafanaPodName
+	exists, err := kubeClient.PodExists(ctx, podName)
 	if err != nil {
-		return nil, err
+		return nil, stacktrace.Propagate(err, "error while determining whether pod exists %s", podName)
+	}
+	if !exists {
+		return nil, stacktrace.NewError("unable to locate grafana pod %s", podName)
 	}
 
-	pod, err := kubeClient.CoreV1().Pods(namespace).Get(ctx, config.GrafanaPodName, metav1.GetOptions{})
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to locate grafana pod %s", config.GrafanaPodName)
-	}
 	var port uint16
 	_, err = fmt.Sscan(config.GrafanaPodPort, &port)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to decode port number %s", config.GrafanaPodPort)
 	}
 
-	stopCh, err := kubernetes.StartPortForwarding(pod.Name, pod.Namespace, int(port), int(port), kubeConfig)
+	stopCh, err := kubeClient.StartPortForwarding(podName, int(port), int(port))
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to start port forwarder")
 	}

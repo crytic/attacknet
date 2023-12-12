@@ -3,6 +3,7 @@ package pkg
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
+	"attacknet/cmd/pkg/kubernetes"
 	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
@@ -21,9 +22,14 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 		enclave.Destroy(ctx)
 	}()
 
+	kubeClient, err := kubernetes.CreateKubeClient(enclave.Namespace)
+	if err != nil {
+		return err
+	}
+
 	// todo: move these into setupServices or something.
 	log.Infof("Creating a Grafana client")
-	grafanaTunnel, err := CreateGrafanaClient(ctx, enclave.Namespace, cfg.AttacknetConfig)
+	grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
 	if err != nil {
 		return err
 	}
@@ -41,7 +47,7 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
-	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace)
+	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
 	if err != nil {
 		grafanaTunnel.Cleanup(true)
 		return err
@@ -80,7 +86,7 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 
 	// we can build the health checker once the fault is injected
 	log.Info("creating health checker")
-	hc, err := health.BuildHealthChecker(cfg, enclave.Namespace, faultSession.PodsUnderTest)
+	hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
 	if err != nil {
 		return err
 	}
@@ -92,7 +98,7 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 		return err
 	}
 
-	_, err = hc.RunChecksUntilTimeout()
+	_, err = hc.RunChecksUntilTimeout(ctx)
 
 	return err
 }
