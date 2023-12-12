@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// note: we may move the grafana logic to the health module if we move towards grafana-based health alerts
 type GrafanaTunnel struct {
 	Client                   *grafanaSdk.Client
 	portForwardStopCh        chan struct{}
@@ -34,7 +35,7 @@ func CreateGrafanaClient(ctx context.Context, namespace string, config project.A
 		return nil, stacktrace.Propagate(err, "unable to decode port number %s", config.GrafanaPodPort)
 	}
 
-	stopCh, err := kubernetes.StartPortForwarding(pod.Name, pod.Namespace, port, kubeConfig)
+	stopCh, err := kubernetes.StartPortForwarding(pod.Name, pod.Namespace, int(port), int(port), kubeConfig)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to start port forwarder")
 	}

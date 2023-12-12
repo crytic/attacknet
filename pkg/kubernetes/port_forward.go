@@ -8,12 +8,62 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
 )
 
-func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Config) (stopCh chan struct{}, err error) {
+type PortForwardsSession struct {
+	stopCh     chan struct{}
+	PodName    string
+	TargetPort int
+	LocalPort  int
+}
+
+func (session *PortForwardsSession) Close() {
+	close(session.stopCh)
+}
+
+func StartMultiPortForwards(pods []string, namespace string, targetPort int, kubeConfig *rest.Config) ([]*PortForwardsSession, error) {
+	sessions := make([]*PortForwardsSession, len(pods))
+
+	for i, podName := range pods {
+		localPort, err := getFreeEphemeralPort()
+		if err != nil {
+			return nil, err
+		}
+		stopCh, err := StartPortForwarding(podName, namespace, localPort, targetPort, kubeConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		sessions[i] = &PortForwardsSession{
+			stopCh:     stopCh,
+			PodName:    podName,
+			TargetPort: targetPort,
+			LocalPort:  localPort,
+		}
+	}
+	return sessions, nil
+}
+
+// getFreeEphemeralPort note: you should use this port immediately otherwise another resource may claim it.
+func getFreeEphemeralPort() (int, error) {
+
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return 0, stacktrace.Propagate(err, "Error while finding new ephemeral port")
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	err = listener.Close()
+	if err != nil {
+		return 0, stacktrace.Propagate(err, "Error while closing listener")
+	}
+	return port, nil
+}
+
+func StartPortForwarding(pod, namespace string, localPort, remotePort int, kubeConfig *rest.Config) (stopCh chan struct{}, err error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(kubeConfig)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to create roundtripper")
@@ -27,7 +77,7 @@ func StartPortForwarding(pod, namespace string, port uint16, kubeConfig *rest.Co
 	serverURL.Path = path
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, serverURL)
-	portFwd := fmt.Sprintf("%d:%d", port, port)
+	portFwd := fmt.Sprintf("%d:%d", localPort, remotePort)
 
 	stopCh = make(chan struct{}, 1)
 	readyCh := make(chan struct{}, 1)

@@ -1,4 +1,4 @@
-package pkg
+package kurtosis
 
 import (
 	"attacknet/cmd/pkg/project"
@@ -21,6 +21,12 @@ type EnclaveContextWrapper struct {
 	kurtosisCtx            *kurtosis_context.KurtosisContext
 	enclaveCtxInner        *enclaves.EnclaveContext
 	reuseDevnetBetweenRuns bool
+}
+
+type PodUnderTest struct {
+	Name        string
+	Labels      map[string]string
+	ExpectDeath bool
 }
 
 func (e *EnclaveContextWrapper) Destroy(ctx context.Context) {

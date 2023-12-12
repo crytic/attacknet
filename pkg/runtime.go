@@ -3,6 +3,8 @@ package pkg
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
+	"attacknet/cmd/pkg/kurtosis"
+
 	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
@@ -12,70 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func setupDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-
-	hc := health.BuildHealthChecker(nil, nil)
-	_ = hc
-	// todo: spawn kurtosis gateway?
-	kurtosisCtx, err := GetKurtosisContext()
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Creating a new Kurtosis enclave")
-	enclaveCtx, _, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
-	log.Infof("New enclave created under namespace %s", enclaveCtx.Namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Starting the blockchain genesis")
-	err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
-	if err != nil {
-		return nil, err
-	}
-	return enclaveCtx, nil
-}
-
-func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-	kurtosisCtx, err := GetKurtosisContext()
-	if err != nil {
-		return nil, err
-	}
-
-	namespace := cfg.AttacknetConfig.ExistingDevnetNamespace
-	log.Infof("Looking for existing enclave identified by namespace %s", namespace)
-	enclaveCtx, enclaveCreated, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	if enclaveCreated {
-		// we need to genesis a new devnet regardless
-		log.Info("Since we created a new kurtosis enclave, we must now genesis the blockchain.")
-		err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		log.Infof("An active enclave matching %s was found", namespace)
-	}
-
-	return enclaveCtx, nil
-}
-
-func setupEnclave(ctx context.Context, cfg *project.ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
-		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
-			log.Warn("Could not re-use an existing devnet because no existingDevnetNamespace was set.")
-		}
-		enclave, err = setupDevnet(ctx, cfg)
-	} else {
-		enclave, err = loadEnclaveFromExistingDevnet(ctx, cfg)
-	}
-	return enclave, err
-}
-
 func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	enclave, err := setupEnclave(ctx, cfg)
 	if err != nil {
@@ -84,6 +22,15 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	defer func() {
 		enclave.Destroy(ctx)
 	}()
+
+	a := make([]*kurtosis.PodUnderTest, 1)
+	a[0] = &kurtosis.PodUnderTest{Name: "cl-3-prysm-geth", ExpectDeath: false, Labels: nil}
+	log.Info("creating health checker")
+	hc, err := health.BuildHealthChecker(cfg, enclave.Namespace, a)
+	if err != nil {
+		return err
+	}
+	_ = hc
 
 	// todo: move these into setupServices or something.
 	log.Infof("Creating a Grafana client")
@@ -146,7 +93,9 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 		return err
 	}
 
-	return nil
+	_, err = hc.RunChecksUntilTimeout()
+
+	return err
 }
 
 func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
