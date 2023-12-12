@@ -34,7 +34,7 @@ func CreateGrafanaClient(ctx context.Context, kubeClient *kubernetes.KubeClient,
 		return nil, stacktrace.Propagate(err, "unable to decode port number %s", config.GrafanaPodPort)
 	}
 
-	stopCh, err := kubeClient.StartPortForwarding(podName, int(port), int(port))
+	stopCh, err := kubeClient.StartPortForwarding(podName, int(port), int(port), true)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to start port forwarder")
 	}

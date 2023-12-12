@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net"
@@ -48,7 +49,7 @@ func (c *KubeClient) StartMultiPortForwards(pods []KubePod, targetPort int) ([]*
 		if err != nil {
 			return nil, err
 		}
-		stopCh, err := c.StartPortForwarding(pod.GetName(), localPort, targetPort)
+		stopCh, err := c.StartPortForwarding(pod.GetName(), localPort, targetPort, false)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +79,7 @@ func getFreeEphemeralPort() (int, error) {
 	return port, nil
 }
 
-func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int) (stopCh chan struct{}, err error) {
+func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, printToStdout bool) (stopCh chan struct{}, err error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(c.clientInternal)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to create roundtripper")
@@ -94,12 +95,15 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int) 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, serverURL)
 	portFwd := fmt.Sprintf("%d:%d", localPort, remotePort)
 
-	stopCh = make(chan struct{}, 1)
 	readyCh := make(chan struct{}, 1)
-	logger := log.New()
-
-	errLogger := CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
-	stdLogger := CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
+	stopCh = make(chan struct{}, 1)
+	errLogger := io.Discard
+	stdLogger := io.Discard
+	if printToStdout {
+		logger := log.New()
+		errLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
+		stdLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
+	}
 
 	portForward, err := portforward.New(dialer, []string{portFwd}, stopCh, readyCh, stdLogger, errLogger)
 	if err != nil {
