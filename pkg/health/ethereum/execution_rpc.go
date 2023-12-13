@@ -33,7 +33,16 @@ func (c *ExecRpcClient) GetLatestBlockBy(ctx context.Context, blockType string) 
 	var choice *ClientForkChoice
 	err := c.client.Client().CallContext(ctx, &head, "eth_getBlockByNumber", blockType, false)
 	if err != nil {
-		if err.Error() == "finalized block not found" {
+		notFinalizingErrors := []string{
+			"safe block not found",      //geth
+			"finalized block not found", //geth
+			"Unknown block",             //erigon
+			"Unknown block error",       //nethermind
+		}
+		if err.Error() == notFinalizingErrors[0] ||
+			err.Error() == notFinalizingErrors[1] ||
+			err.Error() == notFinalizingErrors[2] ||
+			err.Error() == notFinalizingErrors[3] {
 			choice = &ClientForkChoice{
 				Pod:         c.session.Pod,
 				BlockNumber: 0,

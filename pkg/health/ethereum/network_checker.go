@@ -77,42 +77,92 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 
 	// For now, we will simply ignore the edge case where these queries occur on a block production boundary.
 	// We might have to fix before release.
-	clientForkVotes := make([]*ClientForkChoice, len(rpcClients))
-	for i, client := range rpcClients {
-		choice, err := client.GetLatestBlockBy(ctx, "finalized")
+
+	/*
+		finalizedForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "finalized")
 		if err != nil {
 			return nil, err
 		}
 
-		clientForkVotes[i] = choice
-	}
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
+		if len(wrongBlockNum) > 0 {
+			log.Warn("Consensus issue with finalized fork votes. Waiting 5s and trying again.")
+			time.Sleep(5 * time.Second)
+			finalizedForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "finalized")
+			if err != nil {
+				return nil, err
+			}
+		}
 
-	// do other rpc things
+		latestForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "latest")
+		if err != nil {
+			return nil, err
+		}
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
+		if len(wrongBlockNum) > 0 {
+			log.Warn("Consensus issue with latest fork votes. Waiting 5s and trying again.")
+			time.Sleep(5 * time.Second)
+			latestForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "latest")
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		safeForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "safe")
+		if err != nil {
+			return nil, err
+		}
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
+		if len(wrongBlockNum) > 0 {
+			log.Warn("Consensus issue with safe fork votes. Waiting 5s and trying again.")
+			time.Sleep(5 * time.Second)
+			safeForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "safe")
+			if err != nil {
+				return nil, err
+			}
+		}
+	*/
+
+	latestForkVotes, safeForkVotes, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
+	if err != nil {
+		if err == UnableToReachLatestConsensusError {
+			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(latestForkVotes)
+			reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+			return nil, nil
+		}
+		if err == UnableToReachSafeConsensusError {
+			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(safeForkVotes)
+			reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+			return nil, nil
+		}
+		if err == UnableToReachFinalConsensusError {
+			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
+			reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+			return nil, nil
+		}
+		return nil, err
+	}
 
 	// now close clients
 	for _, c := range rpcClients {
 		c.Close()
 	}
 
-	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(clientForkVotes)
+	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
+	reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+	finalizedHead := consensusBlockNum[0].BlockNumber
 
-	log.Infof("Consensus finalized block height: %d", consensusBlockNum[0].BlockNumber)
-	if len(wrongBlockNum) > 0 {
-		log.Warn("Some nodes are out of consensus.")
-		for _, n := range wrongBlockNum {
-			log.Warnf("---> Node: %s Finalized BlockHeight: %d BlockHash: %s", n.Pod.GetName(), n.BlockNumber, n.BlockHash)
-		}
-	}
+	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
+	reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+	latestHead := consensusBlockNum[0].BlockNumber
 
-	log.Infof("Consensus finalized block hash: %s", consensusBlockHash[0].BlockHash)
-	if len(wrongBlockHash) > 0 {
-		log.Warn("Some nodes are at the correct height, but with the wrong finalized block hash")
-		for _, n := range wrongBlockHash {
-			log.Warnf("---> Node: %s Finalized BlockHeight: %d BlockHash: %s", n.Pod.GetName(), n.BlockNumber, n.BlockHash)
-		}
-	}
+	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
+	reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+	safeHead := consensusBlockNum[0].BlockNumber
 
 	// return err?
+	log.Infof("Finalization -> latest lag: %d", latestHead-finalizedHead)
+	log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
 
 	return nil, nil
 }
