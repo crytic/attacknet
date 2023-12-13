@@ -58,15 +58,61 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 		podsToHealthCheck,
 		labelKey,
 		labelValue,
-		3000)
+		8545)
 	if err != nil {
 		return nil, err
 	}
 
+	// dial out to clients
+	rpcClients := make([]*ExecRpcClient, len(portForwardSessions))
+	for i, s := range portForwardSessions {
+		client, err := CreateExecRpcClient(s)
+		if err != nil {
+			return nil, err
+		}
+		rpcClients[i] = client
+	}
+
 	log.Info("Ready to query for health checks")
 
-	for _, session := range portForwardSessions {
-		session.Close()
+	// For now, we will simply ignore the edge case where these queries occur on a block production boundary.
+	// We might have to fix before release.
+	clientForkVotes := make([]*ClientForkChoice, len(rpcClients))
+	for i, client := range rpcClients {
+		choice, err := client.GetLatestBlockBy(ctx, "finalized")
+		if err != nil {
+			return nil, err
+		}
+
+		clientForkVotes[i] = choice
 	}
+
+	// do other rpc things
+
+	// now close clients
+	for _, c := range rpcClients {
+		c.Close()
+	}
+
+	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(clientForkVotes)
+
+	log.Infof("Consensus finalized block height: %d", consensusBlockNum[0].BlockNumber)
+	if len(wrongBlockNum) > 0 {
+		log.Warn("Some nodes are out of consensus.")
+		for _, n := range wrongBlockNum {
+			log.Warnf("---> Node: %s Finalized BlockHeight: %d BlockHash: %s", n.Pod.GetName(), n.BlockNumber, n.BlockHash)
+		}
+	}
+
+	log.Infof("Consensus finalized block hash: %s", consensusBlockHash[0].BlockHash)
+	if len(wrongBlockHash) > 0 {
+		log.Warn("Some nodes are at the correct height, but with the wrong finalized block hash")
+		for _, n := range wrongBlockHash {
+			log.Warnf("---> Node: %s Finalized BlockHeight: %d BlockHash: %s", n.Pod.GetName(), n.BlockNumber, n.BlockHash)
+		}
+	}
+
+	// return err?
+
 	return nil, nil
 }
