@@ -5,6 +5,7 @@ import (
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 import "attacknet/cmd/pkg/health/types"
 
@@ -123,46 +124,70 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 		}
 	*/
 
-	latestForkVotes, safeForkVotes, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
-	if err != nil {
-		if err == UnableToReachLatestConsensusError {
-			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(latestForkVotes)
-			reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-			return nil, nil
+	startKill := false
+	for {
+		log.Info("running health check")
+
+		latestForkVotes, safeForkVotes, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
+		if latestForkVotes != nil {
+			consensusBlockNum, _, _, _ := determineForkConsensus(latestForkVotes)
+			log.Infof("Consensus latest head: %d", consensusBlockNum[0].BlockNumber)
 		}
-		if err == UnableToReachSafeConsensusError {
-			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(safeForkVotes)
-			reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-			return nil, nil
+
+		if err != nil {
+			if err == UnableToReachLatestConsensusError {
+				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(latestForkVotes)
+				reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+				return nil, nil
+			}
+			if err == UnableToReachSafeConsensusError {
+				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(safeForkVotes)
+				reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+				startKill = true
+				time.Sleep(time.Second * 1)
+				continue
+				//return nil, nil
+			}
+			if err == UnableToReachFinalConsensusError {
+				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
+				reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+				return nil, nil
+			}
+			return nil, err
 		}
-		if err == UnableToReachFinalConsensusError {
-			consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
-			reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-			return nil, nil
+
+		// now close clients
+
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
+		reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+		finalizedHead := consensusBlockNum[0].BlockNumber
+
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
+		reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+		latestHead := consensusBlockNum[0].BlockNumber
+
+		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
+		reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+		safeHead := consensusBlockNum[0].BlockNumber
+
+		// return err?
+		log.Infof("Finalization -> latest lag: %d", latestHead-finalizedHead)
+		log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
+
+		if len(wrongBlockNum) == 0 && startKill {
+			for _, c := range rpcClients {
+				c.Close()
+			}
+			break
 		}
-		return nil, err
+
+		if len(wrongBlockNum) > 0 {
+			if !startKill {
+				startKill = true
+			}
+		}
+		time.Sleep(time.Second * 1)
 	}
-
-	// now close clients
-	for _, c := range rpcClients {
-		c.Close()
-	}
-
-	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
-	reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-	finalizedHead := consensusBlockNum[0].BlockNumber
-
-	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
-	reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-	latestHead := consensusBlockNum[0].BlockNumber
-
-	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
-	reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-	safeHead := consensusBlockNum[0].BlockNumber
-
-	// return err?
-	log.Infof("Finalization -> latest lag: %d", latestHead-finalizedHead)
-	log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
 
 	return nil, nil
 }

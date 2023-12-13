@@ -1,8 +1,8 @@
 participants:
   - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
+    el_client_image: ethpandaops/geth:master-5b57727
     cl_client_type: lighthouse
-    cl_client_image: sigp/lighthouse:latest
+    cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-e5a0e2c
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -17,26 +17,9 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
-    cl_client_type: prysm
-    cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 2048
-    bn_max_mem: 2048
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
-  - el_client_type: erigon
-    el_client_image: thorax/erigon:v2.53.4
-    cl_client_type: prysm
-    cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    el_client_image: ethpandaops/geth:master-5b57727
+    cl_client_type: teku
+    cl_client_image: ethpandaops/teku:master-992b224
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -51,26 +34,43 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: nethermind
-    el_client_image: nethermind/nethermind:1.23.0
-    cl_client_type: prysm
-    cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 2048
-    bn_max_mem: 2048
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
-  - el_client_type: nethermind
-    el_client_image: nethermind/nethermind:1.23.0
+    el_client_image: ethpandaops/nethermind:master-dcec565
     cl_client_type: lighthouse
-    cl_client_image: sigp/lighthouse:latest
+    cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-e5a0e2c
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    bn_min_cpu: 2000
+    bn_max_cpu: 3000
+    bn_min_mem: 2048
+    bn_max_mem: 2048
+    v_min_cpu: 1000
+    v_max_cpu: 1000
+    v_min_mem: 1028
+    v_max_mem: 1028
+    count: 1
+  - el_client_type: nethermind
+    el_client_image: nethermind/nethermind:1.23.0
+    cl_client_type: teku
+    cl_client_image: ethpandaops/teku:master-992b224
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    bn_min_cpu: 2000
+    bn_max_cpu: 3000
+    bn_min_mem: 2048
+    bn_max_mem: 2048
+    v_min_cpu: 1000
+    v_max_cpu: 1000
+    v_min_mem: 1028
+    v_max_mem: 1028
+    count: 1
+  - el_client_type: geth
+    el_client_image: ethpandaops/geth:master-5b57727
+    cl_client_type: lodestar
+    cl_client_image: ethpandaops/lodestar:blobs-inclproof-d5a5a47
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
