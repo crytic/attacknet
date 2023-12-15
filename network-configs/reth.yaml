@@ -86,23 +86,6 @@ participants:
     count: 1
   - el_client_type: reth
     el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
-    cl_client_type: nimbus
-    cl_client_image: statusim/nimbus-eth2:amd64-v23.11.0
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 2048
-    bn_max_mem: 2048
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
-  - el_client_type: reth
-    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
     cl_client_type: lodestar
     cl_client_image: chainsafe/lodestar:v1.12.1
     el_min_cpu: 1000
