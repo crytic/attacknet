@@ -5,7 +5,7 @@ import (
 	"attacknet/cmd/pkg/health/ethereum"
 	"attacknet/cmd/pkg/health/types"
 	"attacknet/cmd/pkg/kubernetes"
-	"attacknet/cmd/pkg/project"
+	types2 "attacknet/cmd/pkg/types"
 	"context"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
@@ -17,7 +17,7 @@ type CheckOrchestrator struct {
 
 // todo: we may want to instantiate this at the beginning of the test suite to validat the configs, then update
 // the podsUnderTest later.
-func BuildHealthChecker(cfg *project.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest) (*CheckOrchestrator, error) {
+func BuildHealthChecker(cfg *types2.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest) (*CheckOrchestrator, error) {
 	networkType := cfg.HarnessConfig.NetworkType
 
 	var checkerImpl types.GenericNetworkChecker

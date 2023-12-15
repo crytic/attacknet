@@ -1,55 +1,17 @@
 package project
 
 import (
+	"attacknet/cmd/pkg/types"
+	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	yaml "gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
-
-	"github.com/kurtosis-tech/stacktrace"
-	yaml "gopkg.in/yaml.v3"
 )
 
-type AttacknetConfig struct {
-	GrafanaPodName             string `yaml:"grafanaPodName"`
-	GrafanaPodPort             string `yaml:"grafanaPodPort"`
-	AllowPostFaultInspection   bool   `yaml:"allowPostFaultInspection"`
-	WaitBeforeInjectionSeconds uint32 `yaml:"waitBeforeInjectionSeconds"`
-	ReuseDevnetBetweenRuns     bool   `yaml:"reuseDevnetBetweenRuns"`
-	ExistingDevnetNamespace    string `yaml:"existingDevnetNamespace"`
-}
-
-type HarnessConfig struct {
-	NetworkType       string `yaml:"networkType"`
-	NetworkPackage    string `yaml:"networkPackage"`
-	NetworkConfigPath string `yaml:"networkConfig"`
-}
-
-type HarnessConfigParsed struct {
-	NetworkType    string
-	NetworkPackage string
-	NetworkConfig  []byte
-}
-
-type TestConfig struct {
-	Name      string                 `yaml:"testName"`
-	FaultSpec map[string]interface{} `yaml:"chaosFaultSpec"`
-}
-
-type Config struct {
-	AttacknetConfig AttacknetConfig `yaml:"attacknetConfig"`
-	HarnessConfig   HarnessConfig   `yaml:"harnessConfig"`
-	Tests           []TestConfig    `yaml:"tests"`
-}
-
-type ConfigParsed struct {
-	AttacknetConfig AttacknetConfig
-	HarnessConfig   HarnessConfigParsed
-	Tests           []TestConfig
-}
-
-func defaultConfig() *Config {
-	cfg := Config{
-		AttacknetConfig: AttacknetConfig{
+func defaultConfig() *types.Config {
+	cfg := types.Config{
+		AttacknetConfig: types.AttacknetConfig{
 			WaitBeforeInjectionSeconds: 0,
 			ExistingDevnetNamespace:    "",
 			ReuseDevnetBetweenRuns:     false,
@@ -59,7 +21,7 @@ func defaultConfig() *Config {
 	return &cfg
 }
 
-func LoadSuiteConfigFromName(suiteName string) (*ConfigParsed, error) {
+func LoadSuiteConfigFromName(suiteName string) (*types.ConfigParsed, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -77,7 +39,7 @@ func LoadSuiteConfigFromName(suiteName string) (*ConfigParsed, error) {
 	return cfg, nil
 }
 
-func loadSuiteFromPath(path string) (*ConfigParsed, error) {
+func loadSuiteFromPath(path string) (*types.ConfigParsed, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Could not read test suite on %s. is the project initialized?", path)
@@ -99,14 +61,14 @@ func loadSuiteFromPath(path string) (*ConfigParsed, error) {
 		return nil, stacktrace.Propagate(err, "Could not read the NetworkConfigPath file at %s", networkConfigPathFull)
 	}
 
-	cfgParsed := &ConfigParsed{
-		cfg.AttacknetConfig,
-		HarnessConfigParsed{
-			cfg.HarnessConfig.NetworkType,
-			cfg.HarnessConfig.NetworkPackage,
-			packageConfig,
+	cfgParsed := &types.ConfigParsed{
+		AttacknetConfig: cfg.AttacknetConfig,
+		HarnessConfig: types.HarnessConfigParsed{
+			NetworkType:    cfg.HarnessConfig.NetworkType,
+			NetworkPackage: cfg.HarnessConfig.NetworkPackage,
+			NetworkConfig:  packageConfig,
 		},
-		cfg.Tests,
+		TestConfig: cfg.TestConfig,
 	}
 
 	return cfgParsed, nil

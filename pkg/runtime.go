@@ -2,18 +2,15 @@ package pkg
 
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
-	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
-	"attacknet/cmd/pkg/project"
+	"attacknet/cmd/pkg/types"
 	"context"
-	"errors"
 	"time"
 
-	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
 )
 
-func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
+func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 	enclave, err := setupEnclave(ctx, cfg)
 	if err != nil {
 		return err
@@ -27,7 +24,7 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 		return err
 	}
 
-	// todo: move these into setupServices or something.
+	// todo: move this into setupServices or something.
 	log.Infof("Creating a Grafana client")
 	grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
 	if err != nil {
@@ -36,14 +33,6 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	defer func() {
 		grafanaTunnel.Cleanup(false)
 	}()
-
-	// todo: set up grafana health checks/alerting here
-
-	// todo: wait for finality or other network pre-conditions here.
-	// probably check for initial health checks here too.
-
-	//ds, err := grafanaTunnel.Client.GetDatasource(ctx, 1)
-	//grafanaTunnel.Client.CreateAlertNotification()
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
@@ -61,49 +50,52 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	time.Sleep(time.Duration(cfg.AttacknetConfig.WaitBeforeInjectionSeconds) * time.Second)
 
 	log.Infof("Starting fault injection")
+	_ = chaosClient
+	return nil
+	/*
+		faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
+		if err != nil {
+			grafanaTunnel.Cleanup(true)
+			return err
+		}
 
-	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
-	if err != nil {
-		grafanaTunnel.Cleanup(true)
-		return err
-	}
+		// start core logic loop here.
+		err = waitForInjectionCompleted(ctx, faultSession)
+		if err != nil {
+			grafanaTunnel.Cleanup(true)
+			return err
+		}
+		var timeToSleep time.Duration
+		if faultSession.TestDuration != nil {
+			durationSeconds := int(faultSession.TestDuration.Seconds())
+			log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
+			timeToSleep = *faultSession.TestDuration
+		} else {
+			log.Infof("Fault injected successfully. This fault has no specific duration.")
+		}
+		time.Sleep(timeToSleep)
 
-	// start core logic loop here.
-	err = waitForInjectionCompleted(ctx, faultSession)
-	if err != nil {
-		grafanaTunnel.Cleanup(true)
-		return err
-	}
-	var timeToSleep time.Duration
-	if faultSession.TestDuration != nil {
-		durationSeconds := int(faultSession.TestDuration.Seconds())
-		log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-		timeToSleep = *faultSession.TestDuration
-	} else {
-		log.Infof("Fault injected successfully. This fault has no specific duration.")
-	}
-	time.Sleep(timeToSleep)
+		// we can build the health checker once the fault is injected
+		log.Info("creating health checker")
+		hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
+		if err != nil {
+			return err
+		}
+		_ = hc
 
-	// we can build the health checker once the fault is injected
-	log.Info("creating health checker")
-	hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
-	if err != nil {
-		return err
-	}
-	_ = hc
+		err = waitForFaultRecovery(ctx, faultSession)
+		if err != nil {
+			grafanaTunnel.Cleanup(true)
+			return err
+		}
 
-	err = waitForFaultRecovery(ctx, faultSession)
-	if err != nil {
-		grafanaTunnel.Cleanup(true)
-		return err
-	}
+		_, err = hc.RunChecksUntilTimeout(ctx)
 
-	_, err = hc.RunChecksUntilTimeout(ctx)
-
-	return err
+		return err*/
 }
 
 // todo: move to fault session?
+/*
 func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
 	// First, wait 10 seconds to allow chaos-mesh to inject into the cluster.
 	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.
@@ -169,3 +161,4 @@ func waitForFaultRecovery(ctx context.Context, session *chaos_mesh.FaultSession)
 		// todo: add timeout break if no changes in k8s resource after fault duration elapses
 	}
 }
+*/

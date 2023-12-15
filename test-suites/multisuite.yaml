@@ -1,0 +1,47 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 0
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: devnet-12.yaml
+  networkType: ethereum
+
+tests:
+- testName: reth-lighthouse-clock-skew
+  chaosFaultSpec:
+    kind: TimeChaos
+    apiVersion: chaos-mesh.org/v1alpha1
+    spec:
+      selector:
+        labelSelectors:
+          kurtosistech.com.custom/ethereum-package.client: lighthouse
+          kurtosistech.com.custom/ethereum-package.client-type: beacon
+      mode: all
+      action: delay
+      timeOffset: '-5m'
+      duration: 10m
+
+#kind: NetworkChaos
+#metadata:
+#  name: partition
+#spec:
+#  action: partition
+#  mode: all
+#  selector:
+#    namespaces:
+#      - default
+#    labelSelectors:
+#      'app': 'app1'
+#  direction: to
+#  target:
+#    mode: all
+#    selector:
+#      namespaces:
+#        - default
+#      labelSelectors:
+#        'app': 'app2'
