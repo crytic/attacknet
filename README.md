@@ -10,7 +10,7 @@
 
 ### Setting up the other bits
 
-1. Set up a containerd k8s cluster. (1.25 or older) (todo: recommended resourcing. Also note that auto-scaling can 
+1. Set up a containerd k8s cluster. (1.26 or older) (todo: recommended resourcing. Also note that auto-scaling can 
    sometimes be too slow, and kurtosis will time out before the nodes for its workload can be provisioned.)
 2. Authenticate to the cluster for kubectl
 3. Install chaos-mesh
@@ -80,12 +80,16 @@ probably be changed.
 
 At this time, health checks will be run in perpetuity once the fault has concluded. Simply ctrl+c to terminate.
 
+## Changelog
+
+**Dec 15, 2023 version v0.1 (internal)**
+- Initial internal release
+
 ## Developing (wip)
 
 1. Install pre-commit
    - `brew install pre-commit`
    - `pre-commit install`
-
 
 ## Other stuff
 
