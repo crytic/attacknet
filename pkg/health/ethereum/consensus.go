@@ -34,21 +34,24 @@ func getExecNetworkStabilizedConsensus(ctx context.Context, nodeClients []*ExecR
 
 		}
 	}
-
-	safeForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "safe")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	_, wrongBlockNum, _, _ = determineForkConsensus(safeForkChoice)
-	if len(wrongBlockNum) > 0 {
-		if maxAttempts == 0 {
-			return latestForkChoice, safeForkChoice, nil, UnableToReachSafeConsensusError
-		} else {
-			log.Infof("Nodes not at consensus for safe block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
-			time.Sleep(3 * time.Second)
-			return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
+	// prysm uses a more liberal definition of justification than other clients, so it will be out of consensus with
+	// other clients for about 10 blocks per epoch. todo: find a way to address this discrepancy in the future.
+	/*
+		safeForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "safe")
+		if err != nil {
+			return nil, nil, nil, err
 		}
-	}
+		_, wrongBlockNum, _, _ = determineForkConsensus(safeForkChoice)
+		if len(wrongBlockNum) > 0 {
+			if maxAttempts == 0 {
+				return latestForkChoice, safeForkChoice, nil, UnableToReachSafeConsensusError
+			} else {
+				log.Infof("Nodes not at consensus for safe block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
+				time.Sleep(3 * time.Second)
+				return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
+			}
+		}
+	*/
 
 	finalizedForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "finalized")
 	if err != nil {
@@ -57,14 +60,14 @@ func getExecNetworkStabilizedConsensus(ctx context.Context, nodeClients []*ExecR
 	_, wrongBlockNum, _, _ = determineForkConsensus(finalizedForkChoice)
 	if len(wrongBlockNum) > 0 {
 		if maxAttempts == 0 {
-			return latestForkChoice, safeForkChoice, finalizedForkChoice, UnableToReachFinalConsensusError
+			return latestForkChoice, nil, finalizedForkChoice, UnableToReachFinalConsensusError
 		} else {
 			log.Infof("Nodes not at consensus for finalized block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
 			time.Sleep(3 * time.Second)
 			return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
 		}
 	}
-	return latestForkChoice, safeForkChoice, finalizedForkChoice, nil
+	return latestForkChoice, nil, finalizedForkChoice, nil
 }
 
 func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecRpcClient, blockType string) ([]*ClientForkChoice, error) {
@@ -139,7 +142,7 @@ func reportConsensusDataToLogger(consensusType string,
 
 	log.Infof("Consensus %s block height: %d", consensusType, consensusBlockNum[0].BlockNumber)
 	if len(wrongBlockNum) > 0 {
-		log.Warnf("Some nodes are out of consensus for %s", consensusType)
+		log.Warnf("Some nodes are out of consensus for block type '%s'", consensusType)
 		for _, n := range wrongBlockNum {
 			log.Warnf("---> Node: %s %s BlockHeight: %d BlockHash: %s", n.Pod.GetName(), consensusType, n.BlockNumber, n.BlockHash)
 		}
@@ -147,7 +150,7 @@ func reportConsensusDataToLogger(consensusType string,
 
 	log.Infof("Consensus %s block hash: %s", consensusType, consensusBlockHash[0].BlockHash)
 	if len(wrongBlockHash) > 0 {
-		log.Warnf("Some nodes are at the correct height, but with the wrong %s block hash", consensusType)
+		log.Warnf("Some nodes are at the correct height, but with the wrong '%s' block hash", consensusType)
 		for _, n := range wrongBlockHash {
 			log.Warnf("---> Node: %s %s BlockHeight: %d BlockHash: %s", n.Pod.GetName(), consensusType, n.BlockNumber, n.BlockHash)
 		}

@@ -76,59 +76,11 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 
 	log.Info("Ready to query for health checks")
 
-	// For now, we will simply ignore the edge case where these queries occur on a block production boundary.
-	// We might have to fix before release.
-
-	/*
-		finalizedForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "finalized")
-		if err != nil {
-			return nil, err
-		}
-
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
-		if len(wrongBlockNum) > 0 {
-			log.Warn("Consensus issue with finalized fork votes. Waiting 5s and trying again.")
-			time.Sleep(5 * time.Second)
-			finalizedForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "finalized")
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		latestForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "latest")
-		if err != nil {
-			return nil, err
-		}
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
-		if len(wrongBlockNum) > 0 {
-			log.Warn("Consensus issue with latest fork votes. Waiting 5s and trying again.")
-			time.Sleep(5 * time.Second)
-			latestForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "latest")
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		safeForkVotes, err := getExecNetworkConsensus(ctx, rpcClients, "safe")
-		if err != nil {
-			return nil, err
-		}
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
-		if len(wrongBlockNum) > 0 {
-			log.Warn("Consensus issue with safe fork votes. Waiting 5s and trying again.")
-			time.Sleep(5 * time.Second)
-			safeForkVotes, err = getExecNetworkConsensus(ctx, rpcClients, "safe")
-			if err != nil {
-				return nil, err
-			}
-		}
-	*/
-
 	startKill := false
 	for {
 		log.Info("running health check")
 
-		latestForkVotes, safeForkVotes, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
+		latestForkVotes, _, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
 		if latestForkVotes != nil {
 			consensusBlockNum, _, _, _ := determineForkConsensus(latestForkVotes)
 			log.Infof("Consensus latest head: %d", consensusBlockNum[0].BlockNumber)
@@ -138,20 +90,16 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 			if err == UnableToReachLatestConsensusError {
 				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(latestForkVotes)
 				reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-				return nil, nil
-			}
-			if err == UnableToReachSafeConsensusError {
-				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(safeForkVotes)
-				reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
 				startKill = true
 				time.Sleep(time.Second * 1)
 				continue
-				//return nil, nil
 			}
 			if err == UnableToReachFinalConsensusError {
 				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
 				reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-				return nil, nil
+				startKill = true
+				time.Sleep(time.Second * 1)
+				continue
 			}
 			return nil, err
 		}
@@ -166,13 +114,9 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 		reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
 		latestHead := consensusBlockNum[0].BlockNumber
 
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(safeForkVotes)
-		reportConsensusDataToLogger("safe", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-		safeHead := consensusBlockNum[0].BlockNumber
-
 		// return err?
 		log.Infof("Finalization -> latest lag: %d", latestHead-finalizedHead)
-		log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
+		//log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
 
 		if len(wrongBlockNum) == 0 && startKill {
 			for _, c := range rpcClients {

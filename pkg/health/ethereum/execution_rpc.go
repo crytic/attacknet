@@ -38,6 +38,7 @@ func (c *ExecRpcClient) GetLatestBlockBy(ctx context.Context, blockType string) 
 			"finalized block not found", //geth
 			"Unknown block",             //erigon
 			"Unknown block error",       //nethermind
+			"unknown block",             //reth
 		}
 		if err.Error() == notFinalizingErrors[0] ||
 			err.Error() == notFinalizingErrors[1] ||
