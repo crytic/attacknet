@@ -48,7 +48,7 @@ attacknetConfig:
 harnessConfig:
   networkPackage: github.com/crytic/ethereum-package # The Kurtosis package to deploy to instrument the devnet.
   networkConfig: default.yaml # The configuration to use for the Kurtosis package. These live in ./network-configs and are referenced by their filename. 
-
+  networkType: ethereum # no touchy
 
 # The list of tests to be run. As of right now, the first test is run and the tool terminates. In the future, we will genesis single-use devnets for each test, run the test, and terminate once all the tests are completed and all the enclaves are cleaned up.
 tests:
@@ -77,6 +77,8 @@ Once you've got your configuration set up, you can run Attacknet:
 
 If your suite config is located at `./test-suites/suite.yaml`, you would run `attacknet start suite`. This will 
 probably be changed.
+
+At this time, health checks will be run in perpetuity once the fault has concluded. Simply ctrl+c to terminate.
 
 ## Developing (wip)
 
