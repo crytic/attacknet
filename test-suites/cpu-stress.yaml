@@ -9,6 +9,7 @@ attacknetConfig:
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
   networkConfig: default.yaml
+  networkType: ethereum
 
 tests:
 - testName: cpu-stress

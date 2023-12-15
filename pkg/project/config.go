@@ -1,4 +1,4 @@
-package pkg
+package project
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -19,11 +19,13 @@ type AttacknetConfig struct {
 }
 
 type HarnessConfig struct {
+	NetworkType       string `yaml:"networkType"`
 	NetworkPackage    string `yaml:"networkPackage"`
 	NetworkConfigPath string `yaml:"networkConfig"`
 }
 
 type HarnessConfigParsed struct {
+	NetworkType    string
 	NetworkPackage string
 	NetworkConfig  []byte
 }
@@ -71,6 +73,7 @@ func LoadSuiteConfigFromName(suiteName string) (*ConfigParsed, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return cfg, nil
 }
 
@@ -99,6 +102,7 @@ func loadSuiteFromPath(path string) (*ConfigParsed, error) {
 	cfgParsed := &ConfigParsed{
 		cfg.AttacknetConfig,
 		HarnessConfigParsed{
+			cfg.HarnessConfig.NetworkType,
 			cfg.HarnessConfig.NetworkPackage,
 			packageConfig,
 		},

@@ -9,6 +9,7 @@ attacknetConfig:
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
   networkConfig: default.yaml
+  networkType: ethereum
 
 tests:
   # Note: io chaos will not work unless the "volumePath" actually maps to a volume mount. The root mount is not valid.

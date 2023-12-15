@@ -2,6 +2,9 @@ package pkg
 
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
+	"attacknet/cmd/pkg/health"
+	"attacknet/cmd/pkg/kubernetes"
+	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
 	"time"
@@ -10,68 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func setupDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-	// todo: spawn kurtosis gateway?
-	kurtosisCtx, err := GetKurtosisContext()
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Creating a new Kurtosis enclave")
-	enclaveCtx, _, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
-	log.Infof("New enclave created under namespace %s", enclaveCtx.Namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Starting the blockchain genesis")
-	err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
-	if err != nil {
-		return nil, err
-	}
-	return enclaveCtx, nil
-}
-
-func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-	kurtosisCtx, err := GetKurtosisContext()
-	if err != nil {
-		return nil, err
-	}
-
-	namespace := cfg.AttacknetConfig.ExistingDevnetNamespace
-	log.Infof("Looking for existing enclave identified by namespace %s", namespace)
-	enclaveCtx, enclaveCreated, err := CreateOrImportContext(ctx, kurtosisCtx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	if enclaveCreated {
-		// we need to genesis a new devnet regardless
-		log.Info("Since we created a new kurtosis enclave, we must now genesis the blockchain.")
-		err = StartNetwork(ctx, enclaveCtx, cfg.HarnessConfig)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		log.Infof("An active enclave matching %s was found", namespace)
-	}
-
-	return enclaveCtx, nil
-}
-
-func setupEnclave(ctx context.Context, cfg *ConfigParsed) (enclave *EnclaveContextWrapper, err error) {
-	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
-		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
-			log.Warn("Could not re-use an existing devnet because no existingDevnetNamespace was set.")
-		}
-		enclave, err = setupDevnet(ctx, cfg)
-	} else {
-		enclave, err = loadEnclaveFromExistingDevnet(ctx, cfg)
-	}
-	return enclave, err
-}
-
-func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
+func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	enclave, err := setupEnclave(ctx, cfg)
 	if err != nil {
 		return err
@@ -80,9 +22,14 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		enclave.Destroy(ctx)
 	}()
 
+	kubeClient, err := kubernetes.CreateKubeClient(enclave.Namespace)
+	if err != nil {
+		return err
+	}
+
 	// todo: move these into setupServices or something.
 	log.Infof("Creating a Grafana client")
-	grafanaTunnel, err := CreateGrafanaClient(ctx, enclave.Namespace, cfg.AttacknetConfig)
+	grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
 	if err != nil {
 		return err
 	}
@@ -100,7 +47,7 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
-	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace)
+	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
 	if err != nil {
 		grafanaTunnel.Cleanup(true)
 		return err
@@ -127,13 +74,23 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		grafanaTunnel.Cleanup(true)
 		return err
 	}
+	var timeToSleep time.Duration
 	if faultSession.TestDuration != nil {
 		durationSeconds := int(faultSession.TestDuration.Seconds())
 		log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-		time.Sleep(*faultSession.TestDuration)
+		timeToSleep = *faultSession.TestDuration
 	} else {
 		log.Infof("Fault injected successfully. This fault has no specific duration.")
 	}
+	time.Sleep(timeToSleep)
+
+	// we can build the health checker once the fault is injected
+	log.Info("creating health checker")
+	hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
+	if err != nil {
+		return err
+	}
+	_ = hc
 
 	err = waitForFaultRecovery(ctx, faultSession)
 	if err != nil {
@@ -141,9 +98,12 @@ func StartTestSuite(ctx context.Context, cfg *ConfigParsed) error {
 		return err
 	}
 
-	return nil
+	_, err = hc.RunChecksUntilTimeout(ctx)
+
+	return err
 }
 
+// todo: move to fault session?
 func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
 	// First, wait 10 seconds to allow chaos-mesh to inject into the cluster.
 	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.

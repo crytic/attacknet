@@ -10,3 +10,9 @@ linters:
     - staticcheck
     - ineffassign
     - gosec
+
+issues:
+  exclude-rules:
+  - path: pkg/kubernetes/port_forward.go
+    text: Binds to all network interfaces
+
