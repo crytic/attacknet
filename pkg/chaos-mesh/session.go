@@ -334,8 +334,8 @@ func filterInjectedPods(records []*api.Record) ([]string, error) {
 	for _, record := range records {
 		if record.Phase == "Injected" {
 			parts := strings.Split(record.Id, "/")
-			if len(parts) != 2 {
-				return nil, stacktrace.NewError("fault record id was split into more than 2 parts")
+			if len(parts) <= 2 {
+				return nil, stacktrace.NewError("fault record id was split into less than two parts")
 			}
 			injectedPods = append(injectedPods, parts[1])
 		}
