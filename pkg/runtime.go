@@ -3,6 +3,7 @@ package pkg
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/kubernetes"
+	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
 	"time"
@@ -49,8 +50,21 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 	)
 	time.Sleep(time.Duration(cfg.AttacknetConfig.WaitBeforeInjectionSeconds) * time.Second)
 
-	log.Infof("Starting fault injection")
-	_ = chaosClient
+	log.Infof("Running %d tests", len(cfg.TestConfig.Tests))
+
+	for i, test := range cfg.TestConfig.Tests {
+		log.Infof("Running test #%d, '%s'", i, test.TestName)
+		executor := test_executor.CreateTestExecutor(chaosClient, test)
+
+		err = executor.RunTestPlan(ctx)
+		if err != nil {
+			log.Errorf("Error while running test #%d", i+1)
+			return err
+		} else {
+			log.Infof("Test #%d completed successfully", i+1)
+		}
+	}
+
 	return nil
 	/*
 		faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
@@ -96,44 +110,7 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 
 // todo: move to fault session?
 /*
-func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSession) error {
-	// First, wait 10 seconds to allow chaos-mesh to inject into the cluster.
-	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.
-	time.Sleep(10 * time.Second)
 
-	status, err := session.GetStatus(ctx)
-	if err != nil {
-		return err
-	}
-
-	switch status {
-	case chaos_mesh.InProgress:
-		return nil
-	case chaos_mesh.Stopping:
-		errmsg := "fault changed to 'stopping' status after 10 seconds. faults must last longer than 10s"
-		log.Error(errmsg)
-		return stacktrace.NewError(errmsg)
-	case chaos_mesh.Starting:
-		var errmsg string
-		if !session.TargetSelectionCompleted {
-			errmsg = "chaos-mesh was unable to identify any pods for injection based on the configured criteria"
-			log.Error(errmsg)
-		} else {
-			errmsg = "chaos-mesh is still in a 'starting' state after 10 seconds. Check kubernetes events to see what's wrong."
-			log.Error(errmsg)
-		}
-		return stacktrace.NewError(errmsg)
-	case chaos_mesh.Error:
-		errmsg := "there was an unspecified error returned by chaos-mesh. inspect the fault resource"
-		log.Error(errmsg)
-		return stacktrace.NewError(errmsg)
-	case chaos_mesh.Completed:
-		// occurs for faults that perform an action immediately then terminate. (killing pods, etc)
-		return nil
-	default:
-		return stacktrace.NewError("unknown chaos session state %s", status)
-	}
-}
 
 func waitForFaultRecovery(ctx context.Context, session *chaos_mesh.FaultSession) error {
 	for {

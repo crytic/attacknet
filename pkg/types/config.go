@@ -1,7 +1,5 @@
 package types
 
-import "time"
-
 type AttacknetConfig struct {
 	GrafanaPodName             string `yaml:"grafanaPodName"`
 	GrafanaPodPort             string `yaml:"grafanaPodPort"`
@@ -23,38 +21,13 @@ type HarnessConfigParsed struct {
 	NetworkConfig  []byte
 }
 
-type PlanStepType string
-
-const (
-	InjectFault            PlanStepType = "RunSingleFault"
-	WaitForFaultCompletion PlanStepType = "WaitForFaultCompletion"
-	WaitForDuration        PlanStepType = "WaitForDuration"
-	WaitForHealthChecks    PlanStepType = "WaitForHealthChecks"
-)
-
-type TestPlanStep struct {
-
-	// StepType
-	//
-}
-
-type PlanStepSingleFault struct {
-	StepDescription string                 `yaml:"description"`
-	FaultSpec       map[string]interface{} `yaml:"chaosFaultSpec"`
-}
-
-type PlanStepWait struct {
-	StepDescription string        `yaml:"description"`
-	WaitAmount      time.Duration `yaml:"duration"`
-}
-
 type SuiteTestConfigs struct {
 	Tests []SuiteTest `yaml:"tests"`
 }
 
 type SuiteTest struct {
-	TestName  string        `yaml:"testName"`
-	PlanSteps []interface{} `yaml:"planSteps"`
+	TestName  string     `yaml:"testName"`
+	PlanSteps []PlanStep `yaml:"planSteps"`
 }
 
 type Config struct {
@@ -67,4 +40,20 @@ type ConfigParsed struct {
 	AttacknetConfig AttacknetConfig
 	HarnessConfig   HarnessConfigParsed
 	TestConfig      SuiteTestConfigs
+}
+
+type StepType string
+
+const (
+	InvalidStepType        StepType = ""
+	InjectFault            StepType = "injectFault"
+	WaitForFaultCompletion StepType = "waitForFaultCompletion"
+	WaitForDuration        StepType = "waitForDuration"
+	WaitForHealthChecks    StepType = "waitForHealthChecks"
+)
+
+type PlanStep struct {
+	StepType        StepType               `yaml:"stepType"`
+	StepDescription string                 `yaml:"description"`
+	Spec            map[string]interface{} `yaml:",inline"`
 }
