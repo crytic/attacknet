@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type AttacknetConfig struct {
 	GrafanaPodName             string `yaml:"grafanaPodName"`
 	GrafanaPodPort             string `yaml:"grafanaPodPort"`
@@ -25,9 +27,15 @@ type SuiteTestConfigs struct {
 	Tests []SuiteTest `yaml:"tests"`
 }
 
+type HealthCheckConfig struct {
+	EnableChecks bool          `yaml:"enableChecks"`
+	GracePeriod  time.Duration `yaml:"gracePeriod"`
+}
+
 type SuiteTest struct {
-	TestName  string     `yaml:"testName"`
-	PlanSteps []PlanStep `yaml:"planSteps"`
+	TestName     string            `yaml:"testName"`
+	PlanSteps    []PlanStep        `yaml:"planSteps"`
+	HealthConfig HealthCheckConfig `yaml:"health"`
 }
 
 type Config struct {
@@ -49,7 +57,8 @@ const (
 	InjectFault            StepType = "injectFault"
 	WaitForFaultCompletion StepType = "waitForFaultCompletion"
 	WaitForDuration        StepType = "waitForDuration"
-	WaitForHealthChecks    StepType = "waitForHealthChecks"
+	// note: we'll have to think hard about how chaosSessions determine dead pods if we allow inter-step health checks.
+	// WaitForHealthChecks    StepType = "waitForHealthChecks"
 )
 
 type PlanStep struct {
