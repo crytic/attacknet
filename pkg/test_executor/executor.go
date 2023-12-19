@@ -28,22 +28,29 @@ func (te *TestExecutor) RunTestPlan(ctx context.Context) error {
 		if err != nil {
 			return stacktrace.Propagate(err, "could not marshal plan step %s", genericStep.Spec)
 		}
-		log.Infof("Running test step: %s", genericStep.StepDescription)
+		log.Infof("Running test step '%s'", genericStep.StepDescription)
 		switch genericStep.StepType {
 		case types.InjectFault:
 			var s PlanStepSingleFault
 			err = yaml.Unmarshal(marshalledSpec, &s)
 			if err != nil {
-				return stacktrace.Propagate(err, "could not unmarshal InjectFault from plan")
+				return stacktrace.Propagate(err, "could not unmarshal injectFault step from plan")
 			}
 			err = te.runInjectFaultStep(ctx, s) // check err after switch
 		case types.WaitForFaultCompletion:
 			var s PlanStepWaitForFaultCompletion
 			err = yaml.Unmarshal(marshalledSpec, &s)
 			if err != nil {
-				return stacktrace.Propagate(err, "could not unmarshal WaitForFaultCompletion from plan")
+				return stacktrace.Propagate(err, "could not unmarshal waitForFaultCompletion step from plan")
 			}
 			err = te.runWaitForFaultCompletion(ctx, s)
+		case types.WaitForDuration:
+			var s PlanStepWait
+			err = yaml.Unmarshal(marshalledSpec, &s)
+			if err != nil {
+				return stacktrace.Propagate(err, "could not unmarshal waitForDuration step from plan")
+			}
+			err = te.runWaitForDuration(s)
 		default:
 			err = stacktrace.NewError("Unknown fault step type %s", genericStep.StepType)
 		}
@@ -105,6 +112,12 @@ func (te *TestExecutor) runWaitForFaultCompletion(ctx context.Context, _ PlanSte
 		}
 		log.Infof("Fault #%d has completed", i+1)
 	}
+	return nil
+}
+
+func (te *TestExecutor) runWaitForDuration(step PlanStepWait) error {
+	log.Infof("Sleeping for %.0f seconds", step.WaitAmount.Seconds())
+	time.Sleep(step.WaitAmount)
 	return nil
 }
 
@@ -174,6 +187,5 @@ func waitForFaultRecovery(ctx context.Context, session *chaos_mesh.FaultSession)
 		default:
 			return stacktrace.NewError("unknown chaos session state %s", status)
 		}
-		// todo: add timeout break if no changes in k8s resource after fault duration elapses
 	}
 }

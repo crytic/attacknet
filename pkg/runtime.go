@@ -61,8 +61,9 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			log.Errorf("Error while running test #%d", i+1)
 			return err
 		} else {
-			log.Infof("Test #%d completed successfully", i+1)
+			log.Infof("Test #%d completed.", i+1)
 		}
+
 	}
 
 	return nil
