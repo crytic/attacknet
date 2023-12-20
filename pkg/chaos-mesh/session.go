@@ -126,7 +126,6 @@ func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) (bo
 			continue
 		}
 		if condition.Status == v1.ConditionTrue {
-			log.Info("chaos-mesh has identified pods to inject into")
 			f.TargetSelectionCompleted = true
 		}
 

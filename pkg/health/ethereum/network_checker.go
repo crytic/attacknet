@@ -4,6 +4,7 @@ import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -75,63 +76,73 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 	}
 
 	log.Info("Ready to query for health checks")
-
-	startKill := false
-	for {
-		log.Info("running health check")
-
-		latestForkVotes, _, finalizedForkVotes, err := getExecNetworkStabilizedConsensus(ctx, rpcClients, 3)
-		if latestForkVotes != nil {
-			consensusBlockNum, _, _, _ := determineForkConsensus(latestForkVotes)
-			log.Infof("Consensus latest head: %d", consensusBlockNum[0].BlockNumber)
-		}
-
-		if err != nil {
-			if err == UnableToReachLatestConsensusError {
-				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(latestForkVotes)
-				reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-				startKill = true
-				time.Sleep(time.Second * 1)
-				continue
-			}
-			if err == UnableToReachFinalConsensusError {
-				consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
-				reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-				startKill = true
-				time.Sleep(time.Second * 1)
-				continue
-			}
-			return nil, err
-		}
-
-		// now close clients
-
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(finalizedForkVotes)
-		reportConsensusDataToLogger("finalized", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-		finalizedHead := consensusBlockNum[0].BlockNumber
-
-		consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash = determineForkConsensus(latestForkVotes)
-		reportConsensusDataToLogger("latest", consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-		latestHead := consensusBlockNum[0].BlockNumber
-
-		// return err?
-		log.Infof("Finalization -> latest lag: %d", latestHead-finalizedHead)
-		//log.Infof("Safe -> Final lag: %d", safeHead-finalizedHead)
-
-		if len(wrongBlockNum) == 0 && startKill {
-			for _, c := range rpcClients {
-				c.Close()
-			}
-			break
-		}
-
-		if len(wrongBlockNum) > 0 {
-			if !startKill {
-				startKill = true
-			}
-		}
-		time.Sleep(time.Second * 1)
+	latestResult, err := e.getBlockConsensus(ctx, rpcClients, "latest", 3)
+	if err != nil {
+		return nil, err
+	}
+	finalResult, err := e.getBlockConsensus(ctx, rpcClients, "finalized", 3)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	log.Infof("Finalization -> latest lag: %d", latestResult.ConsensusBlockNum-finalResult.ConsensusBlockNum)
+
+	// construct results
+	results := make([]*types.CheckResult, 4)
+	results[0] = latestResult.BlockNumResult
+	results[1] = latestResult.BlockHashResult
+	results[2] = finalResult.BlockNumResult
+	results[3] = finalResult.BlockHashResult
+
+	return results, nil
+}
+
+type getBlockConsensusResult struct {
+	BlockNumResult     *types.CheckResult
+	BlockHashResult    *types.CheckResult
+	ConsensusBlockNum  uint64
+	ConsensusBlockHash string
+}
+
+func (e *EthNetworkChecker) getBlockConsensus(ctx context.Context, clients []*ExecRpcClient, blockType string, maxAttempts int) (*getBlockConsensusResult, error) {
+	forkChoice, err := getExecNetworkConsensus(ctx, clients, blockType)
+	if err != nil {
+		return nil, err
+	}
+	// determine whether the nodes are in consensus
+	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(forkChoice)
+	if len(wrongBlockNum) > 0 {
+		if maxAttempts > 0 {
+			log.Infof("Nodes not at consensus for %s block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", blockType, maxAttempts-1)
+			time.Sleep(2 * time.Second)
+			return e.getBlockConsensus(ctx, clients, blockType, maxAttempts-1)
+		} else {
+			reportConsensusDataToLogger(blockType, consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+		}
+	}
+
+	blockNumResult := &types.CheckResult{}
+	blockNumResult.TestName = fmt.Sprintf("All nodes agree on %s block number", blockType)
+	for _, node := range consensusBlockNum {
+		blockNumResult.PodsPassing = append(blockNumResult.PodsPassing, node.Pod.GetName())
+	}
+	for _, node := range wrongBlockNum {
+		blockNumResult.PodsFailing = append(blockNumResult.PodsFailing, node.Pod.GetName())
+	}
+
+	blockHashResult := &types.CheckResult{}
+	blockHashResult.TestName = fmt.Sprintf("All nodes agree on %s block hash", blockType)
+	for _, node := range consensusBlockHash {
+		blockHashResult.PodsPassing = append(blockHashResult.PodsPassing, node.Pod.GetName())
+	}
+	for _, node := range wrongBlockHash {
+		blockHashResult.PodsFailing = append(blockHashResult.PodsFailing, node.Pod.GetName())
+	}
+	reportConsensusDataToLogger(blockType, consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+	return &getBlockConsensusResult{
+		blockNumResult,
+		blockHashResult,
+		consensusBlockNum[0].BlockNumber,
+		consensusBlockHash[0].BlockHash,
+	}, nil
 }

@@ -43,7 +43,8 @@ func (c *ExecRpcClient) GetLatestBlockBy(ctx context.Context, blockType string) 
 		if err.Error() == notFinalizingErrors[0] ||
 			err.Error() == notFinalizingErrors[1] ||
 			err.Error() == notFinalizingErrors[2] ||
-			err.Error() == notFinalizingErrors[3] {
+			err.Error() == notFinalizingErrors[3] ||
+			err.Error() == notFinalizingErrors[4] {
 			choice = &ClientForkChoice{
 				Pod:         c.session.Pod,
 				BlockNumber: 0,

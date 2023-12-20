@@ -16,6 +16,7 @@ type TestExecutor struct {
 	testName      string
 	planSteps     []types.PlanStep
 	faultSessions []*chaos_mesh.FaultSession
+	planCompleted bool
 }
 
 func CreateTestExecutor(chaosClient *chaos_mesh.ChaosClient, test types.SuiteTest) *TestExecutor {
@@ -23,6 +24,9 @@ func CreateTestExecutor(chaosClient *chaos_mesh.ChaosClient, test types.SuiteTes
 }
 
 func (te *TestExecutor) RunTestPlan(ctx context.Context) error {
+	if te.planCompleted {
+		return stacktrace.NewError("test executor %s has already been run", te.testName)
+	}
 	for _, genericStep := range te.planSteps {
 		marshalledSpec, err := yaml.Marshal(genericStep.Spec)
 		if err != nil {
@@ -59,7 +63,42 @@ func (te *TestExecutor) RunTestPlan(ctx context.Context) error {
 			return err
 		}
 	}
+	te.planCompleted = true
 	return nil
+}
+
+func (te *TestExecutor) GetPodsUnderTest() ([]*chaos_mesh.PodUnderTest, error) {
+	if !te.planCompleted {
+		return nil, stacktrace.NewError("test %s has not been executed yet. cannot determine pods under test", te.testName)
+	}
+	pods := make(map[string]*chaos_mesh.PodUnderTest)
+
+	for _, session := range te.faultSessions {
+		for _, pod := range session.PodsUnderTest {
+			if val, ok := pods[pod.Name]; !ok {
+				p := &chaos_mesh.PodUnderTest{
+					Name:           pod.Name,
+					Labels:         pod.Labels,
+					ExpectDeath:    pod.ExpectDeath,
+					TouchedByFault: pod.TouchedByFault,
+				}
+				pods[pod.Name] = p
+			} else {
+				if pod.ExpectDeath && !val.ExpectDeath {
+					val.ExpectDeath = true
+				}
+				if pod.TouchedByFault && !val.TouchedByFault {
+					val.TouchedByFault = true
+				}
+			}
+		}
+	}
+
+	var retPods []*chaos_mesh.PodUnderTest
+	for _, pod := range pods {
+		retPods = append(retPods, pod)
+	}
+	return retPods, nil
 }
 
 func (te *TestExecutor) runInjectFaultStep(ctx context.Context, step PlanStepSingleFault) error {
@@ -67,33 +106,9 @@ func (te *TestExecutor) runInjectFaultStep(ctx context.Context, step PlanStepSin
 	if err != nil {
 		return err
 	}
+	te.faultSessions = append(te.faultSessions, faultSession)
 
 	err = waitForInjectionCompleted(ctx, faultSession)
-
-	te.faultSessions = append(te.faultSessions, faultSession)
-	/*
-		var timeToSleep time.Duration
-		if faultSession.TestDuration != nil {
-			durationSeconds := int(faultSession.TestDuration.Seconds())
-			log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-			timeToSleep = *faultSession.TestDuration
-		} else {
-			log.Infof("Fault injected successfully. This fault has no specific duration.")
-		}
-		time.Sleep(timeToSleep)
-	*/
-
-	// we can build the health checker once the fault is injected
-	/*
-		log.Info("creating health checker")
-		hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
-		if err != nil {
-			return err
-		}
-		_ = hc
-	*/
-
-	// err = waitForFaultRecovery(ctx, faultSession)
 	return err
 }
 

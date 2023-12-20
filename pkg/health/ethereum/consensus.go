@@ -3,71 +3,17 @@ package ethereum
 import (
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
-	"fmt"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
-var UnableToReachLatestConsensusError = fmt.Errorf("there are nodes that disagree on the latest block")
-var UnableToReachSafeConsensusError = fmt.Errorf("there are nodes that disagree on the safe block")
-var UnableToReachFinalConsensusError = fmt.Errorf("there are nodes that disagree on the finalized block")
+// var UnableToReachLatestConsensusError = fmt.Errorf("there are nodes that disagree on the latest block")
+// var UnableToReachSafeConsensusError = fmt.Errorf("there are nodes that disagree on the safe block")
+// var UnableToReachFinalConsensusError = fmt.Errorf("there are nodes that disagree on the finalized block")
 
 type ClientForkChoice struct {
 	Pod         kubernetes.KubePod
 	BlockNumber uint64
 	BlockHash   string
-}
-
-func getExecNetworkStabilizedConsensus(ctx context.Context, nodeClients []*ExecRpcClient, maxAttempts int) ([]*ClientForkChoice, []*ClientForkChoice, []*ClientForkChoice, error) {
-	latestForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "latest")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	_, wrongBlockNum, _, _ := determineForkConsensus(latestForkChoice)
-	if len(wrongBlockNum) > 0 {
-		if maxAttempts == 0 {
-			return latestForkChoice, nil, nil, UnableToReachLatestConsensusError
-		} else {
-			log.Infof("Nodes not at consensus for latest block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
-			time.Sleep(3 * time.Second)
-			return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
-
-		}
-	}
-	// prysm uses a more liberal definition of justification than other clients, so it will be out of consensus with
-	// other clients for about 10 blocks per epoch. todo: find a way to address this discrepancy in the future.
-	/*
-		safeForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "safe")
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		_, wrongBlockNum, _, _ = determineForkConsensus(safeForkChoice)
-		if len(wrongBlockNum) > 0 {
-			if maxAttempts == 0 {
-				return latestForkChoice, safeForkChoice, nil, UnableToReachSafeConsensusError
-			} else {
-				log.Infof("Nodes not at consensus for safe block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
-				time.Sleep(3 * time.Second)
-				return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
-			}
-		}
-	*/
-
-	finalizedForkChoice, err := getExecNetworkConsensus(ctx, nodeClients, "finalized")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	_, wrongBlockNum, _, _ = determineForkConsensus(finalizedForkChoice)
-	if len(wrongBlockNum) > 0 {
-		if maxAttempts == 0 {
-			return latestForkChoice, nil, finalizedForkChoice, UnableToReachFinalConsensusError
-		} else {
-			log.Infof("Nodes not at consensus for finalized block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", maxAttempts-1)
-			time.Sleep(3 * time.Second)
-			return getExecNetworkStabilizedConsensus(ctx, nodeClients, maxAttempts-1)
-		}
-	}
-	return latestForkChoice, nil, finalizedForkChoice, nil
 }
 
 func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecRpcClient, blockType string) ([]*ClientForkChoice, error) {

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
+	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
@@ -64,6 +65,23 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			log.Infof("Test #%d completed.", i+1)
 		}
 
+		if test.HealthConfig.EnableChecks {
+			podsUnderTest, err := executor.GetPodsUnderTest()
+			if err != nil {
+				return err
+			}
+
+			hc, err := health.BuildHealthChecker(cfg, kubeClient, podsUnderTest, test.HealthConfig)
+			if err != nil {
+				return err
+			}
+			results, err := hc.RunChecks(ctx)
+			if err != nil {
+				return err
+			}
+			// todo: log here
+			_ = results
+		}
 	}
 
 	return nil

@@ -5,19 +5,19 @@ import (
 	"attacknet/cmd/pkg/health/ethereum"
 	"attacknet/cmd/pkg/health/types"
 	"attacknet/cmd/pkg/kubernetes"
-	types2 "attacknet/cmd/pkg/types"
+	confTypes "attacknet/cmd/pkg/types"
 	"context"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 type CheckOrchestrator struct {
 	checkerImpl types.GenericNetworkChecker
+	gracePeriod time.Duration
 }
 
-// todo: we may want to instantiate this at the beginning of the test suite to validat the configs, then update
-// the podsUnderTest later.
-func BuildHealthChecker(cfg *types2.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest) (*CheckOrchestrator, error) {
+func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
 	networkType := cfg.HarnessConfig.NetworkType
 
 	var checkerImpl types.GenericNetworkChecker
@@ -33,6 +33,34 @@ func BuildHealthChecker(cfg *types2.ConfigParsed, kubeClient *kubernetes.KubeCli
 	return &CheckOrchestrator{checkerImpl: checkerImpl}, nil
 }
 
-func (hc *CheckOrchestrator) RunChecksUntilTimeout(ctx context.Context) ([]*types.CheckResult, error) {
-	return hc.checkerImpl.RunAllChecks(ctx)
+func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResult, error) {
+	latestAllowable := time.Now().Add(hc.gracePeriod)
+	log.Infof("Allowing up to %.0f seconds for health checks to pass on all nodes", hc.gracePeriod.Seconds())
+
+	for {
+		results, err := hc.checkerImpl.RunAllChecks(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if AllChecksPassed(results) {
+			return results, nil
+		}
+
+		if time.Now().After(latestAllowable) {
+			log.Warn("Grace period elapsed and a health check is still failing")
+			return results, nil
+		} else {
+			log.Warn("Health checks failed but still in grace period")
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func AllChecksPassed(checks []*types.CheckResult) bool {
+	for _, r := range checks {
+		if len(r.PodsFailing) != 0 {
+			return false
+		}
+	}
+	return true
 }
