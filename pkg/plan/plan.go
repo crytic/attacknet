@@ -37,7 +37,7 @@ func writePlan(networkConfigPath, suiteConfigPath string) error {
 			GrafanaPodPort:             "3000",
 			WaitBeforeInjectionSeconds: 60,
 			ReuseDevnetBetweenRuns:     true,
-			ExistingDevnetNamespace:    "kt-ethereum2",
+			ExistingDevnetNamespace:    "kt-ethereum",
 			AllowPostFaultInspection:   false,
 		},
 		HarnessConfig: types.HarnessConfig{
