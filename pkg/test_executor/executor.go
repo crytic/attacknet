@@ -119,6 +119,12 @@ func (te *TestExecutor) runWaitForFaultCompletion(ctx context.Context, _ PlanSte
 		if now.Before(*fs.TestEndTime) {
 			waitTime := fs.TestEndTime.Sub(now)
 			log.Infof("Waiting %.0f seconds for fault #%d to terminate", waitTime.Seconds(), i+1)
+			log.Infof(
+				"Est time of fault completion: %d:%d:%d %s",
+				fs.TestEndTime.Hour(),
+				fs.TestEndTime.Minute(),
+				fs.TestEndTime.Second(),
+				fs.TestEndTime.Location().String())
 			time.Sleep(waitTime)
 		}
 		err := waitForFaultRecovery(ctx, fs)
