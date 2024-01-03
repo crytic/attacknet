@@ -30,11 +30,12 @@ func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.Kube
 		log.Errorf("unknown network type: %s", networkType)
 		return nil, stacktrace.NewError("unknown network type: %s", networkType)
 	}
-	return &CheckOrchestrator{checkerImpl: checkerImpl}, nil
+	return &CheckOrchestrator{checkerImpl: checkerImpl, gracePeriod: healthCheckConfig.GracePeriod}, nil
 }
 
 func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResult, error) {
-	latestAllowable := time.Now().Add(hc.gracePeriod)
+	start := time.Now()
+	latestAllowable := start.Add(hc.gracePeriod)
 	log.Infof("Allowing up to %.0f seconds for health checks to pass on all nodes", hc.gracePeriod.Seconds())
 
 	for {
@@ -43,12 +44,15 @@ func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResul
 			return nil, err
 		}
 		if AllChecksPassed(results) {
+			timeToPass := time.Since(start).Seconds()
+			pctGraceUsed := timeToPass / hc.gracePeriod.Seconds() * 100
+			log.Infof("Checks passed in %.0f seconds. Consumed %.1f pct of the %.0f second grace period", timeToPass, pctGraceUsed, hc.gracePeriod.Seconds())
 			return results, nil
 		}
 
 		if time.Now().After(latestAllowable) {
 			log.Warn("Grace period elapsed and a health check is still failing")
-			return results, nil
+			return results, stacktrace.NewError("tests failed")
 		} else {
 			log.Warn("Health checks failed but still in grace period")
 			time.Sleep(1 * time.Second)
