@@ -2,6 +2,7 @@ package main
 
 import (
 	"attacknet/cmd/pkg"
+	"attacknet/cmd/pkg/plan"
 	"attacknet/cmd/pkg/project"
 	"context"
 	"github.com/alecthomas/kong"
@@ -17,6 +18,8 @@ var CLI struct {
 	Start struct {
 		Suite string `arg:"" name:"suite name" help:"The test suite to run. These are located in ./test-suites"`
 	} `cmd:"" help:"Run a specified test suite"`
+	Plan struct {
+	} `cmd:"" help:"Construct an attacknet suite for a client"`
 }
 
 func main() {
@@ -48,6 +51,13 @@ func main() {
 			log.Fatal(err)
 		}
 		err = pkg.StartTestSuite(ctx, cfg)
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+
+	case "plan":
+		err := plan.BuildPlan()
 		if err != nil {
 			log.Fatal(err)
 			os.Exit(1)
