@@ -1,42 +1,75 @@
 package network
 
-func createPrysmClient() *ConsensusClientConf {
-	return &ConsensusClientConf{
-		Type:                "prysm",
-		Image:               "prysmaticlabs/prysm-beacon-chain:latest",
-		ValidatorImage:      "prysmaticlabs/prysm-validator:latest",
-		HasValidatorSidecar: true,
-		ExtraLabels:         make(map[string]string)}
+var consensusClients = map[string]func() *ConsensusClient{
+	"prysm":      createPrysmClient,
+	"lighthouse": createLighthouseClient,
+	"teku":       createTekuClient,
+	"lodestar":   createLodestarClient,
+	// https://github.com/kurtosis-tech/ethereum-package/issues/417
+	// "nimbus": createNimbusClient,
+}
+var _ = consensusClients
+
+func createPrysmClient() *ConsensusClient {
+	return &ConsensusClient{
+		Type:                  "prysm",
+		Image:                 "prysmaticlabs/prysm-beacon-chain:latest",
+		ValidatorImage:        "prysmaticlabs/prysm-validator:latest",
+		HasValidatorSidecar:   true,
+		ExtraLabels:           make(map[string]string),
+		CpuRequired:           2000,
+		MemoryRequired:        2048,
+		SidecarCpuRequired:    1000,
+		SidecarMemoryRequired: 1024,
+	}
 }
 
-func createLighthouseClient() *ConsensusClientConf {
-	return &ConsensusClientConf{
-		Type:                "lighthouse",
-		Image:               "sigp/lighthouse:latest",
-		HasValidatorSidecar: true,
-		ExtraLabels:         make(map[string]string)}
+func createLighthouseClient() *ConsensusClient {
+	return &ConsensusClient{
+		Type:                  "lighthouse",
+		Image:                 "sigp/lighthouse:latest",
+		HasValidatorSidecar:   true,
+		ExtraLabels:           make(map[string]string),
+		CpuRequired:           2000,
+		MemoryRequired:        2048,
+		SidecarCpuRequired:    1000,
+		SidecarMemoryRequired: 1024,
+	}
 }
 
-func createTekuClient() *ConsensusClientConf {
-	return &ConsensusClientConf{
+func createTekuClient() *ConsensusClient {
+	return &ConsensusClient{
 		Type:                "teku",
 		Image:               "consensys/teku:23.12.0",
 		HasValidatorSidecar: false,
-		ExtraLabels:         make(map[string]string)}
+		ExtraLabels:         make(map[string]string),
+		CpuRequired:         2000,
+		MemoryRequired:      2048,
+	}
 }
 
-func createLodestarClient() *ConsensusClientConf {
-	return &ConsensusClientConf{
-		Type:                "lodestar",
-		Image:               "chainsafe/lodestar:v1.12.1",
-		HasValidatorSidecar: true,
-		ExtraLabels:         make(map[string]string)}
+func createLodestarClient() *ConsensusClient {
+	return &ConsensusClient{
+		Type:                  "lodestar",
+		Image:                 "chainsafe/lodestar:v1.12.1",
+		HasValidatorSidecar:   true,
+		ExtraLabels:           make(map[string]string),
+		CpuRequired:           2000,
+		MemoryRequired:        2048,
+		SidecarCpuRequired:    1000,
+		SidecarMemoryRequired: 1024,
+	}
 }
 
-func createNimbusClient() *ConsensusClientConf {
-	return &ConsensusClientConf{
-		Type:                "nimbus",
-		Image:               "statusim/nimbus-eth2:amd64-v23.11.0",
-		HasValidatorSidecar: true,
-		ExtraLabels:         make(map[string]string)}
+func createNimbusClient() *ConsensusClient {
+	return &ConsensusClient{
+		Type:                  "nimbus",
+		Image:                 "statusim/nimbus-eth2:amd64-v23.11.0",
+		HasValidatorSidecar:   true,
+		ExtraLabels:           make(map[string]string),
+		CpuRequired:           2000,
+		MemoryRequired:        2048,
+		SidecarCpuRequired:    1000,
+		SidecarMemoryRequired: 1024,
+	}
 }

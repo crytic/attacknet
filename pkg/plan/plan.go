@@ -2,108 +2,99 @@ package plan
 
 import (
 	"attacknet/cmd/pkg/plan/network"
-	"attacknet/cmd/pkg/types"
-	"gopkg.in/yaml.v3"
+	"attacknet/cmd/pkg/plan/suite"
+	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
 	"os"
 	"path/filepath"
 )
 
-func writePlan(networkConfigPath, suiteConfigPath string) error {
-	skew := "-10m"
-	duration := "20m"
-	node := &network.Validator{
-		Index: 4,
-		Consensus: &network.ConsensusClientConf{
-			Type:                "prysm",
-			HasValidatorSidecar: true,
-		},
-		Execution: &network.ExecClientConf{
-			Type: "reth",
-		},
-	}
-	nodes := make([]*network.Validator, 1)
-	nodes[0] = node
-
-	test, err := buildNodeClockSkewTest("clock skew", nodes, skew, duration)
+func preparePaths(testName string) (netRefPath, netConfigPath, planConfigPath string, err error) {
+	dir, err := os.Getwd()
+	// initialize to empty string for error cases
+	netConfigPath = ""
+	planConfigPath = ""
 	if err != nil {
-		return err
-	}
-	var a []types.SuiteTest
-	tests := append(a, *test)
-	_ = tests
-	c := types.Config{
-		AttacknetConfig: types.AttacknetConfig{
-			GrafanaPodName:             "grafana",
-			GrafanaPodPort:             "3000",
-			WaitBeforeInjectionSeconds: 60,
-			ReuseDevnetBetweenRuns:     true,
-			ExistingDevnetNamespace:    "kt-ethereum",
-			AllowPostFaultInspection:   false,
-		},
-		HarnessConfig: types.HarnessConfig{
-			NetworkPackage:    "github.com/kurtosis-tech/ethereum-package",
-			NetworkConfigPath: "reth.yaml",
-			NetworkType:       "ethereum",
-		},
-		TestConfig: types.SuiteTestConfigs{Tests: tests},
+		return
 	}
 
-	err = os.Remove("test-suites/plan/reth-reorg.yaml")
-	if err != nil {
-		return err
-	}
-	f, err := os.Create("test-suites/plan/reth-reorg.yaml")
-	if err != nil {
-		return err
+	netRefPath = fmt.Sprintf("plan/%s.yaml", testName)
+	networkConfigName := fmt.Sprintf("network-configs/%s", netRefPath)
+	netConfigPath = filepath.Join(dir, networkConfigName)
+	if _, err = os.Stat(netConfigPath); err == nil {
+		// delete file
+		err = os.Remove(netConfigPath)
+		if err != nil {
+			err = stacktrace.Propagate(err, "unable to remove file")
+			return
+		}
 	}
 
-	marsh, err := yaml.Marshal(c)
-	if err != nil {
-		return err
+	suiteName := fmt.Sprintf("test-suites/plan/%s.yaml", testName)
+	planConfigPath = filepath.Join(dir, suiteName)
+	if _, err = os.Stat(planConfigPath); err == nil {
+		// delete file
+		err = os.Remove(planConfigPath)
+		if err != nil {
+			err = stacktrace.Propagate(err, "unable to remove file")
+			return
+		}
 	}
-	_, err = f.Write(marsh)
+	err = nil
+	return
+}
+
+func writePlans(netConfigPath, suiteConfigPath string, netConfig, suiteConfig []byte) error {
+	f, err := os.Create(netConfigPath)
 	if err != nil {
-		return err
+		return stacktrace.Propagate(err, "cannot open network config path %s", netConfigPath)
 	}
+	_, err = f.Write(netConfig)
+	if err != nil {
+		return stacktrace.Propagate(err, "could not write network config to file")
+	}
+
 	err = f.Close()
 	if err != nil {
-		return err
+		return stacktrace.Propagate(err, "could not close network config file")
+	}
+
+	f, err = os.Create(suiteConfigPath)
+	if err != nil {
+		return stacktrace.Propagate(err, "cannot open suite config path %s", suiteConfigPath)
+	}
+	_, err = f.Write(suiteConfig)
+	if err != nil {
+		return stacktrace.Propagate(err, "could not write suite config to file")
+	}
+
+	err = f.Close()
+	if err != nil {
+		return stacktrace.Propagate(err, "could not close suite config file")
 	}
 
 	return nil
 }
 
 func BuildPlan() error {
+	testName := "test"
 
-	// clean suite plan dir
-	// cleann etwork config dir
-
-	dir, err := os.Getwd()
+	netRefPath, netConfigPath, suiteConfigPath, err := preparePaths(testName)
 	if err != nil {
 		return err
 	}
 
-	suiteName := "test-suites/plan/reth-reorg.yaml"
-	suiteFilePath := filepath.Join(dir, suiteName)
-	if _, err := os.Stat(suiteFilePath); err == nil {
-		// delete file
-		err = os.Remove(suiteFilePath)
-		if err != nil {
-			return err
-		}
+	netConfig, err := network.BuildExecTesterNetwork("reth")
+	if err != nil {
+		return err
 	}
 
-	networkConfigName := "network-configs/plan/reth-reorg.yaml"
-	networkFilePath := filepath.Join(dir, networkConfigName)
-	if _, err := os.Stat(networkFilePath); err == nil {
-		// delete file
-		err = os.Remove(networkFilePath)
-		if err != nil {
-			return err
-		}
+	suiteConfig, err := suite.WritePlab(netRefPath, netConfig)
+	if err != nil {
+		return err
 	}
 
-	return writePlan(networkFilePath, suiteFilePath)
+	return writePlans(netConfigPath, suiteConfigPath, netConfig, suiteConfig)
 	/*
 				run time delay on various el/cl combos
 				-> each target exists in the same suite/network
@@ -157,11 +148,15 @@ func BuildPlan() error {
 			- percentages (although includes 100%)
 			- clients (both type?)
 
+			syncing faults
+			-> restart node, force to sync. inject fault while syncing. this impacts checkpoint sync probably too.
+
 			packet corruption
 
 
 		each test builder needs a way to reject input corpus
 		eventually we'll want a way to block known bad inputs (ie: lodestar doesnt seem to re-establish peers correctly)
+		anotehr example:
 
 		actual tasks:
 		- implement plan builder for each concept
