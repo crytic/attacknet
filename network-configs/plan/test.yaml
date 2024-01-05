@@ -18,23 +18,6 @@ participants:
       count: 1
     - el_client_type: reth
       el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
-      el_min_cpu: 1000
-      el_max_cpu: 1000
-      el_min_mem: 1024
-      el_max_mem: 1024
-      bn_min_cpu: 2000
-      bn_max_cpu: 2000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
-      count: 1
-    - el_client_type: reth
-      el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
       cl_client_type: lighthouse
       cl_client_image: sigp/lighthouse:latest
       el_min_cpu: 1000
@@ -80,8 +63,26 @@ participants:
       v_min_mem: 1024
       v_max_mem: 1024
       count: 1
+    - el_client_type: reth
+      el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      cl_client_type: prysm
+      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      el_min_cpu: 1000
+      el_max_cpu: 1000
+      el_min_mem: 1024
+      el_max_mem: 1024
+      bn_min_cpu: 2000
+      bn_max_cpu: 2000
+      bn_min_mem: 2048
+      bn_max_mem: 2048
+      v_min_cpu: 1000
+      v_max_cpu: 1000
+      v_min_mem: 1024
+      v_max_mem: 1024
+      count: 1
 network_params:
     num_validator_keys_per_node: 32
 additional_services:
     - prometheus_grafana
+    - dora
 parallel_keystore_generation: false

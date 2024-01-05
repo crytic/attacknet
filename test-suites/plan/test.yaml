@@ -14,7 +14,7 @@ testConfig:
         - testName: clock skew
           planSteps:
             - stepType: injectFault
-              description: 'Inject clock skew on node #3 reth/lighthouse'
+              description: 'Inject clock skew on target reth/teku Node (Node #3)'
               chaosFaultSpec:
                 apiVersion: chaos-mesh.org/v1alpha1
                 kind: TimeChaos
@@ -27,9 +27,8 @@ testConfig:
                             - key: kurtosistech.com/id
                               operator: In
                               values:
-                                - el-3-reth-lighthouse
-                                - cl-3-lighthouse-reth
-                                - cl-3-lighthouse-reth-validator
+                                - el-3-reth-teku
+                                - cl-3-teku-reth
                     timeOffset: -5m
             - stepType: waitForFaultCompletion
               description: wait for faults to terminate
