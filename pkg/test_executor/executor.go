@@ -147,6 +147,8 @@ func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSes
 	// If injection isn't complete after 10 seconds, something is  wrong and we should terminate.
 	timeoutAt := time.Now().Add(time.Second * 10)
 
+	targetingGracePeriod := time.Now().Add(time.Second * 5)
+
 	for {
 		if time.Now().After(timeoutAt) {
 			errmsg := "chaos-mesh is still in a 'starting' state after 10 seconds. Check kubernetes events to see what's wrong."
@@ -168,8 +170,10 @@ func waitForInjectionCompleted(ctx context.Context, session *chaos_mesh.FaultSes
 			return nil
 		case chaos_mesh.Starting:
 			if !session.TargetSelectionCompleted {
-				errmsg := "chaos-mesh was unable to identify any pods for injection based on the configured criteria"
-				return stacktrace.NewError(errmsg)
+				if time.Now().After(targetingGracePeriod) {
+					errmsg := "chaos-mesh was unable to identify any pods for injection based on the configured criteria"
+					return stacktrace.NewError(errmsg)
+				}
 			}
 		case chaos_mesh.Error:
 			errmsg := "there was an unspecified error returned by chaos-mesh. inspect the fault resource"
