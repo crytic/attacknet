@@ -1,21 +1,17 @@
 package suite
 
 import (
-	"attacknet/cmd/pkg/plan/network"
 	"attacknet/cmd/pkg/types"
 	"time"
 )
 
-func buildNodeClockSkewTest(description string, nodes []*network.Node, skew, duration string) (*types.SuiteTest, error) {
+func buildNodeClockSkewTest(description string, targets []*TargetSelector, skew, duration string) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
-	for _, validator := range nodes {
-		s, err := buildNodeClockSkewPlanSteps(validator, skew, duration)
-		if err != nil {
-			return nil, err
-		}
-
-		steps = append(steps, s...)
+	s, err := buildNodeClockSkewPlanSteps(targets, skew, duration)
+	if err != nil {
+		return nil, err
 	}
+	steps = append(steps, s...)
 
 	waitStep := buildWaitForFaultCompletionStep()
 	steps = append(steps, *waitStep)
@@ -32,16 +28,14 @@ func buildNodeClockSkewTest(description string, nodes []*network.Node, skew, dur
 	return test, nil
 }
 
-func buildNodeRestartTest(description string, nodes []*network.Node) (*types.SuiteTest, error) {
+func buildNodeRestartTest(description string, targets []*TargetSelector) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
-	for _, validator := range nodes {
-		s, err := buildNodeRestartSteps(validator)
-		if err != nil {
-			return nil, err
-		}
 
-		steps = append(steps, s...)
+	s, err := buildNodeRestartSteps(targets)
+	if err != nil {
+		return nil, err
 	}
+	steps = append(steps, s...)
 
 	waitStep := buildWaitForFaultCompletionStep()
 	steps = append(steps, *waitStep)

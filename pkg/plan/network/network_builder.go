@@ -95,8 +95,9 @@ func BuildExecTesterNetwork(execClient string) ([]byte, error) {
 		},
 		AdditionalServices: []string{
 			"prometheus_grafana",
+			"dora",
 		},
-		ParallelKeystoreGen: true,
+		ParallelKeystoreGen: false,
 	}
 
 	bs, err := yaml.Marshal(netConfig)

@@ -33,53 +33,33 @@ func buildWaitForFaultCompletionStep() *types.PlanStep {
 	return &types.PlanStep{StepType: types.WaitForFaultCompletion, StepDescription: "wait for faults to terminate"}
 }
 
-func buildParamsForNodeFault(node *network.Node) (selector ExpressionSelector) {
-	targets := []string{}
-
-	elId := convertToNodeIdTag(node, Execution)
-	targets = append(targets, elId)
-
-	clId := convertToNodeIdTag(node, Consensus)
-	targets = append(targets, clId)
-
-	if node.Consensus.HasValidatorSidecar {
-		valId := convertToNodeIdTag(node, Validator)
-		targets = append(targets, valId)
-	}
-
-	selector = ExpressionSelector{
-		Key:      "kurtosistech.com/id",
-		Operator: "In",
-		Values:   targets,
-	}
-	return
-}
-
-func buildNodeClockSkewPlanSteps(node *network.Node, skew, duration string) ([]types.PlanStep, error) {
+func buildNodeClockSkewPlanSteps(nodesSelected []*TargetSelector, skew, duration string) ([]types.PlanStep, error) {
 	var steps []types.PlanStep
-	descriptionGeneric := fmt.Sprintf("Inject clock skew on node #%d", node.Index)
-	selector := buildParamsForNodeFault(node)
+	for _, target := range nodesSelected {
+		description := fmt.Sprintf("Inject clock skew on target %s", target.Description)
 
-	skewStep, err := buildClockSkewFault(descriptionGeneric, skew, duration, []ExpressionSelector{selector})
-	if err != nil {
-		return nil, err
+		skewStep, err := buildClockSkewFault(description, skew, duration, target.Selector)
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, *skewStep)
 	}
-	steps = append(steps, *skewStep)
 
 	return steps, nil
 }
 
-func buildNodeRestartSteps(node *network.Node) ([]types.PlanStep, error) {
+func buildNodeRestartSteps(nodesSelected []*TargetSelector) ([]types.PlanStep, error) {
 	var steps []types.PlanStep
-	descriptionGeneric := "Restart pod %s"
-	selector := buildParamsForNodeFault(node)
 
-	restartStep, err := buildPodRestartFault(descriptionGeneric, []ExpressionSelector{selector})
+	for _, target := range nodesSelected {
+		description := fmt.Sprintf("Restart target %s", target.Description)
+		restartStep, err := buildPodRestartFault(description, target.Selector)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, *restartStep)
 	}
-	steps = append(steps, *restartStep)
 
 	return steps, nil
 }

@@ -1,5 +1,7 @@
 package network
 
+import "fmt"
+
 type ExecClient struct {
 	Type           string
 	Image          string
@@ -25,6 +27,10 @@ type Node struct {
 	Execution      *ExecClient
 	Consensus      *ConsensusClient
 	ConsensusVotes int
+}
+
+func (n *Node) ToString() string {
+	return fmt.Sprintf("#%d %s/%s", n.Index, n.Execution.Type, n.Consensus.Type)
 }
 
 // todo: how much of these should we move to the config module?

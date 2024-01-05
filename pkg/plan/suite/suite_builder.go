@@ -12,9 +12,14 @@ func WritePlab(networkConfigPath string, networkConfig []byte) ([]byte, error) {
 		return nil, err
 	}
 	skew := "-5m"
-	duration := "10m"
+	duration := "1m"
+	criteria := createDualClientTargetCriteria("reth", "teku")
+	targetSelectors, err := BuildTargetSelectors(nodes, TargetAll, criteria, impactNode)
+	if err != nil {
+		return nil, err
+	}
 
-	test, err := buildNodeClockSkewTest("clock skew", nodes, skew, duration)
+	test, err := buildNodeClockSkewTest("clock skew", targetSelectors, skew, duration)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +30,7 @@ func WritePlab(networkConfigPath string, networkConfig []byte) ([]byte, error) {
 		AttacknetConfig: types.AttacknetConfig{
 			GrafanaPodName:             "grafana",
 			GrafanaPodPort:             "3000",
-			WaitBeforeInjectionSeconds: 60,
+			WaitBeforeInjectionSeconds: 0,
 			ReuseDevnetBetweenRuns:     true,
 			ExistingDevnetNamespace:    "kt-ethereum",
 			AllowPostFaultInspection:   false,

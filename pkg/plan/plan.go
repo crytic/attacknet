@@ -161,6 +161,7 @@ func BuildPlan() error {
 		actual tasks:
 		- implement plan builder for each concept
 
+			selector := buildParamsForNodeFault(node)
 	*/
 	//return nil
 }
