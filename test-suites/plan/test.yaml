@@ -1,0 +1,38 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 0
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-ethereum
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package
+    networkConfig: plan/test.yaml
+testConfig:
+    tests:
+        - testName: clock skew
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on node #3 reth/lighthouse'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-reth-lighthouse
+                                - cl-3-lighthouse-reth
+                                - cl-3-lighthouse-reth-validator
+                    timeOffset: -5m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 2m0s
