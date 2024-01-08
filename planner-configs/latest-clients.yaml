@@ -1,0 +1,29 @@
+execution:
+  - name: geth
+    image: ethereum/client-go:latest
+  - name: reth
+    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+  - name: erigon
+    image: thorax/erigon:v2.53.4
+  - name: nethermind
+    image: nethermind/nethermind:1.23.0
+  - name: besu
+    image: hyperledger/besu:latest
+consensus:
+  - name: lighthouse
+    image: sigp/lighthouse:latest
+    has_sidecar: true
+  - name: prysm
+    image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    has_sidecar: true
+  - name: teku
+    image: consensys/teku:23.12.0
+    has_sidecar: false
+  - name: lodestar
+    image: chainsafe/lodestar:v1.12.1
+    has_sidecar: true
+# https://github.com/kurtosis-tech/ethereum-package/issues/417
+#  - name: nimbus
+#    image: statusim/nimbus-eth2:amd64-v23.11.0
+network_params:
+  num_validator_keys_per_node: 32
