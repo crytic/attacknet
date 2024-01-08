@@ -2,7 +2,7 @@ participants:
   - el_client_type: geth
     el_client_image: ethereum/client-go:latest
     cl_client_type: lighthouse
-    cl_client_image: sigp/lighthouse:latest
+    cl_client_image: sigp/lighthouse:stable
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
