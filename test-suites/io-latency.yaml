@@ -23,18 +23,9 @@ tests:
       mode: all
       selector:
         labelSelectors:
-          # kurtosistech.com.custom/ethereum-package.client-type: beacon
-          # kurtosistech.com.custom/ethereum-package.client-type: execution
-          #kurtosistech.com/id: cl-3-prysm-geth
-          kurtosistech.com/id: el-1-geth-lighthouse
+          kurtosistech.com/id: el-2-nethermind-lighthouse
 
-      # for CL nodes
-      #path: '/consensus-data/**/*'
-      #volumePath: /consensus-data
-      # for EL nodes
-      path: '/execution-data/**/*'
-      volumePath: /execution-data
-
+      volumePath: /data/nethermind/execution-data
       delay: '2000ms'
       percent: 100
       duration: 120s
