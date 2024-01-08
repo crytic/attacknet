@@ -50,40 +50,7 @@ participants:
     v_min_mem: 1028
     v_max_mem: 1028
     count: 1
-  - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
-    cl_client_type: lighthouse
-    cl_client_image: sigp/lighthouse:latest
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 2048
-    bn_max_mem: 2048
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
-  - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
-    cl_client_type: teku
-    cl_client_image: ethpandaops/teku:master
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 2048
-    bn_max_mem: 2048
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
+
 
 network_params:
   deneb_fork_epoch: 1
@@ -91,5 +58,4 @@ network_params:
 additional_services:
   - prometheus_grafana
   - dora
-parallel_keystore_generation: true
-persistence: true
+persistent: true
