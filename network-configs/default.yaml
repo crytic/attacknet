@@ -1,8 +1,8 @@
 participants:
-  - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
+  - el_client_type: nethermind
+    el_client_image: nethermindeth/nethermind:master
     cl_client_type: lighthouse
-    cl_client_image: sigp/lighthouse:stable
+    cl_client_image: ethpandaops/lighthouse:stable
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -15,9 +15,9 @@ participants:
     v_max_cpu: 1000
     v_min_mem: 1028
     v_max_mem: 1028
-    count: 1
-  - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
+    count: 2
+  - el_client_type: nethermind
+    el_client_image: nethermindeth/nethermind:master
     cl_client_type: prysm
     cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
     el_min_cpu: 1000
@@ -33,24 +33,6 @@ participants:
     v_min_mem: 1028
     v_max_mem: 1028
     count: 1
-  - el_client_type: geth
-    el_client_image: ethereum/client-go:latest
-    cl_client_type: prysm
-    cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
-    el_min_cpu: 1000
-    el_max_cpu: 1000
-    el_min_mem: 1024
-    el_max_mem: 1024
-    bn_min_cpu: 2000
-    bn_max_cpu: 3000
-    bn_min_mem: 3072
-    bn_max_mem: 3072
-    v_min_cpu: 1000
-    v_max_cpu: 1000
-    v_min_mem: 1028
-    v_max_mem: 1028
-    count: 1
-
 
 network_params:
   deneb_fork_epoch: 1
