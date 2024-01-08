@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	connectrpc.com/connect v1.11.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
