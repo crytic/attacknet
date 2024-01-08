@@ -1,15 +1,5 @@
 package network
 
-var consensusClients = map[string]func() *ConsensusClient{
-	"prysm":      createPrysmClient,
-	"lighthouse": createLighthouseClient,
-	"teku":       createTekuClient,
-	"lodestar":   createLodestarClient,
-	// https://github.com/kurtosis-tech/ethereum-package/issues/417
-	// "nimbus": createNimbusClient,
-}
-var _ = consensusClients
-
 func createPrysmClient() *ConsensusClient {
 	return &ConsensusClient{
 		Type:                  "prysm",

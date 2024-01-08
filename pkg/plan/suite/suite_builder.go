@@ -6,11 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func WritePlab(networkConfigPath string, networkConfig []byte) ([]byte, error) {
-	nodes, err := network.ParseNetworkConfig(networkConfig)
-	if err != nil {
-		return nil, err
-	}
+func WritePlab(networkConfigPath string, nodes []*network.Node) ([]byte, error) {
 	skew := "-5m"
 	duration := "1m"
 	criteria := createDualClientTargetCriteria("reth", "teku")

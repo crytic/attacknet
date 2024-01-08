@@ -1,16 +1,7 @@
 package network
 
-var execClients = map[string]func() *ExecClient{
-	"geth":       createGethClient,
-	"reth":       createRethClient,
-	"nethermind": createNethermindClient,
-	"erigon":     createErigonClient,
-	"besu":       createBesuClient,
-}
-var _ = execClients
-
-func createGethClient() *ExecClient {
-	return &ExecClient{
+func createGethClient() *ExecutionClient {
+	return &ExecutionClient{
 		Type:           "geth",
 		Image:          "ethereum/client-go:latest",
 		ExtraLabels:    make(map[string]string),
@@ -19,8 +10,8 @@ func createGethClient() *ExecClient {
 	}
 }
 
-func createRethClient() *ExecClient {
-	return &ExecClient{
+func createRethClient() *ExecutionClient {
+	return &ExecutionClient{
 		Type:           "reth",
 		Image:          "ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13",
 		ExtraLabels:    make(map[string]string),
@@ -29,8 +20,8 @@ func createRethClient() *ExecClient {
 	}
 }
 
-func createNethermindClient() *ExecClient {
-	return &ExecClient{
+func createNethermindClient() *ExecutionClient {
+	return &ExecutionClient{
 		Type:           "nethermind",
 		Image:          "nethermind/nethermind:1.23.0",
 		ExtraLabels:    make(map[string]string),
@@ -39,8 +30,8 @@ func createNethermindClient() *ExecClient {
 	}
 }
 
-func createErigonClient() *ExecClient {
-	return &ExecClient{
+func createErigonClient() *ExecutionClient {
+	return &ExecutionClient{
 		Type:           "erigon",
 		Image:          "thorax/erigon:v2.53.4",
 		ExtraLabels:    make(map[string]string),
@@ -49,8 +40,8 @@ func createErigonClient() *ExecClient {
 	}
 }
 
-func createBesuClient() *ExecClient {
-	return &ExecClient{
+func createBesuClient() *ExecutionClient {
+	return &ExecutionClient{
 		Type:           "besu",
 		Image:          "hyperledger/besu:latest",
 		ExtraLabels:    make(map[string]string),

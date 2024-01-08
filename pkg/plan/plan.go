@@ -84,17 +84,22 @@ func BuildPlan() error {
 		return err
 	}
 
-	netConfig, err := network.BuildExecTesterNetwork("reth")
+	nodes, genesisConfig, err := network.BuildExecTesterNetwork("reth", "/Users/bsamuels/projects/attacknet/planner-configs/latest-clients.yaml")
 	if err != nil {
 		return err
 	}
 
-	suiteConfig, err := suite.WritePlab(netRefPath, netConfig)
+	suiteConfig, err := suite.WritePlab(netRefPath, nodes)
 	if err != nil {
 		return err
 	}
 
-	return writePlans(netConfigPath, suiteConfigPath, netConfig, suiteConfig)
+	networkConfig, err := network.SerializeNetworkConfig(nodes, genesisConfig)
+	if err != nil {
+		return err
+	}
+
+	return writePlans(netConfigPath, suiteConfigPath, networkConfig, suiteConfig)
 	/*
 				run time delay on various el/cl combos
 				-> each target exists in the same suite/network

@@ -2,7 +2,19 @@ package network
 
 import "fmt"
 
-type ExecClient struct {
+type ClientVersion struct {
+	Name       string `yaml:"name"`
+	Image      string `yaml:"image"`
+	HasSidecar bool   `yaml:"has_sidecar,omitempty"`
+}
+
+type PlanConfig struct {
+	ExecutionClients []ClientVersion `yaml:"execution"`
+	ConsensusClients []ClientVersion `yaml:"consensus"`
+	NetworkParams    GenesisConfig   `yaml:"network_params"`
+}
+
+type ExecutionClient struct {
 	Type           string
 	Image          string
 	ExtraLabels    map[string]string
@@ -24,7 +36,7 @@ type ConsensusClient struct {
 
 type Node struct {
 	Index          int
-	Execution      *ExecClient
+	Execution      *ExecutionClient
 	Consensus      *ConsensusClient
 	ConsensusVotes int
 }
@@ -34,16 +46,16 @@ func (n *Node) ToString() string {
 }
 
 // todo: how much of these should we move to the config module?
-type EthPackageNetworkParams struct {
+type GenesisConfig struct {
 	CapellaForkEpoch  int `yaml:"capella_fork_epoch,omitempty"`
 	NumValKeysPerNode int `yaml:"num_validator_keys_per_node"`
 }
 
 type EthNetConfig struct {
-	Participants        []*Participant           `yaml:"participants"`
-	NetParams           *EthPackageNetworkParams `yaml:"network_params"`
-	AdditionalServices  []string                 `yaml:"additional_services"`
-	ParallelKeystoreGen bool                     `yaml:"parallel_keystore_generation"`
+	Participants        []*Participant `yaml:"participants"`
+	NetParams           GenesisConfig  `yaml:"network_params"`
+	AdditionalServices  []string       `yaml:"additional_services"`
+	ParallelKeystoreGen bool           `yaml:"parallel_keystore_generation"`
 }
 
 type Participant struct {
