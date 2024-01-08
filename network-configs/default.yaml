@@ -70,7 +70,7 @@ participants:
   - el_client_type: geth
     el_client_image: ethereum/client-go:latest
     cl_client_type: teku
-    cl_client_image: sigp/lighthouse:latest
+    cl_client_image: ethpandaops/teku:master
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -86,10 +86,10 @@ participants:
     count: 1
 
 network_params:
-  # This needs to be set to ensure that path based storage is disabled on geth (older version doesn't yet support it)
-  capella_fork_epoch: 1
+  deneb_fork_epoch: 1
   num_validator_keys_per_node: 32
 additional_services:
   - prometheus_grafana
   - dora
 parallel_keystore_generation: true
+persistence: true
