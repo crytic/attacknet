@@ -8,40 +8,54 @@ attacknetConfig:
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: devnet-12.yaml
+  networkConfig: reth.yaml
   networkType: ethereum
 
-tests:
-- testName: reth-lighthouse-clock-skew
-  chaosFaultSpec:
-    kind: TimeChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      selector:
-        labelSelectors:
-          kurtosistech.com.custom/ethereum-package.client: lighthouse
-          kurtosistech.com.custom/ethereum-package.client-type: beacon
-      mode: all
-      action: delay
-      timeOffset: '-5m'
-      duration: 10m
-
-#kind: NetworkChaos
-#metadata:
-#  name: partition
-#spec:
-#  action: partition
-#  mode: all
-#  selector:
-#    namespaces:
-#      - default
-#    labelSelectors:
-#      'app': 'app1'
-#  direction: to
-#  target:
-#    mode: all
-#    selector:
-#      namespaces:
-#        - default
-#      labelSelectors:
-#        'app': 'app2'
+testConfig:
+  tests:
+  - testName: Perform clock skew on reth/teku validator
+    health:
+      enableChecks: true
+      gracePeriod: 120s
+    planSteps:
+    - stepType: injectFault
+      description: "inject clock skew on CL"
+      chaosFaultSpec:
+        kind: TimeChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com/id: cl-6-lodestar-reth
+          mode: all
+          action: delay
+          timeOffset: '-10m'
+          duration: 15m
+    - stepType: injectFault
+      description: "inject clock skew on CL validator"
+      chaosFaultSpec:
+        kind: TimeChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com/id: cl-6-lodestar-reth-validator
+          mode: all
+          action: delay
+          timeOffset: '-10m'
+          duration: 15m
+    - stepType: injectFault
+      description: "inject clock skew on EL"
+      chaosFaultSpec:
+        kind: TimeChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com/id: el-6-reth-lodestar
+          mode: all
+          action: delay
+          timeOffset: '-10m'
+          duration: 15m
+    - stepType: waitForFaultCompletion
+      description: "wait for faults to terminate"
