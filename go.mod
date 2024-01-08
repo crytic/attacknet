@@ -9,7 +9,7 @@ require (
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20240104130649-f55576898805
 	github.com/ethereum/go-ethereum v1.13.8
 	github.com/grafana-tools/sdk v0.0.0-20220919052116-6562121319fc
-	github.com/kurtosis-tech/kurtosis/api/golang v0.85.56-0.20240105153304-05099e567004
+	github.com/kurtosis-tech/kurtosis/api/golang v0.85.56
 	github.com/kurtosis-tech/stacktrace v0.0.0-20211028211901-1c67a77b5409
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v3 v3.0.1
@@ -69,9 +69,9 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/kurtosis-tech/kurtosis-portal/api/golang v0.0.0-20231031173452-349f1ec9a443 // indirect
-	github.com/kurtosis-tech/kurtosis/contexts-config-store v0.0.0-20240105153304-05099e567004 // indirect
-	github.com/kurtosis-tech/kurtosis/grpc-file-transfer/golang v0.0.0-20240105153304-05099e567004 // indirect
-	github.com/kurtosis-tech/kurtosis/utils v0.0.0-20240105153304-05099e567004 // indirect
+	github.com/kurtosis-tech/kurtosis/contexts-config-store v0.0.0-20240108104845-8e7cf71acdac // indirect
+	github.com/kurtosis-tech/kurtosis/grpc-file-transfer/golang v0.0.0-20240108104845-8e7cf71acdac // indirect
+	github.com/kurtosis-tech/kurtosis/utils v0.0.0-20240108104845-8e7cf71acdac // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
