@@ -24,7 +24,7 @@ type KubeClient struct {
 }
 
 func CreateKubeClient(namespace string) (*KubeClient, error) {
-	kubeConfigPath := filepath.Join(os.Getenv("HOME"), ".kube", "types")
+	kubeConfigPath := filepath.Join(os.Getenv("HOME"), ".kube", "config")
 
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
