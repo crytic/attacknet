@@ -2,34 +2,43 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 240
-  reuseDevnetBetweenRuns: false
+  reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
-  #existingDevnetNamespace: kt-ethereum
+  existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
   networkConfig: default.yaml
   networkType: ethereum
 
-tests:
-- testName: bandwidth-geth-prysm
-  chaosFaultSpec:
-    kind: NetworkChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      selector:
-        labelSelectors:
-          kurtosistech.com.custom/ethereum-package.client-type: beacon
+testConfig:
+  tests:
+  - testName: network-bandwidth
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: "inject fault"
+      chaosFaultSpec:
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com.custom/ethereum-package.client-type: beacon
 
-      target:
-        mode: all
-        labelSelectors:
-          kurtosistech.com/id: cl-2-prysm-geth
-      mode: all
-      action: bandwidth
-      duration: 1m
-      direction: from
-      bandwidth:
-        rate: '10kbps'
-        limit:  20000
-        buffer: 500
+          target:
+            mode: all
+            labelSelectors:
+              kurtosistech.com/id: cl-2-prysm-geth
+          mode: all
+          action: bandwidth
+          duration: 1m
+          direction: from
+          bandwidth:
+            rate: '10kbps'
+            limit:  20000
+            buffer: 500
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

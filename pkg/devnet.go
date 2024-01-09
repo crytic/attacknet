@@ -2,12 +2,12 @@ package pkg
 
 import (
 	"attacknet/cmd/pkg/kurtosis"
-	"attacknet/cmd/pkg/project"
+	"attacknet/cmd/pkg/types"
 	"context"
 	log "github.com/sirupsen/logrus"
 )
 
-func setupDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
+func setupDevnet(ctx context.Context, cfg *types.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
 	// todo: spawn kurtosis gateway?
 	kurtosisCtx, err := kurtosis.GetKurtosisContext()
 	if err != nil {
@@ -30,7 +30,7 @@ func setupDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *kurto
 	return enclaveCtx, nil
 }
 
-func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *project.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
+func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *types.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
 	kurtosisCtx, err := kurtosis.GetKurtosisContext()
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func loadEnclaveFromExistingDevnet(ctx context.Context, cfg *project.ConfigParse
 	return enclaveCtx, nil
 }
 
-func setupEnclave(ctx context.Context, cfg *project.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
+func setupEnclave(ctx context.Context, cfg *types.ConfigParsed) (enclave *kurtosis.EnclaveContextWrapper, err error) {
 	if cfg.AttacknetConfig.ExistingDevnetNamespace == "" {
 		if cfg.AttacknetConfig.ReuseDevnetBetweenRuns {
 			log.Warn("Could not re-use an existing devnet because no existingDevnetNamespace was set.")

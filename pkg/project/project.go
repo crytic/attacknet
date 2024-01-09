@@ -31,7 +31,7 @@ func initializeDirectoriesAndFiles(suitePath string, configPath string) error {
 		return err
 	}
 
-	fmt.Print("Todo: we need to create sample files for the suite/config dirs. They will be empty until then.")
+	fmt.Print("Todo: we need to create sample files for the suite/types dirs. They will be empty until then.")
 	return nil
 }
 

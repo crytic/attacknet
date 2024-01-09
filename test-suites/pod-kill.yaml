@@ -11,21 +11,27 @@ harnessConfig:
   networkConfig: default.yaml
   networkType: ethereum
 
-tests:
-- testName: pod-kill
-  # This fault kills the pod and prevents it from being restarted.
-  chaosFaultSpec:
-    kind: PodChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      action: pod-kill
-      mode: all
-      selector:
-        labelSelectors:
-          # kurtosistech.com.custom/ethereum-package.client-type: beacon
-          # kurtosistech.com.custom/ethereum-package.client-type: execution
-          #kurtosistech.com/id: cl-3-prysm-geth
-          kurtosistech.com/id: cl-3-prysm-geth
+testConfig:
+  tests:
+  - testName: pod-kill
+    health:
+      enableChecks: false
+    # This fault kills the pod and prevents it from being restarted.
+    planSteps:
+    - stepType: injectFault
+      description: "kill pods"
+      chaosFaultSpec:
+        kind: PodChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          action: pod-kill
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: cl-3-prysm-geth
 
 
 

@@ -63,7 +63,7 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 
 	faultAction, ok := spec["action"].(string)
 	if !ok {
-		return nil, stacktrace.NewError("failed to decode faultSpec.spec.action to string: %s", spec["action"])
+		faultAction = "default"
 	}
 
 	partial := &FaultSession{
@@ -126,7 +126,6 @@ func (f *FaultSession) checkTargetSelectionCompleted(resource client.Object) (bo
 			continue
 		}
 		if condition.Status == v1.ConditionTrue {
-			log.Info("chaos-mesh has identified pods to inject into")
 			f.TargetSelectionCompleted = true
 		}
 

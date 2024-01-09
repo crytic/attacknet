@@ -10,29 +10,35 @@ harnessConfig:
   networkConfig: devnet-12.yaml
   networkType: ethereum
 
-tests:
-- testName: cpu-stress
-  # This fault can be verified by installing a metrics server and running top. Note it can take up to 60s for the fault to start after injection.
-  # wget https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
-  # kubectl create -f metrics-server.yaml
-  # kubectl top pod el-1-geth-lighthouse
-  chaosFaultSpec:
-    kind: StressChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      mode: all
-      selector:
-        labelSelectors:
-          # kurtosistech.com.custom/ethereum-package.client-type: beacon
-          # kurtosistech.com.custom/ethereum-package.client-type: execution
-          #kurtosistech.com/id: cl-3-prysm-geth
-          kurtosistech.com/id: cl-3-prysm-reth
-      stressors:
-        cpu:
-          workers: 30 # number of threads that apply stress defined by `load`. workers * load may exceed 100.
-          load: 50
 
-      duration: 240s
-
-
-
+testConfig:
+  tests:
+  - testName: cpu-stress
+    # This fault can be verified by installing a metrics server and running top. Note it can take up to 60s for the fault to start after injection.
+    # wget https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
+    # kubectl create -f metrics-server.yaml
+    # kubectl top pod el-1-geth-lighthouse
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: 'Inject cpu stress'
+      chaosFaultSpec:
+        kind: StressChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: cl-2-prysm-geth
+          stressors:
+            cpu:
+              workers: 30 # number of threads that apply stress defined by `load`. workers * load may exceed 100.
+              load: 50
+          duration: 240s
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

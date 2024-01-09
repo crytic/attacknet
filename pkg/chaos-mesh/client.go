@@ -61,7 +61,7 @@ func (c *ChaosClient) StartFault(ctx context.Context, faultSpec map[string]inter
 	if chaosKind, ok := api.AllKinds()[kind]; ok {
 		chaos := chaosKind.SpawnObject()
 
-		faultName := fmt.Sprintf("fault-%d", time.Now().Unix())
+		faultName := fmt.Sprintf("fault-%d", time.Now().UnixMicro())
 		faultMeta := metav1.ObjectMeta{Name: faultName, Namespace: c.chaosNamespace}
 
 		reflect.ValueOf(chaos).Elem().FieldByName("ObjectMeta").Set(reflect.ValueOf(faultMeta))

@@ -1,7 +1,7 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
+  waitBeforeInjectionSeconds: 300
   reuseDevnetBetweenRuns: true
   existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
@@ -11,29 +11,37 @@ harnessConfig:
   networkConfig: default.yaml
   networkType: ethereum
 
-tests:
-- testName: memory-stress
-  # This fault can be verified by installing a metrics server and running top. Note it can take up to 60s for the fault to start after injection.
-  # wget https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
-  # kubectl create -f metrics-server.yaml
-  # kubectl top pod el-1-geth-lighthouse
-  chaosFaultSpec:
-    kind: StressChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      mode: all
-      selector:
-        labelSelectors:
-          # kurtosistech.com.custom/ethereum-package.client-type: beacon
-          # kurtosistech.com.custom/ethereum-package.client-type: execution
-          #kurtosistech.com/id: cl-3-prysm-geth
-          kurtosistech.com/id: el-3-geth-prysm
-      stressors:
-        memory:
-          workers: 50 # number of threads used to consume the memory defined by size. Memory to be allocated is split evenly between workers. Keep in mind threads have ~3MB overhead each.
-          size: '100MB'
+testConfig:
+  tests:
+  - testName: memory-stress
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    # This fault can be verified by installing a metrics server and running top. Note it can take up to 60s for the fault to start after injection.
+    # wget https://raw.githubusercontent.com/pythianarora/total-practice/master/sample-kubernetes-code/metrics-server.yaml
+    # kubectl create -f metrics-server.yaml
+    # kubectl top pod el-1-geth-lighthouse
+    planSteps:
+    - stepType: injectFault
+      description: "inject fault"
+      chaosFaultSpec:
+        kind: StressChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: el-3-geth-prysm
+          stressors:
+            memory:
+              workers: 50 # number of threads used to consume the memory defined by size. Memory to be allocated is split evenly between workers. Keep in mind threads have ~3MB overhead each.
+              size: '100MB'
 
-      duration: 120s
-
+          duration: 120s
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate
 
 

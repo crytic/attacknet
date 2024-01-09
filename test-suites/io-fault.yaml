@@ -2,7 +2,8 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 300
-  reuseDevnetBetweenRuns: false
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
@@ -10,25 +11,40 @@ harnessConfig:
   networkConfig: devnet-12.yaml
   networkType: ethereum
 
-tests:
+testConfig:
+  tests:
   # Note: io chaos will not work unless the "volumePath" actually maps to a volume mount. The root mount is not valid.
   # This means testing io chaos is blocked on Kurtosis supporting persistent volume mounts.
-- testName: io-fault
-  chaosFaultSpec:
-    kind: IOChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      action: fault
-      mode: all
-      selector:
-        labelSelectors:
-          kurtosistech.com/id: el-2-nethermind-lighthouse
+  - testName: io-fault
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: 'Inject i/o faults'
+      chaosFaultSpec:
+        kind: IOChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          action: fault
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: el-1-geth-lighthouse
 
-      volumePath: /data/nethermind/execution-data
-
-      errno: 5
-      percent: 50
-      duration: 30s
-
+          # for CL nodes
+          #path: '/consensus-data/**/*'
+          #volumePath: /consensus-data
+          # for EL nodes
+          path: '/execution-data/**/*'
+          volumePath: /execution-data
+          errno: 5
+          percent: 50
+          duration: 30s
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate
 
 

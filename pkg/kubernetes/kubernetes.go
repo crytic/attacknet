@@ -33,7 +33,7 @@ func CreateKubeClient(namespace string) (*KubeClient, error) {
 
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default config")
+		return nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default types")
 	}
 	/*
 		chaosScheme := runtime.NewScheme()
