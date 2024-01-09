@@ -1,14 +1,13 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
-  reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: kt-ethereum
+  waitBeforeInjectionSeconds: 300
+  reuseDevnetBetweenRuns: false
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 tests:
@@ -29,7 +28,7 @@ tests:
 
       errno: 5
       percent: 50
-      duration: 120s
+      duration: 30s
 
 
 

@@ -1,14 +1,13 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
+  waitBeforeInjectionSeconds: 300
   reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 tests:
@@ -27,7 +26,7 @@ tests:
           # kurtosistech.com.custom/ethereum-package.client-type: beacon
           # kurtosistech.com.custom/ethereum-package.client-type: execution
           #kurtosistech.com/id: cl-3-prysm-geth
-          kurtosistech.com/id: cl-2-prysm-geth
+          kurtosistech.com/id: cl-3-prysm-reth
       stressors:
         cpu:
           workers: 30 # number of threads that apply stress defined by `load`. workers * load may exceed 100.

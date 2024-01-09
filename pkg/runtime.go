@@ -7,6 +7,7 @@ import (
 	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/kurtosis-tech/stacktrace"
@@ -28,28 +29,20 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	}
 
 	// todo: move these into setupServices or something.
-	log.Infof("Creating a Grafana client")
-	grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		grafanaTunnel.Cleanup(false)
-	}()
-
-	// todo: set up grafana health checks/alerting here
-
-	// todo: wait for finality or other network pre-conditions here.
-	// probably check for initial health checks here too.
-
-	//ds, err := grafanaTunnel.Client.GetDatasource(ctx, 1)
-	//grafanaTunnel.Client.CreateAlertNotification()
+	//log.Infof("Creating a Grafana client")
+	//grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
+	//if err != nil {
+	//	return err
+	//}
+	//defer func() {
+	//	grafanaTunnel.Cleanup(false)
+	//}()
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
 	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
 	if err != nil {
-		grafanaTunnel.Cleanup(true)
+		//	grafanaTunnel.Cleanup(true)
 		return err
 	}
 
@@ -64,14 +57,14 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 
 	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
 	if err != nil {
-		grafanaTunnel.Cleanup(true)
+		//	grafanaTunnel.Cleanup(true)
 		return err
 	}
 
 	// start core logic loop here.
 	err = waitForInjectionCompleted(ctx, faultSession)
 	if err != nil {
-		grafanaTunnel.Cleanup(true)
+		//	grafanaTunnel.Cleanup(true)
 		return err
 	}
 	var timeToSleep time.Duration
@@ -94,11 +87,21 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 
 	err = waitForFaultRecovery(ctx, faultSession)
 	if err != nil {
-		grafanaTunnel.Cleanup(true)
+		//	grafanaTunnel.Cleanup(true)
 		return err
 	}
 
 	_, err = hc.RunChecksUntilTimeout(ctx)
+
+	if err != nil {
+		log.Errorf("Errors encountered while running health checks: %s", err.Error())
+	}
+
+	// handle post-fault inspection
+	if cfg.AttacknetConfig.AllowPostFaultInspection {
+		log.Info("Press enter to terminate the port-forward connection.")
+		_, _ = fmt.Scanln()
+	}
 
 	return err
 }
