@@ -60,9 +60,14 @@ func (c *ExecRpcClient) GetLatestBlockBy(ctx context.Context, blockType string) 
 		}
 	} else {
 		blockNum := head.Number.Uint64()
+		hash := head.Hash().String()
+		if blockNum == 0 {
+			// use none for hash
+			hash = "None"
+		}
 		choice = &ClientForkChoice{
 			BlockNumber: blockNum,
-			BlockHash:   head.Hash().String(),
+			BlockHash:   hash,
 			Pod:         c.session.Pod,
 		}
 	}

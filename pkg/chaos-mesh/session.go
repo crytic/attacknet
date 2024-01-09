@@ -63,7 +63,7 @@ func NewFaultSession(ctx context.Context, client *ChaosClient, faultKind *api.Ch
 
 	faultAction, ok := spec["action"].(string)
 	if !ok {
-		return nil, stacktrace.NewError("failed to decode faultSpec.spec.action to string: %s", spec["action"])
+		faultAction = "default"
 	}
 
 	partial := &FaultSession{
