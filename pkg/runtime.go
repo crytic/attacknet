@@ -17,25 +17,11 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		enclave.Destroy(ctx)
-	}()
 
 	kubeClient, err := kubernetes.CreateKubeClient(enclave.Namespace)
 	if err != nil {
 		return err
 	}
-
-
-	// todo: move these into setupServices or something.
-	//log.Infof("Creating a Grafana client")
-	//grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
-	//if err != nil {
-	//	return err
-	//}
-	//defer func() {
-	//	grafanaTunnel.Cleanup(false)
-	//}()
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
@@ -84,6 +70,8 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			_ = results
 		}
 	}
+
+	enclave.Destroy(ctx)
 
 	return nil
 	/*

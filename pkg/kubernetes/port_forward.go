@@ -109,7 +109,7 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, 
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create port forward dialer")
 	}
-	log.Infof("Starting port-forward to pod/%s:%d", pod, remotePort)
+	log.Debugf("Starting port-forward to pod/%s:%d", pod, remotePort)
 
 	go func() {
 		if err = portForward.ForwardPorts(); err != nil {
@@ -119,7 +119,7 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, 
 
 	select {
 	case <-readyCh:
-		log.Infof("Port-forward established to pod/%s:%d", pod, remotePort)
+		log.Debugf("Port-forward established to pod/%s:%d", pod, remotePort)
 	case <-time.After(time.Minute):
 		return nil, errors.New("timed out after waiting to establish port forward")
 	}
