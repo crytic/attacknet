@@ -10,28 +10,29 @@ harnessConfig:
     networkPackage: github.com/kurtosis-tech/ethereum-package
     networkConfig: plan/test.yaml
 testConfig:
-    tests:
-        - testName: clock skew
-          planSteps:
-            - stepType: injectFault
-              description: 'Inject clock skew on target reth/teku Node (Node #3)'
-              chaosFaultSpec:
-                apiVersion: chaos-mesh.org/v1alpha1
-                kind: TimeChaos
-                spec:
-                    action: delay
-                    duration: 1m
-                    mode: all
-                    selector:
-                        expressionSelectors:
-                            - key: kurtosistech.com/id
-                              operator: In
-                              values:
-                                - el-3-reth-teku
-                                - cl-3-teku-reth
-                    timeOffset: -5m
-            - stepType: waitForFaultCompletion
-              description: wait for faults to terminate
-          health:
-            enableChecks: true
-            gracePeriod: 2m0s
+  tests:
+  - testName: clock skew
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: 'Inject clock skew on target reth/teku Node (Node #3)'
+      chaosFaultSpec:
+        apiVersion: chaos-mesh.org/v1alpha1
+        kind: TimeChaos
+        spec:
+            action: delay
+            duration: 1m
+            mode: all
+            selector:
+                expressionSelectors:
+                    - key: kurtosistech.com/id
+                      operator: In
+                      values:
+                        - el-3-reth-teku
+                        - cl-3-teku-reth
+            timeOffset: -5m
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate
+

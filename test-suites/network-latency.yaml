@@ -2,8 +2,8 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 240
-  reuseDevnetBetweenRuns: false
-  #existingDevnetNamespace: kt-ethereum # if no genesis found, create one
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
@@ -11,20 +11,29 @@ harnessConfig:
   networkConfig: default.yaml
   networkType: ethereum
 
-tests:
-- testName: latency-geth-prysm
-  chaosFaultSpec:
-    kind: NetworkChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      selector:
-        labelSelectors:
-          kurtosistech.com.custom/ethereum-package.client: prysm
-          kurtosistech.com.custom/ethereum-package.client-type: beacon
-      mode: all
-      action: delay
-      duration: 5m
-      delay:
-        latency: '500ms'
-        correlation: '100'
-        jitter: '0ms'
+testConfig:
+  tests:
+  - testName: network-latency
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: "inject network latency"
+      chaosFaultSpec:
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com.custom/ethereum-package.client: prysm
+              kurtosistech.com.custom/ethereum-package.client-type: beacon
+          mode: all
+          action: delay
+          duration: 5m
+          delay:
+            latency: '500ms'
+            correlation: '100'
+            jitter: '0ms'
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

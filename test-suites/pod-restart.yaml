@@ -4,7 +4,7 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 0
   reuseDevnetBetweenRuns: true
   existingDevnetNamespace: kt-ethereum
-  allowPostFaultInspection: false
+  allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
@@ -32,7 +32,6 @@ testConfig:
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
               kurtosistech.com/id: cl-4-prysm-reth
-
           duration: 10s
 
 
