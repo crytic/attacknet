@@ -26,21 +26,22 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 		return err
 	}
 
-	// todo: move this into setupServices or something.
-	log.Infof("Creating a Grafana client")
-	grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		grafanaTunnel.Cleanup(false)
-	}()
+
+	// todo: move these into setupServices or something.
+	//log.Infof("Creating a Grafana client")
+	//grafanaTunnel, err := CreateGrafanaClient(ctx, kubeClient, cfg.AttacknetConfig)
+	//if err != nil {
+	//	return err
+	//}
+	//defer func() {
+	//	grafanaTunnel.Cleanup(false)
+	//}()
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
 	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
 	if err != nil {
-		grafanaTunnel.Cleanup(true)
+		//	grafanaTunnel.Cleanup(true)
 		return err
 	}
 

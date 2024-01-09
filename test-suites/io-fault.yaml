@@ -8,7 +8,7 @@ attacknetConfig:
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 testConfig:
@@ -41,10 +41,9 @@ testConfig:
           # for EL nodes
           path: '/execution-data/**/*'
           volumePath: /execution-data
-
           errno: 5
           percent: 50
-          duration: 120s
+          duration: 30s
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate
 

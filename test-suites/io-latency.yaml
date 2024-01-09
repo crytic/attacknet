@@ -1,7 +1,7 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 300
+  waitBeforeInjectionSeconds: 10
   reuseDevnetBetweenRuns: true
   existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
@@ -41,7 +41,6 @@ testConfig:
           # for EL nodes
           path: '/execution-data/**/*'
           volumePath: /execution-data
-
           delay: '2000ms'
           percent: 100
           duration: 120s

@@ -1,15 +1,15 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 10
+  waitBeforeInjectionSeconds: 300
   reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
+
 
 testConfig:
   tests:
@@ -39,7 +39,6 @@ testConfig:
             cpu:
               workers: 30 # number of threads that apply stress defined by `load`. workers * load may exceed 100.
               load: 50
-
           duration: 240s
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate

@@ -1,9 +1,9 @@
 participants:
-  - el_client_type: geth
-    el_client_image: ethpandaops/geth:master-5b57727
+  - el_client_type: nethermind
+    el_client_image: nethermindeth/nethermind:release-1.25.0
     el_extra_labels: {"ethereum-package.partition": "partA"}
     cl_client_type: lighthouse
-    cl_client_image: ethpandaops/lighthouse:sidecar-inclusion-proof-e5a0e2c
+    cl_client_image: ethpandaops/lighthouse:unstable-c55608b
     beacon_extra_labels: {"ethereum-package.partition": "partA"}
     validator_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
@@ -18,12 +18,12 @@ participants:
     v_max_cpu: 1000
     v_min_mem: 1028
     v_max_mem: 1028
-    count: 2
+    count: 1
   - el_client_type: nethermind
-    el_client_image: ethpandaops/nethermind:master-dcec565
+    el_client_image: nethermindeth/nethermind:release-1.25.0
     el_extra_labels: {"ethereum-package.partition": "partA"}
-    cl_client_type: teku
-    cl_client_image: ethpandaops/teku:master-992b224
+    cl_client_type: lighthouse
+    cl_client_image: ethpandaops/lighthouse:unstable-c55608b
     beacon_extra_labels: {"ethereum-package.partition": "partA"}
     validator_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
@@ -42,8 +42,8 @@ participants:
   - el_client_type: reth
     el_client_image: ethpandaops/reth:main-471c28e
     el_extra_labels: {"ethereum-package.partition": "partB"}
-    cl_client_type: lodestar
-    cl_client_image: ethpandaops/lodestar:blobs-inclproof-d5a5a47
+    cl_client_type: prysm
+    cl_client_image: gcr.io/prysmaticlabs/prysm/beacon-chain:HEAD-929e9d,gcr.io/prysmaticlabs/prysm/validator:HEAD-929e9d
     beacon_extra_labels: {"ethereum-package.partition": "partB"}
     validator_extra_labels: {"ethereum-package.partition": "partB"}
     el_min_cpu: 1000
@@ -61,13 +61,8 @@ participants:
     count: 1
 network_params:
   deneb_fork_epoch: 1
-  num_validator_keys_per_node: 32
-  seconds_per_slot: 6
   genesis_delay: 120
 additional_services:
-  - prometheus_grafana
   - beacon_metrics_gazer
   - dora
-  - tx_spammer
-  - blob_spammer
-parallel_keystore_generation: true
+persistent: true

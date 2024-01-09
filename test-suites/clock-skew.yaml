@@ -2,12 +2,12 @@ attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 300
-  reuseDevnetBetweenRuns: false
+  reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 testConfig:
@@ -29,8 +29,8 @@ testConfig:
               kurtosistech.com.custom/ethereum-package.client-type: beacon
           mode: all
           action: delay
-          timeOffset: '-5m'
-          duration: 10m
+          timeOffset: '-1m'
+          duration: 1m
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate
 

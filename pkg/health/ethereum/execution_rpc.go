@@ -40,11 +40,16 @@ func (c *ExecRpcClient) GetLatestBlockBy(ctx context.Context, blockType string) 
 			"Unknown block error",       //nethermind
 			"unknown block",             //reth
 		}
-		if err.Error() == notFinalizingErrors[0] ||
-			err.Error() == notFinalizingErrors[1] ||
-			err.Error() == notFinalizingErrors[2] ||
-			err.Error() == notFinalizingErrors[3] ||
-			err.Error() == notFinalizingErrors[4] {
+
+		noFinalBlockFound := false
+		for _, msg := range notFinalizingErrors {
+			if err.Error() == msg {
+				noFinalBlockFound = true
+				break
+			}
+		}
+
+		if noFinalBlockFound {
 			choice = &ClientForkChoice{
 				Pod:         c.session.Pod,
 				BlockNumber: 0,
