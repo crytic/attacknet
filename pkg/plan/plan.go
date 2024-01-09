@@ -2,7 +2,7 @@ package plan
 
 import (
 	"attacknet/cmd/pkg/plan/network"
-	"attacknet/cmd/pkg/plan/suite"
+	"attacknet/cmd/pkg/plan/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	"os"
@@ -47,126 +47,136 @@ func preparePaths(testName string) (netRefPath, netConfigPath, planConfigPath st
 func writePlans(netConfigPath, suiteConfigPath string, netConfig, suiteConfig []byte) error {
 	f, err := os.Create(netConfigPath)
 	if err != nil {
-		return stacktrace.Propagate(err, "cannot open network config path %s", netConfigPath)
+		return stacktrace.Propagate(err, "cannot open network types path %s", netConfigPath)
 	}
 	_, err = f.Write(netConfig)
 	if err != nil {
-		return stacktrace.Propagate(err, "could not write network config to file")
+		return stacktrace.Propagate(err, "could not write network types to file")
 	}
 
 	err = f.Close()
 	if err != nil {
-		return stacktrace.Propagate(err, "could not close network config file")
+		return stacktrace.Propagate(err, "could not close network types file")
 	}
 
 	f, err = os.Create(suiteConfigPath)
 	if err != nil {
-		return stacktrace.Propagate(err, "cannot open suite config path %s", suiteConfigPath)
+		return stacktrace.Propagate(err, "cannot open suite types path %s", suiteConfigPath)
 	}
 	_, err = f.Write(suiteConfig)
 	if err != nil {
-		return stacktrace.Propagate(err, "could not write suite config to file")
+		return stacktrace.Propagate(err, "could not write suite types to file")
 	}
 
 	err = f.Close()
 	if err != nil {
-		return stacktrace.Propagate(err, "could not close suite config file")
+		return stacktrace.Propagate(err, "could not close suite types file")
 	}
 
 	return nil
 }
 
-func BuildPlan() error {
-	testName := "test"
+func BuildPlan(planName string, config *types.PlannerConfig) error {
 
-	netRefPath, netConfigPath, suiteConfigPath, err := preparePaths(testName)
+	netRefPath, netConfigPath, suiteConfigPath, err := preparePaths(planName)
 	if err != nil {
 		return err
 	}
 
-	nodes, genesisConfig, err := network.BuildExecTesterNetwork("reth", "/Users/bsamuels/projects/attacknet/planner-configs/latest-clients.yaml")
+	nodes, err := network.ComposeNetworkTopology(config.FaultConfig.TargetClient, config.ExecutionClients, config.ConsensusClients)
 	if err != nil {
 		return err
 	}
 
-	suiteConfig, err := suite.WritePlab(netRefPath, nodes)
-	if err != nil {
-		return err
-	}
-
-	networkConfig, err := network.SerializeNetworkConfig(nodes, genesisConfig)
-	if err != nil {
-		return err
-	}
-
-	return writePlans(netConfigPath, suiteConfigPath, networkConfig, suiteConfig)
+	//suiteConfig, err := suite.ComposeAndSerializeTestSuite(netRefPath, nodes)
+	//_ = suiteConfig
+	_ = nodes
+	_ = netConfigPath
+	_ = suiteConfigPath
+	_ = netRefPath
 	/*
-				run time delay on various el/cl combos
-				-> each target exists in the same suite/network
+		suiteConfig, err := suite.WritePlab(netRefPath, nodes)
+		if err != nil {
+			return err
+		}
 
-				run time delay on group of el-cl nodes that use the same CL or EL
-				-> network minority
-				-> 33+ but less than 66%
+		networkConfig, err := network.SerializeNetworkTopology(nodes, genesisConfig)
+		if err != nil {
+			return err
+		}
 
-				re-org on group of el-cl nodes that use the same CL or EL
-
-			there's two steps, identifying targets, and creating the manifest for the target/test config
-
-			targeting criteria types:
-			- percentages of the validator set (32, 33, 34, 50, 65)%
-			- subcategories: by node vs. by client
-			- target by client
-				- a specific node containing an instance of the client
-				- all nodes containing an instance of the client
-				- a specific instance of the client
-				- all instances of the client
-				- subcategories: target node or target client by criterion
-
-
-			clock skew
-			- extra varies:
-				- clock skew nodes by EL
-				- clock skew nodes by CL
-			- criterion: percentage(client, node), target by client(client, node)
-
-
-			restarts
-			- these restarts require resync
-			- criterion: percentages(client, node), target by client(client, node)
-
-			network bandwidth
-			- extra varies:
-				- the amount of bandwidth
-				- whether the constraint is EL<-CL or node <-> network
-			- percentages
-			- client criterion (although not all client selections will be valid)
-
-			network split
-			- percentages
-			- client criterion
-
-			packet drop
-			- extra varies: loss pct, correlation
-
-			latency
-			- extra varies: latency amount, correlation
-			- percentages (although includes 100%)
-			- clients (both type?)
-
-			syncing faults
-			-> restart node, force to sync. inject fault while syncing. this impacts checkpoint sync probably too.
-
-			packet corruption
-
-
-		each test builder needs a way to reject input corpus
-		eventually we'll want a way to block known bad inputs (ie: lodestar doesnt seem to re-establish peers correctly)
-		anotehr example:
-
-		actual tasks:
-		- implement plan builder for each concept
-
-			selector := buildParamsForNodeFault(node)
+		return writePlans(netConfigPath, suiteConfigPath, networkConfig, suiteConfig)
 	*/
-	//return nil
+
+	return nil
 }
+
+/*
+			run time delay on various el/cl combos
+			-> each target exists in the same suite/network
+
+			run time delay on group of el-cl nodes that use the same CL or EL
+			-> network minority
+			-> 33+ but less than 66%
+
+			re-org on group of el-cl nodes that use the same CL or EL
+
+		there's two steps, identifying targets, and creating the manifest for the target/test types
+
+		targeting criteria types:
+		- percentages of the validator set (32, 33, 34, 50, 65)%
+		- subcategories: by node vs. by client
+		- target by client
+			- a specific node containing an instance of the client
+			- all nodes containing an instance of the client
+			- a specific instance of the client
+			- all instances of the client
+			- subcategories: target node or target client by criterion
+
+
+		clock skew
+		- extra varies:
+			- clock skew nodes by EL
+			- clock skew nodes by CL
+		- criterion: percentage(client, node), target by client(client, node)
+
+
+		restarts
+		- these restarts require resync
+		- criterion: percentages(client, node), target by client(client, node)
+
+		network bandwidth
+		- extra varies:
+			- the amount of bandwidth
+			- whether the constraint is EL<-CL or node <-> network
+		- percentages
+		- client criterion (although not all client selections will be valid)
+
+		network split
+		- percentages
+		- client criterion
+
+		packet drop
+		- extra varies: loss pct, correlation
+
+		latency
+		- extra varies: latency amount, correlation
+		- percentages (although includes 100%)
+		- clients (both type?)
+
+		syncing faults
+		-> restart node, force to sync. inject fault while syncing. this impacts checkpoint sync probably too.
+
+		packet corruption
+
+
+	each test builder needs a way to reject input corpus
+	eventually we'll want a way to block known bad inputs (ie: lodestar doesnt seem to re-establish peers correctly)
+	anotehr example:
+
+	actual tasks:
+	- implement plan builder for each concept
+
+		selector := buildParamsForNodeFault(node)
+*/
+//return nil

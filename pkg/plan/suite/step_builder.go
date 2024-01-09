@@ -1,7 +1,7 @@
 package suite
 
 import (
-	"attacknet/cmd/pkg/plan/network"
+	planTypes "attacknet/cmd/pkg/plan/types"
 	"attacknet/cmd/pkg/types"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -15,7 +15,7 @@ const (
 	Validator clientType = "validator"
 )
 
-func convertToNodeIdTag(node *network.Node, client clientType) string {
+func convertToNodeIdTag(node *planTypes.Node, client clientType) string {
 	switch client {
 	case Execution:
 		return fmt.Sprintf("el-%d-%s-%s", node.Index, node.Execution.Type, node.Consensus.Type)

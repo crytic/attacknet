@@ -24,7 +24,7 @@ type KubeClient struct {
 }
 
 func CreateKubeClient(namespace string) (*KubeClient, error) {
-	kubeConfigPath := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	kubeConfigPath := filepath.Join(os.Getenv("HOME"), ".kube", "types")
 
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
@@ -33,7 +33,7 @@ func CreateKubeClient(namespace string) (*KubeClient, error) {
 
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default config")
+		return nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default types")
 	}
 	/*
 		chaosScheme := runtime.NewScheme()

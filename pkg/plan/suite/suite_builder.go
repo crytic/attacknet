@@ -1,16 +1,35 @@
 package suite
 
 import (
-	"attacknet/cmd/pkg/plan/network"
+	planTypes "attacknet/cmd/pkg/plan/types"
 	"attacknet/cmd/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
-func WritePlab(networkConfigPath string, nodes []*network.Node) ([]byte, error) {
+func ComposeAndSerializeTestSuite(
+	faultConfig planTypes.PlannerFaultConfiguration,
+	networkConfigPath string,
+	nodes []*planTypes.Node) ([]byte, error) {
+
+	var tests []types.SuiteTest
+
+	//slice by targeting (client, node)
+	// -> creates targeting lambdas
+	//slice by attack size
+	// -> takes nodes[], returns target selectors. count reduced as aliasing overlaps will cause dupes
+
+	// slice by intensity
+	// -> creates []intensities
+
+	_ = tests
+	return nil, nil
+}
+
+func WritePlab(networkConfigPath string, nodes []*planTypes.Node) ([]byte, error) {
 	skew := "-5m"
 	duration := "1m"
-	criteria := createDualClientTargetCriteria("reth", "teku")
-	targetSelectors, err := BuildTargetSelectors(nodes, TargetAll, criteria, impactNode)
+	criteriaLambda := createDualClientTargetCriteria("reth", "teku")
+	targetSelectors, err := BuildTargetSelectors(nodes, planTypes.AttackAll, criteriaLambda, impactNode)
 	if err != nil {
 		return nil, err
 	}

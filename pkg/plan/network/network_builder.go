@@ -1,15 +1,15 @@
 package network
 
 import (
+	"attacknet/cmd/pkg/plan/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	"gopkg.in/yaml.v3"
-	"os"
 	"strings"
 )
 
-func serializeNodes(nodes []*Node) []*Participant {
-	participants := make([]*Participant, len(nodes))
+func serializeNodes(nodes []*types.Node) []*types.Participant {
+	participants := make([]*types.Participant, len(nodes))
 	for i, node := range nodes {
 		consensusImage := node.Consensus.Image
 
@@ -18,7 +18,7 @@ func serializeNodes(nodes []*Node) []*Participant {
 			consensusImage = consensusImage + fmt.Sprintf(",%s", node.Consensus.ValidatorImage)
 		}
 
-		p := &Participant{
+		p := &types.Participant{
 			ElClientType:  node.Execution.Type,
 			ElClientImage: node.Execution.Image,
 
@@ -47,8 +47,8 @@ func serializeNodes(nodes []*Node) []*Participant {
 	return participants
 }
 
-func createNodesForElTesting(index int, execClient ClientVersion, consensusClients map[string]ClientVersion) ([]*Node, error) {
-	var nodes []*Node
+func createNodesForElTesting(index int, execClient types.ClientVersion, consensusClients map[string]types.ClientVersion) ([]*types.Node, error) {
+	var nodes []*types.Node
 
 	for _, consensusClient := range consensusClients {
 		node := buildNode(index, execClient, consensusClient)
@@ -59,7 +59,7 @@ func createNodesForElTesting(index int, execClient ClientVersion, consensusClien
 	return nodes, nil
 }
 
-func createBootnode(execClients, consensusClients map[string]ClientVersion) (*Node, error) {
+func createBootnode(execClients, consensusClients map[string]types.ClientVersion) (*types.Node, error) {
 	execConf, ok := execClients["geth"]
 	if !ok {
 		return nil, stacktrace.NewError("unable to load configuration for exec client geth")
@@ -71,20 +71,9 @@ func createBootnode(execClients, consensusClients map[string]ClientVersion) (*No
 	return buildNode(0, execConf, consConf), nil
 }
 
-func loadClientConfig(clientConfigPath string) (executionClients, consensusClients map[string]ClientVersion, networkConfig *GenesisConfig, err error) {
-	bs, err := os.ReadFile(clientConfigPath)
-	if err != nil {
-		return nil, nil, nil, stacktrace.Propagate(err, "could not read client config file on path %s", clientConfigPath)
-	}
-
-	var config PlanConfig
-	err = yaml.Unmarshal(bs, &config)
-	if err != nil {
-		return nil, nil, nil, stacktrace.Propagate(err, "unable to unmarshal planner config in %s", clientConfigPath)
-	}
-
-	populateClientMap := func(li []ClientVersion) (map[string]ClientVersion, error) {
-		clients := make(map[string]ClientVersion)
+func clientListsToMaps(execClients, consClients []types.ClientVersion) (execClientMap, consClientMap map[string]types.ClientVersion, err error) {
+	populateClientMap := func(li []types.ClientVersion) (map[string]types.ClientVersion, error) {
+		clients := make(map[string]types.ClientVersion)
 		for _, client := range li {
 			_, exists := clients[client.Name]
 			if exists {
@@ -95,53 +84,75 @@ func loadClientConfig(clientConfigPath string) (executionClients, consensusClien
 		return clients, nil
 	}
 
-	executionClients, err = populateClientMap(config.ExecutionClients)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	consensusClients, err = populateClientMap(config.ConsensusClients)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return executionClients, consensusClients, &config.NetworkParams, nil
-}
-
-func BuildExecTesterNetwork(execClient string, clientConfigPath string) ([]*Node, *GenesisConfig, error) {
-	execClients, consensusClients, networkConfig, err := loadClientConfig(clientConfigPath)
+	execClientMap, err = populateClientMap(execClients)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	consClientMap, err = populateClientMap(consClients)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return execClientMap, consClientMap, nil
+}
+
+func ComposeNetworkTopology(client string, execClients, consClients []types.ClientVersion) ([]*types.Node, error) {
+	if client == "all" {
+		return nil, stacktrace.NewError("target client 'all' not supported yet")
+	}
+
+	isExecutionClient := false
+	for _, execClient := range execClients {
+		if execClient.Name == client {
+			isExecutionClient = true
+			break
+		}
+	}
+	// assume already checked client is a member of consClients or execClients
+
+	if isExecutionClient {
+		return composeExecTesterNetwork(client, execClients, consClients)
+	} else {
+		// todo
+		return nil, nil
+	}
+}
+
+func composeExecTesterNetwork(execClient string, execClients, consClients []types.ClientVersion) ([]*types.Node, error) {
+	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
+	if err != nil {
+		return nil, err
 	}
 
 	// make sure execClient actually exists
-	clientUnderTest, ok := execClients[execClient]
+	clientUnderTest, ok := execClientMap[execClient]
 	if !ok {
-		return nil, nil, stacktrace.NewError("unknown execution client %s", execClient)
+		return nil, stacktrace.NewError("unknown execution client %s", execClient)
 	}
 
-	var nodes []*Node
+	var nodes []*types.Node
 	index := 0
-	bootnode, err := createBootnode(execClients, consensusClients)
+	bootnode, err := createBootnode(execClientMap, consClientMap)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	nodes = append(nodes, bootnode)
 	index += 1
 
-	n, err := createNodesForElTesting(index, clientUnderTest, consensusClients)
+	n, err := createNodesForElTesting(index, clientUnderTest, consClientMap)
 	nodes = append(nodes, n...)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return nodes, networkConfig, nil
+	return nodes, nil
 }
 
-func SerializeNetworkConfig(nodes []*Node, config *GenesisConfig) ([]byte, error) {
+func SerializeNetworkTopology(nodes []*types.Node, config *types.GenesisConfig) ([]byte, error) {
 	serializableNodes := serializeNodes(nodes)
 
-	netConfig := &EthNetConfig{
+	netConfig := &types.EthNetConfig{
 		Participants: serializableNodes,
 		NetParams:    *config,
 		AdditionalServices: []string{
@@ -159,14 +170,14 @@ func SerializeNetworkConfig(nodes []*Node, config *GenesisConfig) ([]byte, error
 	return bs, nil
 }
 
-func ParseKurtosisNetworkConfig(conf []byte) ([]*Node, error) {
-	parsedConf := EthNetConfig{}
+func ParseKurtosisNetworkConfig(conf []byte) ([]*types.Node, error) {
+	parsedConf := types.EthNetConfig{}
 	err := yaml.Unmarshal(conf, &parsedConf)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to parse eth network config")
+		return nil, stacktrace.Propagate(err, "unable to parse eth network types")
 	}
 
-	var nodes []*Node
+	var nodes []*types.Node
 
 	for i, participant := range parsedConf.Participants {
 		hasSidecar := false
@@ -183,10 +194,10 @@ func ParseKurtosisNetworkConfig(conf []byte) ([]*Node, error) {
 
 		votesPerNode := parsedConf.NetParams.NumValKeysPerNode
 
-		node := &Node{
+		node := &types.Node{
 			Index:          i + 1,
 			ConsensusVotes: votesPerNode,
-			Consensus: &ConsensusClient{
+			Consensus: &types.ConsensusClient{
 				Type:                  participant.ClClientType,
 				Image:                 consensusImage,
 				ValidatorImage:        validatorImage,
@@ -197,7 +208,7 @@ func ParseKurtosisNetworkConfig(conf []byte) ([]*Node, error) {
 				SidecarCpuRequired:    participant.ValMinCpu,
 				SidecarMemoryRequired: participant.ValMinMemory,
 			},
-			Execution: &ExecutionClient{
+			Execution: &types.ExecutionClient{
 				Type:           participant.ElClientType,
 				Image:          participant.ElClientImage,
 				ExtraLabels:    map[string]string{},

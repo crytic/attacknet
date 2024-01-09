@@ -19,6 +19,8 @@ var CLI struct {
 		Suite string `arg:"" name:"suite name" help:"The test suite to run. These are located in ./test-suites"`
 	} `cmd:"" help:"Run a specified test suite"`
 	Plan struct {
+		Name string `arg:"" optional:"" name:"name" help:"The name of the test suite to be generated"`
+		Path string `arg:"" optional:"" type:"existingfile" name:"path" help:"Location of the planner configuration."`
 	} `cmd:"" help:"Construct an attacknet suite for a client"`
 }
 
@@ -55,9 +57,13 @@ func main() {
 			log.Fatal(err)
 			os.Exit(1)
 		}
-
-	case "plan":
-		err := plan.BuildPlan()
+	case "plan <path>":
+		config, err := plan.LoadPlannerConfigFromPath(CLI.Plan.Path)
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+		}
+		err = plan.BuildPlan(CLI.Plan.Name, config)
 		if err != nil {
 			log.Fatal(err)
 			os.Exit(1)

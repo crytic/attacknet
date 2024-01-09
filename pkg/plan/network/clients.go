@@ -1,6 +1,9 @@
 package network
 
-import "strings"
+import (
+	"attacknet/cmd/pkg/plan/types"
+	"strings"
+)
 
 const default_el_cpu = 1000
 const default_cl_cpu = 1000
@@ -10,7 +13,7 @@ const default_el_mem = 1024
 const default_cl_mem = 2048
 const default_val_mem = 1024
 
-func buildConsensusClient(config ClientVersion) *ConsensusClient {
+func buildConsensusClient(config types.ClientVersion) *types.ConsensusClient {
 	image := config.Image
 	validatorImage := ""
 
@@ -20,7 +23,7 @@ func buildConsensusClient(config ClientVersion) *ConsensusClient {
 		validatorImage = images[1]
 	}
 	if config.HasSidecar {
-		return &ConsensusClient{
+		return &types.ConsensusClient{
 			Type:                  config.Name,
 			Image:                 image,
 			HasValidatorSidecar:   true,
@@ -32,7 +35,7 @@ func buildConsensusClient(config ClientVersion) *ConsensusClient {
 			SidecarMemoryRequired: default_val_mem,
 		}
 	} else {
-		return &ConsensusClient{
+		return &types.ConsensusClient{
 			Type:                  config.Name,
 			Image:                 image,
 			HasValidatorSidecar:   false,
@@ -46,8 +49,8 @@ func buildConsensusClient(config ClientVersion) *ConsensusClient {
 	}
 }
 
-func buildExecutionClient(config ClientVersion) *ExecutionClient {
-	return &ExecutionClient{
+func buildExecutionClient(config types.ClientVersion) *types.ExecutionClient {
+	return &types.ExecutionClient{
 		Type:           config.Name,
 		Image:          config.Image,
 		ExtraLabels:    make(map[string]string),
@@ -56,8 +59,8 @@ func buildExecutionClient(config ClientVersion) *ExecutionClient {
 	}
 }
 
-func buildNode(index int, execConf, consensusConf ClientVersion) *Node {
-	return &Node{
+func buildNode(index int, execConf, consensusConf types.ClientVersion) *types.Node {
+	return &types.Node{
 		Index:     index,
 		Execution: buildExecutionClient(execConf),
 		Consensus: buildConsensusClient(consensusConf),

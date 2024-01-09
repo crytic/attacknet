@@ -1,7 +1,9 @@
 package network
 
-func createPrysmClient() *ConsensusClient {
-	return &ConsensusClient{
+import "attacknet/cmd/pkg/plan/types"
+
+func createPrysmClient() *types.ConsensusClient {
+	return &types.ConsensusClient{
 		Type:                  "prysm",
 		Image:                 "prysmaticlabs/prysm-beacon-chain:latest",
 		ValidatorImage:        "prysmaticlabs/prysm-validator:latest",
@@ -14,8 +16,8 @@ func createPrysmClient() *ConsensusClient {
 	}
 }
 
-func createLighthouseClient() *ConsensusClient {
-	return &ConsensusClient{
+func createLighthouseClient() *types.ConsensusClient {
+	return &types.ConsensusClient{
 		Type:                  "lighthouse",
 		Image:                 "sigp/lighthouse:latest",
 		HasValidatorSidecar:   true,
@@ -27,8 +29,8 @@ func createLighthouseClient() *ConsensusClient {
 	}
 }
 
-func createTekuClient() *ConsensusClient {
-	return &ConsensusClient{
+func createTekuClient() *types.ConsensusClient {
+	return &types.ConsensusClient{
 		Type:                "teku",
 		Image:               "consensys/teku:23.12.0",
 		HasValidatorSidecar: false,
@@ -38,8 +40,8 @@ func createTekuClient() *ConsensusClient {
 	}
 }
 
-func createLodestarClient() *ConsensusClient {
-	return &ConsensusClient{
+func createLodestarClient() *types.ConsensusClient {
+	return &types.ConsensusClient{
 		Type:                  "lodestar",
 		Image:                 "chainsafe/lodestar:v1.12.1",
 		HasValidatorSidecar:   true,
@@ -51,8 +53,8 @@ func createLodestarClient() *ConsensusClient {
 	}
 }
 
-func createNimbusClient() *ConsensusClient {
-	return &ConsensusClient{
+func createNimbusClient() *types.ConsensusClient {
+	return &types.ConsensusClient{
 		Type:                  "nimbus",
 		Image:                 "statusim/nimbus-eth2:amd64-v23.11.0",
 		HasValidatorSidecar:   true,
