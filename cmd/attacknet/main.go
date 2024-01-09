@@ -6,7 +6,7 @@ import (
 	"attacknet/cmd/pkg/project"
 	"context"
 	"github.com/alecthomas/kong"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
