@@ -48,10 +48,10 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
 	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
-	//if err != nil {
-	//	grafanaTunnel.Cleanup(true)
-	//	return err
-	//}
+	if err != nil {
+		//	grafanaTunnel.Cleanup(true)
+		return err
+	}
 
 	// standby for timer
 	log.Infof(
@@ -63,17 +63,17 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	log.Infof("Starting fault injection")
 
 	faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
-	//if err != nil {
-	//	grafanaTunnel.Cleanup(true)
-	//	return err
-	//}
+	if err != nil {
+		//	grafanaTunnel.Cleanup(true)
+		return err
+	}
 
 	// start core logic loop here.
 	err = waitForInjectionCompleted(ctx, faultSession)
-	//if err != nil {
-	//	grafanaTunnel.Cleanup(true)
-	//	return err
-	//}
+	if err != nil {
+		//	grafanaTunnel.Cleanup(true)
+		return err
+	}
 	var timeToSleep time.Duration
 	if faultSession.TestDuration != nil {
 		durationSeconds := int(faultSession.TestDuration.Seconds())
@@ -93,10 +93,10 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	_ = hc
 
 	err = waitForFaultRecovery(ctx, faultSession)
-	//if err != nil {
-	//	grafanaTunnel.Cleanup(true)
-	//	return err
-	//}
+	if err != nil {
+		//	grafanaTunnel.Cleanup(true)
+		return err
+	}
 
 	_, err = hc.RunChecksUntilTimeout(ctx)
 
