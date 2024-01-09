@@ -7,6 +7,7 @@ import (
 	"attacknet/cmd/pkg/project"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/kurtosis-tech/stacktrace"
@@ -36,14 +37,6 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	//defer func() {
 	//	grafanaTunnel.Cleanup(false)
 	//}()
-
-	// todo: set up grafana health checks/alerting here
-
-	// todo: wait for finality or other network pre-conditions here.
-	// probably check for initial health checks here too.
-
-	//ds, err := grafanaTunnel.Client.GetDatasource(ctx, 1)
-	//grafanaTunnel.Client.CreateAlertNotification()
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
@@ -99,6 +92,16 @@ func StartTestSuite(ctx context.Context, cfg *project.ConfigParsed) error {
 	}
 
 	_, err = hc.RunChecksUntilTimeout(ctx)
+
+	if err != nil {
+		log.Errorf("Errors encountered while running health checks: %s", err.Error())
+	}
+
+	// handle post-fault inspection
+	if cfg.AttacknetConfig.AllowPostFaultInspection {
+		log.Info("Press enter to terminate the port-forward connection.")
+		_, _ = fmt.Scanln()
+	}
 
 	return err
 }
