@@ -132,7 +132,7 @@ func composeExecTesterNetwork(execClient string, execClients, consClients []type
 	}
 
 	var nodes []*types.Node
-	index := 0
+	index := 1
 	bootnode, err := createBootnode(execClientMap, consClientMap)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package suite
 import (
 	"attacknet/cmd/pkg/plan/types"
 	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
 )
 
 type TargetSelector struct {
@@ -162,7 +163,21 @@ func impactConsensusClient(node *types.Node) *TargetSelector {
 	}
 }
 
-func createExecClientTargetCriteria(elClientType string) TargetCriteriaFilter {
+func targetSpecEnumToLambda(targetSelector types.TargetingSpec, isExecClient bool) (func(node *types.Node) *TargetSelector, error) {
+	if targetSelector == types.TargetMatchingNode {
+		return impactNode, nil
+	}
+	if targetSelector == types.TargetMatchingClient {
+		if isExecClient {
+			return impactExecClient, nil
+		} else {
+			return impactConsensusClient, nil
+		}
+	}
+	return nil, stacktrace.NewError("target selector %s not supported", targetSelector)
+}
+
+func createExecClientFilter(elClientType string) TargetCriteriaFilter {
 	return func(size types.AttackSize, nodes []*types.Node) ([]*types.Node, error) {
 		criteria := func(n *types.Node) bool {
 			return n.Execution.Type == elClientType
@@ -173,7 +188,7 @@ func createExecClientTargetCriteria(elClientType string) TargetCriteriaFilter {
 	}
 }
 
-func createConsensusClientTargetCriteria(clClientType string) TargetCriteriaFilter {
+func createConsensusClientFilter(clClientType string) TargetCriteriaFilter {
 	return func(size types.AttackSize, nodes []*types.Node) ([]*types.Node, error) {
 		criteria := func(n *types.Node) bool {
 			return n.Consensus.Type == clClientType

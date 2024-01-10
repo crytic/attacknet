@@ -3,69 +3,99 @@ package suite
 import (
 	planTypes "attacknet/cmd/pkg/plan/types"
 	"attacknet/cmd/pkg/types"
-	"gopkg.in/yaml.v3"
+	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
-func ComposeAndSerializeTestSuite(
-	faultConfig planTypes.PlannerFaultConfiguration,
-	networkConfigPath string,
-	nodes []*planTypes.Node) ([]byte, error) {
+func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
+	if isExecClient {
+		return createExecClientFilter(clientType)
+	} else {
+		return createConsensusClientFilter(clientType)
+	}
+}
 
-	var tests []types.SuiteTest
+func buildTestsForFaultType(
+	faultType planTypes.FaultTypeEnum,
+	config map[string]string,
+	targetSelectors []*TargetSelector) (*types.SuiteTest, error) {
 
-	//slice by targeting (client, node)
-	// -> creates targeting lambdas
-	//slice by attack size
-	// -> takes nodes[], returns target selectors. count reduced as aliasing overlaps will cause dupes
+	switch faultType {
+	case planTypes.FaultClockSkew:
+		skew, ok := config["skew"]
+		if !ok {
+			return nil, stacktrace.NewError("missing skew field for clock skew fault")
+		}
+		duration, ok := config["duration"]
+		if !ok {
+			return nil, stacktrace.NewError("missing duration field for clock skew fault")
+		}
+		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
+		return buildNodeClockSkewTest(description, targetSelectors, skew, duration)
+	case planTypes.FaultContainerRestart:
+		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
+		return buildNodeRestartTest(description, targetSelectors)
+	}
 
-	// slice by intensity
-	// -> creates []intensities
-
-	_ = tests
 	return nil, nil
 }
 
-func WritePlab(networkConfigPath string, nodes []*planTypes.Node) ([]byte, error) {
-	skew := "-5m"
-	duration := "1m"
-	criteriaLambda := createDualClientTargetCriteria("reth", "teku")
-	targetSelectors, err := BuildTargetSelectors(nodes, planTypes.AttackAll, criteriaLambda, impactNode)
-	if err != nil {
-		return nil, err
+func ComposeTestSuite(
+	config planTypes.PlannerFaultConfiguration,
+	isExecClient bool,
+	nodes []*planTypes.Node) ([]types.SuiteTest, error) {
+
+	var tests []types.SuiteTest
+	runtimeEstimate := 0
+
+	nodeFilter := buildNodeFilteringLambda(config.TargetClient, isExecClient)
+
+	for _, targetDimension := range config.TargetingDimensions {
+		targetFilter, err := targetSpecEnumToLambda(targetDimension, isExecClient)
+		if err != nil {
+			return nil, err
+		}
+		nodeCountsTested := make(map[int]bool)
+		for _, attackSize := range config.AttackSizeDimensions {
+			targetSelectors, err := BuildTargetSelectors(nodes, attackSize, nodeFilter, targetFilter)
+			if err != nil {
+				cannotMeet, ok := err.(CannotMeetConstraintError)
+				if !ok {
+					return nil, err
+				}
+				log.Infof("Attack size %s for %d nodes cannot be satisfied. Use more clients if this attack size needs to be tested.", cannotMeet.AttackSize, cannotMeet.TargetableCount)
+				continue
+			}
+			// deduplicate attack sizes that produce the same scope
+			_, alreadyTested := nodeCountsTested[len(targetSelectors)]
+			if alreadyTested {
+				continue
+			} else {
+				nodeCountsTested[len(targetSelectors)] = true
+			}
+
+			for _, faultConfig := range config.FaultConfigDimensions {
+				// update runtime estimate. find better way
+				duration, ok := faultConfig["duration"]
+				if ok {
+					d, err := time.ParseDuration(duration)
+					if err == nil {
+						runtimeEstimate += int(d.Seconds())
+					}
+				}
+
+				test, err := buildTestsForFaultType(config.FaultType, faultConfig, targetSelectors)
+				if err != nil {
+					return nil, err
+				}
+				tests = append(tests, *test)
+			}
+		}
 	}
 
-	test, err := buildNodeClockSkewTest("clock skew", targetSelectors, skew, duration)
-	if err != nil {
-		return nil, err
-	}
-	var a []types.SuiteTest
-	tests := append(a, *test)
-	_ = tests
-	c := types.Config{
-		AttacknetConfig: types.AttacknetConfig{
-			GrafanaPodName:             "grafana",
-			GrafanaPodPort:             "3000",
-			WaitBeforeInjectionSeconds: 0,
-			ReuseDevnetBetweenRuns:     true,
-			ExistingDevnetNamespace:    "kt-ethereum",
-			AllowPostFaultInspection:   false,
-		},
-		HarnessConfig: types.HarnessConfig{
-			NetworkPackage:    "github.com/kurtosis-tech/ethereum-package",
-			NetworkConfigPath: networkConfigPath,
-			NetworkType:       "ethereum",
-		},
-		TestConfig: types.SuiteTestConfigs{Tests: tests},
-	}
+	log.Infof("ESTIMATE: Running this test suite will take, at minimum, %d minutes", runtimeEstimate/60)
 
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := yaml.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
+	return tests, nil
 }

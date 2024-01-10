@@ -5,10 +5,12 @@ import (
 )
 
 type PlannerConfig struct {
-	ExecutionClients []ClientVersion           `yaml:"execution"`
-	ConsensusClients []ClientVersion           `yaml:"consensus"`
-	NetworkParams    GenesisConfig             `yaml:"network_params"`
-	FaultConfig      PlannerFaultConfiguration `yaml:"fault_config"`
+	ExecutionClients    []ClientVersion           `yaml:"execution"`
+	ConsensusClients    []ClientVersion           `yaml:"consensus"`
+	GenesisParams       GenesisConfig             `yaml:"network_params"`
+	KurtosisPackage     string                    `yaml:"kurtosis_package"`
+	KubernetesNamespace string                    `yaml:"kubernetes_namespace"`
+	FaultConfig         PlannerFaultConfiguration `yaml:"fault_config"`
 }
 
 type ExecutionClient struct {
@@ -57,11 +59,11 @@ var FaultTypes = map[FaultTypeEnum]bool{
 var _ = FaultTypes
 
 type PlannerFaultConfiguration struct {
-	FaultType            FaultTypeEnum            `yaml:"fault_type"`
-	TargetClient         string                   `yaml:"target_client"`
-	IntensityDimensions  []map[string]interface{} `yaml:"fault_intensity_dimensions"`
-	TargetingDimensions  []TargetingSpec          `yaml:"fault_targeting_dimensions"`
-	AttackSizeDimensions []AttackSize             `yaml:"fault_attack_size_dimensions"`
+	FaultType             FaultTypeEnum       `yaml:"fault_type"`
+	TargetClient          string              `yaml:"target_client"`
+	FaultConfigDimensions []map[string]string `yaml:"fault_config_dimensions"`
+	TargetingDimensions   []TargetingSpec     `yaml:"fault_targeting_dimensions"`
+	AttackSizeDimensions  []AttackSize        `yaml:"fault_attack_size_dimensions"`
 }
 
 func (c *PlannerConfig) IsTargetExecutionClient() bool {

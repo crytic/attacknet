@@ -21,7 +21,7 @@ func buildNodeClockSkewTest(description string, targets []*TargetSelector, skew,
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  time.Second * 120,
+			GracePeriod:  time.Second * 120 * 2,
 		},
 	}
 
@@ -45,7 +45,7 @@ func buildNodeRestartTest(description string, targets []*TargetSelector) (*types
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  time.Second * 240,
+			GracePeriod:  time.Second * 240 * 2,
 		},
 	}
 

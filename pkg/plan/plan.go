@@ -2,9 +2,12 @@ package plan
 
 import (
 	"attacknet/cmd/pkg/plan/network"
-	"attacknet/cmd/pkg/plan/types"
+	"attacknet/cmd/pkg/plan/suite"
+	planTypes "attacknet/cmd/pkg/plan/types"
+	types "attacknet/cmd/pkg/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 )
@@ -76,7 +79,7 @@ func writePlans(netConfigPath, suiteConfigPath string, netConfig, suiteConfig []
 	return nil
 }
 
-func BuildPlan(planName string, config *types.PlannerConfig) error {
+func BuildPlan(planName string, config *planTypes.PlannerConfig) error {
 
 	netRefPath, netConfigPath, suiteConfigPath, err := preparePaths(planName)
 	if err != nil {
@@ -88,27 +91,53 @@ func BuildPlan(planName string, config *types.PlannerConfig) error {
 		return err
 	}
 
-	//suiteConfig, err := suite.ComposeAndSerializeTestSuite(netRefPath, nodes)
-	//_ = suiteConfig
-	_ = nodes
-	_ = netConfigPath
-	_ = suiteConfigPath
-	_ = netRefPath
-	/*
-		suiteConfig, err := suite.WritePlab(netRefPath, nodes)
-		if err != nil {
-			return err
+	isExecTarget := config.IsTargetExecutionClient()
+	tests, err := suite.ComposeTestSuite(config.FaultConfig, isExecTarget, nodes)
+	if err != nil {
+		return err
+	}
+
+	var attacknetConfig types.AttacknetConfig
+	if config.KubernetesNamespace == "" {
+		attacknetConfig = types.AttacknetConfig{
+			GrafanaPodName:             "grafana",
+			GrafanaPodPort:             "3000",
+			WaitBeforeInjectionSeconds: 0,
+			ReuseDevnetBetweenRuns:     true,
+			AllowPostFaultInspection:   false,
 		}
-
-		networkConfig, err := network.SerializeNetworkTopology(nodes, genesisConfig)
-		if err != nil {
-			return err
+	} else {
+		attacknetConfig = types.AttacknetConfig{
+			GrafanaPodName:             "grafana",
+			GrafanaPodPort:             "3000",
+			WaitBeforeInjectionSeconds: 0,
+			ReuseDevnetBetweenRuns:     true,
+			ExistingDevnetNamespace:    config.KubernetesNamespace,
+			AllowPostFaultInspection:   false,
 		}
+	}
 
-		return writePlans(netConfigPath, suiteConfigPath, networkConfig, suiteConfig)
-	*/
+	c := types.Config{
+		AttacknetConfig: attacknetConfig,
+		HarnessConfig: types.HarnessConfig{
+			NetworkPackage:    config.KurtosisPackage,
+			NetworkConfigPath: netRefPath,
+			NetworkType:       "ethereum",
+		},
+		TestConfig: types.SuiteTestConfigs{Tests: tests},
+	}
 
-	return nil
+	suiteConfig, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	networkConfig, err := network.SerializeNetworkTopology(nodes, &config.GenesisParams)
+	if err != nil {
+		return err
+	}
+
+	return writePlans(netConfigPath, suiteConfigPath, networkConfig, suiteConfig)
 }
 
 /*
