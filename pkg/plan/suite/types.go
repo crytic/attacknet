@@ -1,4 +1,4 @@
-package types
+package suite
 
 type TargetingSpec string
 
@@ -32,4 +32,24 @@ var AttackSizes = map[AttackSize]bool{
 	AttackSuperminority: true,
 	AttackMajority:      true,
 	AttackSupermajority: true,
+}
+
+type FaultTypeEnum string
+
+const (
+	FaultClockSkew        FaultTypeEnum = "ClockSkew"
+	FaultContainerRestart FaultTypeEnum = "RestartContainers"
+)
+
+var FaultTypes = map[FaultTypeEnum]bool{
+	FaultClockSkew:        true,
+	FaultContainerRestart: true,
+}
+
+type PlannerFaultConfiguration struct {
+	FaultType             FaultTypeEnum       `yaml:"fault_type"`
+	TargetClient          string              `yaml:"target_client"`
+	FaultConfigDimensions []map[string]string `yaml:"fault_config_dimensions"`
+	TargetingDimensions   []TargetingSpec     `yaml:"fault_targeting_dimensions"`
+	AttackSizeDimensions  []AttackSize        `yaml:"fault_attack_size_dimensions"`
 }

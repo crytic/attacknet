@@ -1,17 +1,18 @@
 package suite
 
 import (
-	"attacknet/cmd/pkg/plan/types"
+	"attacknet/cmd/pkg/plan/network"
 	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
 )
 
-type TargetSelector struct {
-	Selector    []ExpressionSelector
+type ChaosTargetSelector struct {
+	Selector    []ChaosExpressionSelector
 	Description string
 }
 
 type CannotMeetConstraintError struct {
-	types.AttackSize
+	AttackSize
 	TargetableCount int
 }
 
@@ -19,14 +20,20 @@ func (e CannotMeetConstraintError) Error() string {
 	return fmt.Sprintf("Cannot target '%s' for %d nodes", e.AttackSize, e.TargetableCount)
 }
 
-type NodeFilterCriteria func(n *types.Node) bool
+type NodeFilterCriteria func(n *network.Node) bool
+type TargetCriteriaFilter func(AttackSize, []*network.Node) ([]*network.Node, error)
+type NodeImpactSelector func(node *network.Node) *ChaosTargetSelector
 
-type TargetCriteriaFilter func(types.AttackSize, []*types.Node) ([]*types.Node, error)
+func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
+	if isExecClient {
+		return filterNodesByExecClient(clientType)
+	} else {
+		return filterNodesByConsensusClient(clientType)
+	}
+}
 
-type NodeImpactSelector func(node *types.Node) *TargetSelector
-
-func filterNodes(nodes []*types.Node, criteria NodeFilterCriteria) []*types.Node {
-	var result []*types.Node
+func filterNodes(nodes []*network.Node, criteria NodeFilterCriteria) []*network.Node {
+	var result []*network.Node
 	for _, n := range nodes {
 		if criteria(n) {
 			result = append(result, n)
@@ -35,17 +42,17 @@ func filterNodes(nodes []*types.Node, criteria NodeFilterCriteria) []*types.Node
 	return result
 }
 
-func chooseTargetsUsingAttackSize(size types.AttackSize, targetable []*types.Node) ([]*types.Node, error) {
+func chooseTargetsUsingAttackSize(size AttackSize, targetable []*network.Node) ([]*network.Node, error) {
 	totalTargetable := float32(len(targetable))
 	var nodesToTarget int
 	switch size {
-	case types.AttackOne:
+	case AttackOne:
 		nodesToTarget = 1
-	case types.AttackAll:
+	case AttackAll:
 		nodesToTarget = len(targetable)
-	case types.AttackMinority:
+	case AttackMinority:
 		nodesToTarget = int(totalTargetable * 0.32)
-	case types.AttackSuperminority:
+	case AttackSuperminority:
 		nodesToTarget = int(totalTargetable * 0.34)
 		if float32(nodesToTarget)/totalTargetable < 0.333333333 {
 			nodesToTarget += 1
@@ -57,7 +64,7 @@ func chooseTargetsUsingAttackSize(size types.AttackSize, targetable []*types.Nod
 				TargetableCount: len(targetable),
 			}
 		}
-	case types.AttackMajority:
+	case AttackMajority:
 		nodesToTarget = int(totalTargetable * 0.51)
 		if float32(nodesToTarget)/totalTargetable <= 0.50 {
 			nodesToTarget += 1
@@ -69,7 +76,7 @@ func chooseTargetsUsingAttackSize(size types.AttackSize, targetable []*types.Nod
 				TargetableCount: len(targetable),
 			}
 		}
-	case types.AttackSupermajority:
+	case AttackSupermajority:
 		nodesToTarget = int(totalTargetable * 0.67)
 		if float32(nodesToTarget)/totalTargetable <= 0.666666666 {
 			nodesToTarget += 1
@@ -90,14 +97,14 @@ func chooseTargetsUsingAttackSize(size types.AttackSize, targetable []*types.Nod
 		}
 	}
 
-	var targets []*types.Node
+	var targets []*network.Node
 	for i := 0; i < nodesToTarget; i++ {
 		targets = append(targets, targetable[i])
 	}
 	return targets, nil
 }
 
-func impactNode(node *types.Node) *TargetSelector {
+func createTargetSelectorForNode(node *network.Node) *ChaosTargetSelector {
 	var targets []string
 
 	elId := convertToNodeIdTag(node, Execution)
@@ -111,35 +118,35 @@ func impactNode(node *types.Node) *TargetSelector {
 		targets = append(targets, valId)
 	}
 
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   targets,
 	}
 
 	description := fmt.Sprintf("%s/%s Node (Node #%d)", node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func impactExecClient(node *types.Node) *TargetSelector {
+func createTargetSelectorForExecClient(node *network.Node) *ChaosTargetSelector {
 	elId := convertToNodeIdTag(node, Execution)
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   []string{elId},
 	}
 
 	description := fmt.Sprintf("%s client of %s/%s Node (Node #%d)", node.Execution.Type, node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func impactConsensusClient(node *types.Node) *TargetSelector {
+func createTargetSelectorForConsensusClient(node *network.Node) *ChaosTargetSelector {
 	var targets []string
 	clId := convertToNodeIdTag(node, Consensus)
 	targets = append(targets, clId)
@@ -149,22 +156,36 @@ func impactConsensusClient(node *types.Node) *TargetSelector {
 		targets = append(targets, valId)
 	}
 
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   targets,
 	}
 
 	description := fmt.Sprintf("%s client of %s/%s Node (Node #%d)", node.Consensus.Type, node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func createExecClientTargetCriteria(elClientType string) TargetCriteriaFilter {
-	return func(size types.AttackSize, nodes []*types.Node) ([]*types.Node, error) {
-		criteria := func(n *types.Node) bool {
+func targetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (func(node *network.Node) *ChaosTargetSelector, error) {
+	if targetSelector == TargetMatchingNode {
+		return createTargetSelectorForNode, nil
+	}
+	if targetSelector == TargetMatchingClient {
+		if isExecClient {
+			return createTargetSelectorForExecClient, nil
+		} else {
+			return createTargetSelectorForConsensusClient, nil
+		}
+	}
+	return nil, stacktrace.NewError("target selector %s not supported", targetSelector)
+}
+
+func filterNodesByExecClient(elClientType string) TargetCriteriaFilter {
+	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+		criteria := func(n *network.Node) bool {
 			return n.Execution.Type == elClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
@@ -173,9 +194,9 @@ func createExecClientTargetCriteria(elClientType string) TargetCriteriaFilter {
 	}
 }
 
-func createConsensusClientTargetCriteria(clClientType string) TargetCriteriaFilter {
-	return func(size types.AttackSize, nodes []*types.Node) ([]*types.Node, error) {
-		criteria := func(n *types.Node) bool {
+func filterNodesByConsensusClient(clClientType string) TargetCriteriaFilter {
+	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
@@ -184,9 +205,9 @@ func createConsensusClientTargetCriteria(clClientType string) TargetCriteriaFilt
 	}
 }
 
-func createDualClientTargetCriteria(elClientType, clClientType string) TargetCriteriaFilter {
-	return func(size types.AttackSize, nodes []*types.Node) ([]*types.Node, error) {
-		criteria := func(n *types.Node) bool {
+func filterNodesByClientCombo(elClientType, clClientType string) TargetCriteriaFilter {
+	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType && n.Execution.Type == elClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
@@ -195,13 +216,13 @@ func createDualClientTargetCriteria(elClientType, clClientType string) TargetCri
 	}
 }
 
-func BuildTargetSelectors(nodes []*types.Node, size types.AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*TargetSelector, error) {
+func buildChaosMeshTargetSelectors(nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*ChaosTargetSelector, error) {
 	targets, err := targetCriteria(size, nodes)
 	if err != nil {
 		return nil, err
 	}
 
-	var targetSelectors []*TargetSelector
+	var targetSelectors []*ChaosTargetSelector
 	for _, node := range targets {
 		targetSelectors = append(targetSelectors, impactSelector(node))
 	}

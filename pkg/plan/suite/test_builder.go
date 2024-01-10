@@ -5,15 +5,18 @@ import (
 	"time"
 )
 
-func buildNodeClockSkewTest(description string, targets []*TargetSelector, skew, duration string) (*types.SuiteTest, error) {
+const clockSkewGracePeriod = time.Second * 1800
+const containerRestartGracePeriod = time.Second * 3600
+
+func composeNodeClockSkewTest(description string, targets []*ChaosTargetSelector, skew, duration string) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
-	s, err := buildNodeClockSkewPlanSteps(targets, skew, duration)
+	s, err := composeNodeClockSkewPlanSteps(targets, skew, duration)
 	if err != nil {
 		return nil, err
 	}
 	steps = append(steps, s...)
 
-	waitStep := buildWaitForFaultCompletionStep()
+	waitStep := composeWaitForFaultCompletionStep()
 	steps = append(steps, *waitStep)
 
 	test := &types.SuiteTest{
@@ -21,23 +24,23 @@ func buildNodeClockSkewTest(description string, targets []*TargetSelector, skew,
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  time.Second * 120,
+			GracePeriod:  clockSkewGracePeriod,
 		},
 	}
 
 	return test, nil
 }
 
-func buildNodeRestartTest(description string, targets []*TargetSelector) (*types.SuiteTest, error) {
+func composeNodeRestartTest(description string, targets []*ChaosTargetSelector) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
 
-	s, err := buildNodeRestartSteps(targets)
+	s, err := composeNodeRestartSteps(targets)
 	if err != nil {
 		return nil, err
 	}
 	steps = append(steps, s...)
 
-	waitStep := buildWaitForFaultCompletionStep()
+	waitStep := composeWaitForFaultCompletionStep()
 	steps = append(steps, *waitStep)
 
 	test := &types.SuiteTest{
@@ -45,11 +48,11 @@ func buildNodeRestartTest(description string, targets []*TargetSelector) (*types
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  time.Second * 240,
+			GracePeriod:  containerRestartGracePeriod,
 		},
 	}
 
 	return test, nil
 }
 
-//func buildCpuPressureTest(description string, targets []*TargetSelector, pressure int) (*types.SuiteTest, error) {
+//func buildCpuPressureTest(description string, targets []*ChaosTargetSelector, pressure int) (*types.SuiteTest, error) {

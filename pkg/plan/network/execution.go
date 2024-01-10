@@ -1,53 +1,60 @@
 package network
 
-import "attacknet/cmd/pkg/plan/types"
+import (
+	"github.com/kurtosis-tech/stacktrace"
+)
 
-func createGethClient() *types.ExecutionClient {
-	return &types.ExecutionClient{
-		Type:           "geth",
-		Image:          "ethereum/client-go:latest",
-		ExtraLabels:    make(map[string]string),
-		CpuRequired:    1000,
-		MemoryRequired: 1024,
+const defaultElCpu = 1000
+const defaultElMem = 1024
+
+func composeExecTesterNetwork(execClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
+	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
+	if err != nil {
+		return nil, err
 	}
+
+	// make sure execClient actually exists
+	clientUnderTest, ok := execClientMap[execClient]
+	if !ok {
+		return nil, stacktrace.NewError("unknown execution client %s", execClient)
+	}
+
+	var nodes []*Node
+	index := 1
+	bootnode, err := composeBootnode(execClientMap, consClientMap)
+	if err != nil {
+		return nil, err
+	}
+	nodes = append(nodes, bootnode)
+	index += 1
+
+	n, err := composeNodesForElTesting(index, clientUnderTest, consClientMap)
+	nodes = append(nodes, n...)
+	if err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
 }
 
-func createRethClient() *types.ExecutionClient {
-	return &types.ExecutionClient{
-		Type:           "reth",
-		Image:          "ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13",
-		ExtraLabels:    make(map[string]string),
-		CpuRequired:    1000,
-		MemoryRequired: 1024,
+func composeNodesForElTesting(index int, execClient ClientVersion, consensusClients map[string]ClientVersion) ([]*Node, error) {
+	var nodes []*Node
+
+	for _, consensusClient := range consensusClients {
+		node := buildNode(index, execClient, consensusClient)
+		nodes = append(nodes, node)
+
+		index += 1
 	}
+	return nodes, nil
 }
 
-func createNethermindClient() *types.ExecutionClient {
-	return &types.ExecutionClient{
-		Type:           "nethermind",
-		Image:          "nethermind/nethermind:1.23.0",
+func composeExecutionClient(config ClientVersion) *ExecutionClient {
+	return &ExecutionClient{
+		Type:           config.Name,
+		Image:          config.Image,
 		ExtraLabels:    make(map[string]string),
-		CpuRequired:    1000,
-		MemoryRequired: 1024,
-	}
-}
-
-func createErigonClient() *types.ExecutionClient {
-	return &types.ExecutionClient{
-		Type:           "erigon",
-		Image:          "thorax/erigon:v2.53.4",
-		ExtraLabels:    make(map[string]string),
-		CpuRequired:    1000,
-		MemoryRequired: 1024,
-	}
-}
-
-func createBesuClient() *types.ExecutionClient {
-	return &types.ExecutionClient{
-		Type:           "besu",
-		Image:          "hyperledger/besu:latest",
-		ExtraLabels:    make(map[string]string),
-		CpuRequired:    1000,
-		MemoryRequired: 1024,
+		CpuRequired:    defaultElCpu,
+		MemoryRequired: defaultElMem,
 	}
 }

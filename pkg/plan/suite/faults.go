@@ -10,15 +10,15 @@ import (
 // and deserialize to the same struct. Instead, we create pared down copies of the structs with no inlining.
 // Completely scuffed.
 
-type ExpressionSelector struct {
+type ChaosExpressionSelector struct {
 	Key      string   `yaml:"key"`
 	Operator string   `yaml:"operator"`
 	Values   []string `yaml:"values"`
 }
 
 type Selector struct {
-	LabelSelectors      map[string]string    `yaml:"labelSelectors,omitempty"`
-	ExpressionSelectors []ExpressionSelector `yaml:"expressionSelectors,omitempty"`
+	LabelSelectors      map[string]string         `yaml:"labelSelectors,omitempty"`
+	ExpressionSelectors []ChaosExpressionSelector `yaml:"expressionSelectors,omitempty"`
 }
 
 type TimeChaosSpec struct {
@@ -70,7 +70,7 @@ func convertFaultSpecToMap(s interface{}) (map[string]interface{}, error) {
 	return faultSpec, nil
 }
 
-func buildClockSkewFault(description, timeOffset, duration string, expressionSelectors []ExpressionSelector) (*types.PlanStep, error) {
+func buildClockSkewFault(description, timeOffset, duration string, expressionSelectors []ChaosExpressionSelector) (*types.PlanStep, error) {
 
 	t := TimeChaosWrapper{
 		TimeChaosFault: TimeChaosFault{
@@ -101,7 +101,7 @@ func buildClockSkewFault(description, timeOffset, duration string, expressionSel
 	return step, nil
 }
 
-func buildPodRestartFault(description string, expressionSelectors []ExpressionSelector) (*types.PlanStep, error) {
+func buildPodRestartFault(description string, expressionSelectors []ChaosExpressionSelector) (*types.PlanStep, error) {
 	t := PodChaosWrapper{
 		PodChaosFault: PodChaosFault{
 			Kind:       "PodChaos",

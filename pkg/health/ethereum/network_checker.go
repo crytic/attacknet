@@ -75,7 +75,7 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckRes
 		rpcClients[i] = client
 	}
 
-	log.Info("Ready to query for health checks")
+	log.Debug("Ready to query for health checks")
 	latestResult, err := e.getBlockConsensus(ctx, rpcClients, "latest", 3)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (e *EthNetworkChecker) getBlockConsensus(ctx context.Context, clients []*Ex
 	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(forkChoice)
 	if len(wrongBlockNum) > 0 {
 		if maxAttempts > 0 {
-			log.Infof("Nodes not at consensus for %s block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", blockType, maxAttempts-1)
+			log.Debugf("Nodes not at consensus for %s block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", blockType, maxAttempts-1)
 			time.Sleep(2 * time.Second)
 			return e.getBlockConsensus(ctx, clients, blockType, maxAttempts-1)
 		} else {

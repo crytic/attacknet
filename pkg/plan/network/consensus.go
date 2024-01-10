@@ -1,67 +1,90 @@
 package network
 
-import "attacknet/cmd/pkg/plan/types"
+import (
+	"github.com/kurtosis-tech/stacktrace"
+	"strings"
+)
 
-func createPrysmClient() *types.ConsensusClient {
-	return &types.ConsensusClient{
-		Type:                  "prysm",
-		Image:                 "prysmaticlabs/prysm-beacon-chain:latest",
-		ValidatorImage:        "prysmaticlabs/prysm-validator:latest",
-		HasValidatorSidecar:   true,
-		ExtraLabels:           make(map[string]string),
-		CpuRequired:           2000,
-		MemoryRequired:        2048,
-		SidecarCpuRequired:    1000,
-		SidecarMemoryRequired: 1024,
+const defaultClCpu = 1000
+const defaultValCpu = 1000
+
+const defaultClMem = 2048
+const defaultValMem = 1024
+
+func composeConsensusTesterNetwork(consensusClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
+	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
+	if err != nil {
+		return nil, err
 	}
+
+	// make sure consensusClient actually exists
+	clientUnderTest, ok := consClientMap[consensusClient]
+	if !ok {
+		return nil, stacktrace.NewError("unknown consensus client %s", consensusClient)
+	}
+
+	var nodes []*Node
+	index := 1
+	bootnode, err := composeBootnode(execClientMap, consClientMap)
+	if err != nil {
+		return nil, err
+	}
+	nodes = append(nodes, bootnode)
+	index += 1
+
+	n, err := composeNodesForClTesting(index, clientUnderTest, execClientMap)
+	nodes = append(nodes, n...)
+	if err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
 }
 
-func createLighthouseClient() *types.ConsensusClient {
-	return &types.ConsensusClient{
-		Type:                  "lighthouse",
-		Image:                 "sigp/lighthouse:latest",
-		HasValidatorSidecar:   true,
-		ExtraLabels:           make(map[string]string),
-		CpuRequired:           2000,
-		MemoryRequired:        2048,
-		SidecarCpuRequired:    1000,
-		SidecarMemoryRequired: 1024,
+func composeNodesForClTesting(index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {
+	var nodes []*Node
+
+	for _, execClient := range execClients {
+		node := buildNode(index, execClient, consensusClient)
+		nodes = append(nodes, node)
+
+		index += 1
 	}
+	return nodes, nil
 }
 
-func createTekuClient() *types.ConsensusClient {
-	return &types.ConsensusClient{
-		Type:                "teku",
-		Image:               "consensys/teku:23.12.0",
-		HasValidatorSidecar: false,
-		ExtraLabels:         make(map[string]string),
-		CpuRequired:         2000,
-		MemoryRequired:      2048,
-	}
-}
+func composeConsensusClient(config ClientVersion) *ConsensusClient {
+	image := config.Image
+	validatorImage := ""
 
-func createLodestarClient() *types.ConsensusClient {
-	return &types.ConsensusClient{
-		Type:                  "lodestar",
-		Image:                 "chainsafe/lodestar:v1.12.1",
-		HasValidatorSidecar:   true,
-		ExtraLabels:           make(map[string]string),
-		CpuRequired:           2000,
-		MemoryRequired:        2048,
-		SidecarCpuRequired:    1000,
-		SidecarMemoryRequired: 1024,
+	if strings.Contains(config.Image, ",") {
+		images := strings.Split(config.Image, ",")
+		image = images[0]
+		validatorImage = images[1]
 	}
-}
-
-func createNimbusClient() *types.ConsensusClient {
-	return &types.ConsensusClient{
-		Type:                  "nimbus",
-		Image:                 "statusim/nimbus-eth2:amd64-v23.11.0",
-		HasValidatorSidecar:   true,
-		ExtraLabels:           make(map[string]string),
-		CpuRequired:           2000,
-		MemoryRequired:        2048,
-		SidecarCpuRequired:    1000,
-		SidecarMemoryRequired: 1024,
+	if config.HasSidecar {
+		return &ConsensusClient{
+			Type:                  config.Name,
+			Image:                 image,
+			HasValidatorSidecar:   true,
+			ValidatorImage:        validatorImage,
+			ExtraLabels:           make(map[string]string),
+			CpuRequired:           defaultClCpu,
+			MemoryRequired:        defaultClMem,
+			SidecarCpuRequired:    defaultValCpu,
+			SidecarMemoryRequired: defaultValMem,
+		}
+	} else {
+		return &ConsensusClient{
+			Type:                  config.Name,
+			Image:                 image,
+			HasValidatorSidecar:   false,
+			ValidatorImage:        validatorImage,
+			ExtraLabels:           make(map[string]string),
+			CpuRequired:           defaultClCpu,
+			MemoryRequired:        defaultClMem,
+			SidecarCpuRequired:    0,
+			SidecarMemoryRequired: 0,
+		}
 	}
 }

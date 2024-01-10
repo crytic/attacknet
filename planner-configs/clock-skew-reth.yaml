@@ -27,3 +27,21 @@ consensus:
 #    image: statusim/nimbus-eth2:amd64-v23.11.0
 network_params:
   num_validator_keys_per_node: 32
+kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
+kubernetes_namespace: kt-ethereum
+fault_config:
+  fault_type: ClockSkew
+  target_client: reth
+  fault_config_dimensions:
+    - skew: -2m
+      duration: 10m
+  fault_targeting_dimensions:
+    - MatchingNode
+    - MatchingClient
+  fault_attack_size_dimensions:
+    - AttackOneMatching
+    - AttackMinorityMatching
+    - AttackSuperminorityMatching
+    - AttackMajorityMatching
+    - AttackSupermajorityMatching
+    - AttackAllMatching

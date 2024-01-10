@@ -1,71 +1,93 @@
 package suite
 
 import (
-	planTypes "attacknet/cmd/pkg/plan/types"
+	"attacknet/cmd/pkg/plan/network"
 	"attacknet/cmd/pkg/types"
-	"gopkg.in/yaml.v3"
+	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
-func ComposeAndSerializeTestSuite(
-	faultConfig planTypes.PlannerFaultConfiguration,
-	networkConfigPath string,
-	nodes []*planTypes.Node) ([]byte, error) {
+func ComposeTestSuite(
+	config PlannerFaultConfiguration,
+	isExecClient bool,
+	nodes []*network.Node) ([]types.SuiteTest, error) {
 
 	var tests []types.SuiteTest
+	runtimeEstimate := 0
 
-	//slice by targeting (client, node)
-	// -> creates targeting lambdas
-	//slice by attack size
-	// -> takes nodes[], returns target selectors. count reduced as aliasing overlaps will cause dupes
+	nodeFilter := buildNodeFilteringLambda(config.TargetClient, isExecClient)
 
-	// slice by intensity
-	// -> creates []intensities
+	for _, targetDimension := range config.TargetingDimensions {
+		targetFilter, err := targetSpecEnumToLambda(targetDimension, isExecClient)
+		if err != nil {
+			return nil, err
+		}
+		nodeCountsTested := make(map[int]bool)
+		for _, attackSize := range config.AttackSizeDimensions {
+			targetSelectors, err := buildChaosMeshTargetSelectors(nodes, attackSize, nodeFilter, targetFilter)
+			if err != nil {
+				cannotMeet, ok := err.(CannotMeetConstraintError)
+				if !ok {
+					return nil, err
+				}
+				log.Infof("Attack size %s for %d nodes cannot be satisfied. Use more clients if this attack size needs to be tested.", cannotMeet.AttackSize, cannotMeet.TargetableCount)
+				continue
+			}
+			// deduplicate attack sizes that produce the same scope
+			_, alreadyTested := nodeCountsTested[len(targetSelectors)]
+			if alreadyTested {
+				continue
+			} else {
+				nodeCountsTested[len(targetSelectors)] = true
+			}
 
-	_ = tests
-	return nil, nil
+			for _, faultConfig := range config.FaultConfigDimensions {
+				// update runtime estimate. find better way
+				duration, ok := faultConfig["duration"]
+				if ok {
+					d, err := time.ParseDuration(duration)
+					if err == nil {
+						runtimeEstimate += int(d.Seconds())
+					}
+				}
+
+				test, err := composeTestsForFaultType(config.FaultType, faultConfig, targetSelectors)
+				if err != nil {
+					return nil, err
+				}
+				tests = append(tests, *test)
+			}
+		}
+	}
+
+	log.Infof("ESTIMATE: Running this test suite will take, at minimum, %d minutes", runtimeEstimate/60)
+
+	return tests, nil
 }
 
-func WritePlab(networkConfigPath string, nodes []*planTypes.Node) ([]byte, error) {
-	skew := "-5m"
-	duration := "1m"
-	criteriaLambda := createDualClientTargetCriteria("reth", "teku")
-	targetSelectors, err := BuildTargetSelectors(nodes, planTypes.AttackAll, criteriaLambda, impactNode)
-	if err != nil {
-		return nil, err
+func composeTestsForFaultType(
+	faultType FaultTypeEnum,
+	config map[string]string,
+	targetSelectors []*ChaosTargetSelector) (*types.SuiteTest, error) {
+
+	switch faultType {
+	case FaultClockSkew:
+		skew, ok := config["skew"]
+		if !ok {
+			return nil, stacktrace.NewError("missing skew field for clock skew fault")
+		}
+		duration, ok := config["duration"]
+		if !ok {
+			return nil, stacktrace.NewError("missing duration field for clock skew fault")
+		}
+		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
+		return composeNodeClockSkewTest(description, targetSelectors, skew, duration)
+	case FaultContainerRestart:
+		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
+		return composeNodeRestartTest(description, targetSelectors)
 	}
 
-	test, err := buildNodeClockSkewTest("clock skew", targetSelectors, skew, duration)
-	if err != nil {
-		return nil, err
-	}
-	var a []types.SuiteTest
-	tests := append(a, *test)
-	_ = tests
-	c := types.Config{
-		AttacknetConfig: types.AttacknetConfig{
-			GrafanaPodName:             "grafana",
-			GrafanaPodPort:             "3000",
-			WaitBeforeInjectionSeconds: 0,
-			ReuseDevnetBetweenRuns:     true,
-			ExistingDevnetNamespace:    "kt-ethereum",
-			AllowPostFaultInspection:   false,
-		},
-		HarnessConfig: types.HarnessConfig{
-			NetworkPackage:    "github.com/kurtosis-tech/ethereum-package",
-			NetworkConfigPath: networkConfigPath,
-			NetworkType:       "ethereum",
-		},
-		TestConfig: types.SuiteTestConfigs{Tests: tests},
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := yaml.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
+	return nil, nil
 }

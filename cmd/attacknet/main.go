@@ -57,7 +57,7 @@ func main() {
 			log.Fatal(err)
 			os.Exit(1)
 		}
-	case "plan <path>":
+	case "plan <name> <path>":
 		config, err := plan.LoadPlannerConfigFromPath(CLI.Plan.Path)
 		if err != nil {
 			log.Fatal(err)
@@ -68,5 +68,7 @@ func main() {
 			log.Fatal(err)
 			os.Exit(1)
 		}
+	default:
+		log.Fatal("unrecognized arguments")
 	}
 }
