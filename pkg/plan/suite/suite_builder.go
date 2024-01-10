@@ -1,7 +1,7 @@
 package suite
 
 import (
-	planTypes "attacknet/cmd/pkg/plan/types"
+	"attacknet/cmd/pkg/plan/network"
 	"attacknet/cmd/pkg/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
@@ -18,12 +18,12 @@ func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriter
 }
 
 func buildTestsForFaultType(
-	faultType planTypes.FaultTypeEnum,
+	faultType FaultTypeEnum,
 	config map[string]string,
 	targetSelectors []*TargetSelector) (*types.SuiteTest, error) {
 
 	switch faultType {
-	case planTypes.FaultClockSkew:
+	case FaultClockSkew:
 		skew, ok := config["skew"]
 		if !ok {
 			return nil, stacktrace.NewError("missing skew field for clock skew fault")
@@ -34,7 +34,7 @@ func buildTestsForFaultType(
 		}
 		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
 		return buildNodeClockSkewTest(description, targetSelectors, skew, duration)
-	case planTypes.FaultContainerRestart:
+	case FaultContainerRestart:
 		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
 		return buildNodeRestartTest(description, targetSelectors)
 	}
@@ -43,9 +43,9 @@ func buildTestsForFaultType(
 }
 
 func ComposeTestSuite(
-	config planTypes.PlannerFaultConfiguration,
+	config PlannerFaultConfiguration,
 	isExecClient bool,
-	nodes []*planTypes.Node) ([]types.SuiteTest, error) {
+	nodes []*network.Node) ([]types.SuiteTest, error) {
 
 	var tests []types.SuiteTest
 	runtimeEstimate := 0

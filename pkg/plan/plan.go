@@ -3,7 +3,6 @@ package plan
 import (
 	"attacknet/cmd/pkg/plan/network"
 	"attacknet/cmd/pkg/plan/suite"
-	planTypes "attacknet/cmd/pkg/plan/types"
 	types "attacknet/cmd/pkg/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
@@ -79,7 +78,7 @@ func writePlans(netConfigPath, suiteConfigPath string, netConfig, suiteConfig []
 	return nil
 }
 
-func BuildPlan(planName string, config *planTypes.PlannerConfig) error {
+func BuildPlan(planName string, config *PlannerConfig) error {
 
 	netRefPath, netConfigPath, suiteConfigPath, err := preparePaths(planName)
 	if err != nil {
@@ -132,7 +131,7 @@ func BuildPlan(planName string, config *planTypes.PlannerConfig) error {
 		return err
 	}
 
-	networkConfig, err := network.SerializeNetworkTopology(nodes, &config.GenesisParams)
+	networkConfig, err := SerializeNetworkTopology(nodes, &config.GenesisParams)
 	if err != nil {
 		return err
 	}
