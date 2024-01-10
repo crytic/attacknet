@@ -29,11 +29,11 @@ func convertToNodeIdTag(node *network.Node, client clientType) string {
 	}
 }
 
-func buildWaitForFaultCompletionStep() *types.PlanStep {
+func composeWaitForFaultCompletionStep() *types.PlanStep {
 	return &types.PlanStep{StepType: types.WaitForFaultCompletion, StepDescription: "wait for faults to terminate"}
 }
 
-func buildNodeClockSkewPlanSteps(nodesSelected []*TargetSelector, skew, duration string) ([]types.PlanStep, error) {
+func composeNodeClockSkewPlanSteps(nodesSelected []*ChaosTargetSelector, skew, duration string) ([]types.PlanStep, error) {
 	var steps []types.PlanStep
 	for _, target := range nodesSelected {
 		description := fmt.Sprintf("Inject clock skew on target %s", target.Description)
@@ -48,7 +48,7 @@ func buildNodeClockSkewPlanSteps(nodesSelected []*TargetSelector, skew, duration
 	return steps, nil
 }
 
-func buildNodeRestartSteps(nodesSelected []*TargetSelector) ([]types.PlanStep, error) {
+func composeNodeRestartSteps(nodesSelected []*ChaosTargetSelector) ([]types.PlanStep, error) {
 	var steps []types.PlanStep
 
 	for _, target := range nodesSelected {

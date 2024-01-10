@@ -9,39 +9,6 @@ import (
 	"time"
 )
 
-func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
-	if isExecClient {
-		return createExecClientFilter(clientType)
-	} else {
-		return createConsensusClientFilter(clientType)
-	}
-}
-
-func buildTestsForFaultType(
-	faultType FaultTypeEnum,
-	config map[string]string,
-	targetSelectors []*TargetSelector) (*types.SuiteTest, error) {
-
-	switch faultType {
-	case FaultClockSkew:
-		skew, ok := config["skew"]
-		if !ok {
-			return nil, stacktrace.NewError("missing skew field for clock skew fault")
-		}
-		duration, ok := config["duration"]
-		if !ok {
-			return nil, stacktrace.NewError("missing duration field for clock skew fault")
-		}
-		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
-		return buildNodeClockSkewTest(description, targetSelectors, skew, duration)
-	case FaultContainerRestart:
-		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
-		return buildNodeRestartTest(description, targetSelectors)
-	}
-
-	return nil, nil
-}
-
 func ComposeTestSuite(
 	config PlannerFaultConfiguration,
 	isExecClient bool,
@@ -59,7 +26,7 @@ func ComposeTestSuite(
 		}
 		nodeCountsTested := make(map[int]bool)
 		for _, attackSize := range config.AttackSizeDimensions {
-			targetSelectors, err := BuildTargetSelectors(nodes, attackSize, nodeFilter, targetFilter)
+			targetSelectors, err := buildChaosMeshTargetSelectors(nodes, attackSize, nodeFilter, targetFilter)
 			if err != nil {
 				cannotMeet, ok := err.(CannotMeetConstraintError)
 				if !ok {
@@ -86,7 +53,7 @@ func ComposeTestSuite(
 					}
 				}
 
-				test, err := buildTestsForFaultType(config.FaultType, faultConfig, targetSelectors)
+				test, err := composeTestsForFaultType(config.FaultType, faultConfig, targetSelectors)
 				if err != nil {
 					return nil, err
 				}
@@ -98,4 +65,29 @@ func ComposeTestSuite(
 	log.Infof("ESTIMATE: Running this test suite will take, at minimum, %d minutes", runtimeEstimate/60)
 
 	return tests, nil
+}
+
+func composeTestsForFaultType(
+	faultType FaultTypeEnum,
+	config map[string]string,
+	targetSelectors []*ChaosTargetSelector) (*types.SuiteTest, error) {
+
+	switch faultType {
+	case FaultClockSkew:
+		skew, ok := config["skew"]
+		if !ok {
+			return nil, stacktrace.NewError("missing skew field for clock skew fault")
+		}
+		duration, ok := config["duration"]
+		if !ok {
+			return nil, stacktrace.NewError("missing duration field for clock skew fault")
+		}
+		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
+		return composeNodeClockSkewTest(description, targetSelectors, skew, duration)
+	case FaultContainerRestart:
+		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
+		return composeNodeRestartTest(description, targetSelectors)
+	}
+
+	return nil, nil
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 )
 
-type TargetSelector struct {
-	Selector    []ExpressionSelector
+type ChaosTargetSelector struct {
+	Selector    []ChaosExpressionSelector
 	Description string
 }
 
@@ -21,10 +21,16 @@ func (e CannotMeetConstraintError) Error() string {
 }
 
 type NodeFilterCriteria func(n *network.Node) bool
-
 type TargetCriteriaFilter func(AttackSize, []*network.Node) ([]*network.Node, error)
+type NodeImpactSelector func(node *network.Node) *ChaosTargetSelector
 
-type NodeImpactSelector func(node *network.Node) *TargetSelector
+func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
+	if isExecClient {
+		return filterNodesByExecClient(clientType)
+	} else {
+		return filterNodesByConsensusClient(clientType)
+	}
+}
 
 func filterNodes(nodes []*network.Node, criteria NodeFilterCriteria) []*network.Node {
 	var result []*network.Node
@@ -98,7 +104,7 @@ func chooseTargetsUsingAttackSize(size AttackSize, targetable []*network.Node) (
 	return targets, nil
 }
 
-func impactNode(node *network.Node) *TargetSelector {
+func createTargetSelectorForNode(node *network.Node) *ChaosTargetSelector {
 	var targets []string
 
 	elId := convertToNodeIdTag(node, Execution)
@@ -112,35 +118,35 @@ func impactNode(node *network.Node) *TargetSelector {
 		targets = append(targets, valId)
 	}
 
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   targets,
 	}
 
 	description := fmt.Sprintf("%s/%s Node (Node #%d)", node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func impactExecClient(node *network.Node) *TargetSelector {
+func createTargetSelectorForExecClient(node *network.Node) *ChaosTargetSelector {
 	elId := convertToNodeIdTag(node, Execution)
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   []string{elId},
 	}
 
 	description := fmt.Sprintf("%s client of %s/%s Node (Node #%d)", node.Execution.Type, node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func impactConsensusClient(node *network.Node) *TargetSelector {
+func createTargetSelectorForConsensusClient(node *network.Node) *ChaosTargetSelector {
 	var targets []string
 	clId := convertToNodeIdTag(node, Consensus)
 	targets = append(targets, clId)
@@ -150,34 +156,34 @@ func impactConsensusClient(node *network.Node) *TargetSelector {
 		targets = append(targets, valId)
 	}
 
-	selector := ExpressionSelector{
+	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
 		Values:   targets,
 	}
 
 	description := fmt.Sprintf("%s client of %s/%s Node (Node #%d)", node.Consensus.Type, node.Execution.Type, node.Consensus.Type, node.Index)
-	return &TargetSelector{
-		Selector:    []ExpressionSelector{selector},
+	return &ChaosTargetSelector{
+		Selector:    []ChaosExpressionSelector{selector},
 		Description: description,
 	}
 }
 
-func targetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (func(node *network.Node) *TargetSelector, error) {
+func targetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (func(node *network.Node) *ChaosTargetSelector, error) {
 	if targetSelector == TargetMatchingNode {
-		return impactNode, nil
+		return createTargetSelectorForNode, nil
 	}
 	if targetSelector == TargetMatchingClient {
 		if isExecClient {
-			return impactExecClient, nil
+			return createTargetSelectorForExecClient, nil
 		} else {
-			return impactConsensusClient, nil
+			return createTargetSelectorForConsensusClient, nil
 		}
 	}
 	return nil, stacktrace.NewError("target selector %s not supported", targetSelector)
 }
 
-func createExecClientFilter(elClientType string) TargetCriteriaFilter {
+func filterNodesByExecClient(elClientType string) TargetCriteriaFilter {
 	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Execution.Type == elClientType
@@ -188,7 +194,7 @@ func createExecClientFilter(elClientType string) TargetCriteriaFilter {
 	}
 }
 
-func createConsensusClientFilter(clClientType string) TargetCriteriaFilter {
+func filterNodesByConsensusClient(clClientType string) TargetCriteriaFilter {
 	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType
@@ -199,7 +205,7 @@ func createConsensusClientFilter(clClientType string) TargetCriteriaFilter {
 	}
 }
 
-func createDualClientTargetCriteria(elClientType, clClientType string) TargetCriteriaFilter {
+func filterNodesByClientCombo(elClientType, clClientType string) TargetCriteriaFilter {
 	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType && n.Execution.Type == elClientType
@@ -210,13 +216,13 @@ func createDualClientTargetCriteria(elClientType, clClientType string) TargetCri
 	}
 }
 
-func BuildTargetSelectors(nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*TargetSelector, error) {
+func buildChaosMeshTargetSelectors(nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*ChaosTargetSelector, error) {
 	targets, err := targetCriteria(size, nodes)
 	if err != nil {
 		return nil, err
 	}
 
-	var targetSelectors []*TargetSelector
+	var targetSelectors []*ChaosTargetSelector
 	for _, node := range targets {
 		targetSelectors = append(targetSelectors, impactSelector(node))
 	}
