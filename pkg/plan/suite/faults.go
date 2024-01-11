@@ -107,7 +107,7 @@ func buildPodRestartFault(description string, expressionSelectors []ChaosExpress
 			Kind:       "PodChaos",
 			ApiVersion: "chaos-mesh.org/v1alpha1",
 			Spec: PodChaosSpec{
-				Duration: "10s",
+				Duration: "1s",
 				Mode:     "all",
 				Selector: Selector{
 					ExpressionSelectors: expressionSelectors,

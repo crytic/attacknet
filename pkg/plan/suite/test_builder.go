@@ -5,10 +5,7 @@ import (
 	"time"
 )
 
-const clockSkewGracePeriod = time.Second * 1800
-const containerRestartGracePeriod = time.Second * 3600
-
-func composeNodeClockSkewTest(description string, targets []*ChaosTargetSelector, skew, duration string) (*types.SuiteTest, error) {
+func composeNodeClockSkewTest(description string, targets []*ChaosTargetSelector, skew, duration string, graceDuration time.Duration) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
 	s, err := composeNodeClockSkewPlanSteps(targets, skew, duration)
 	if err != nil {
@@ -24,14 +21,14 @@ func composeNodeClockSkewTest(description string, targets []*ChaosTargetSelector
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  clockSkewGracePeriod,
+			GracePeriod:  graceDuration,
 		},
 	}
 
 	return test, nil
 }
 
-func composeNodeRestartTest(description string, targets []*ChaosTargetSelector) (*types.SuiteTest, error) {
+func composeNodeRestartTest(description string, targets []*ChaosTargetSelector, graceDuration time.Duration) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
 
 	s, err := composeNodeRestartSteps(targets)
@@ -48,7 +45,7 @@ func composeNodeRestartTest(description string, targets []*ChaosTargetSelector) 
 		PlanSteps: steps,
 		HealthConfig: types.HealthCheckConfig{
 			EnableChecks: true,
-			GracePeriod:  containerRestartGracePeriod,
+			GracePeriod:  graceDuration,
 		},
 	}
 

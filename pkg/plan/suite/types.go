@@ -1,5 +1,7 @@
 package suite
 
+import "time"
+
 type TargetingSpec string
 
 const (
@@ -49,6 +51,7 @@ var FaultTypes = map[FaultTypeEnum]bool{
 type PlannerFaultConfiguration struct {
 	FaultType             FaultTypeEnum       `yaml:"fault_type"`
 	TargetClient          string              `yaml:"target_client"`
+	WaitBeforeFirstTest   time.Duration       `yaml:"wait_before_first_test"`
 	FaultConfigDimensions []map[string]string `yaml:"fault_config_dimensions"`
 	TargetingDimensions   []TargetingSpec     `yaml:"fault_targeting_dimensions"`
 	AttackSizeDimensions  []AttackSize        `yaml:"fault_attack_size_dimensions"`

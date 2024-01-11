@@ -52,8 +52,19 @@ func ComposeTestSuite(
 						runtimeEstimate += int(d.Seconds())
 					}
 				}
+				var targetingDescription string
+				if targetDimension == TargetMatchingNode {
+					targetingDescription = fmt.Sprintf("Impacting the full node of targeted %s clients. Injecting into %s of the matching targets.", config.TargetClient, attackSize)
+				} else {
+					targetingDescription = fmt.Sprintf("Impacting the client of targeted %s clients. Injecting into %s of the matching targets.", config.TargetClient, attackSize)
+				}
 
-				test, err := composeTestsForFaultType(config.FaultType, faultConfig, targetSelectors)
+				test, err := composeTestForFaultType(
+					config.FaultType,
+					faultConfig,
+					targetSelectors,
+					targetingDescription,
+				)
 				if err != nil {
 					return nil, err
 				}
@@ -67,10 +78,12 @@ func ComposeTestSuite(
 	return tests, nil
 }
 
-func composeTestsForFaultType(
+func composeTestForFaultType(
 	faultType FaultTypeEnum,
 	config map[string]string,
-	targetSelectors []*ChaosTargetSelector) (*types.SuiteTest, error) {
+	targetSelectors []*ChaosTargetSelector,
+	targetingDescription string,
+) (*types.SuiteTest, error) {
 
 	switch faultType {
 	case FaultClockSkew:
@@ -82,11 +95,28 @@ func composeTestsForFaultType(
 		if !ok {
 			return nil, stacktrace.NewError("missing duration field for clock skew fault")
 		}
-		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets", skew, duration, len(targetSelectors))
-		return composeNodeClockSkewTest(description, targetSelectors, skew, duration)
+		grace, ok := config["grace_period"]
+		if !ok {
+			return nil, stacktrace.NewError("missing grace_period field for clock skew fault")
+		}
+		graceDuration, err := time.ParseDuration(grace)
+		if err != nil {
+			return nil, stacktrace.NewError("unable to convert grace_period field to a time duration for clock skew fault")
+		}
+
+		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s", skew, duration, len(targetSelectors), targetingDescription)
+		return composeNodeClockSkewTest(description, targetSelectors, skew, duration, graceDuration)
 	case FaultContainerRestart:
-		description := fmt.Sprintf("Restarting %d targets", len(targetSelectors))
-		return composeNodeRestartTest(description, targetSelectors)
+		grace, ok := config["grace_period"]
+		if !ok {
+			return nil, stacktrace.NewError("missing grace_period field for restsrt fault")
+		}
+		graceDuration, err := time.ParseDuration(grace)
+		if err != nil {
+			return nil, stacktrace.NewError("unable to convert grace_period field to a time duration for clock skew fault")
+		}
+		description := fmt.Sprintf("Restarting %d targets. %s", len(targetSelectors), targetingDescription)
+		return composeNodeRestartTest(description, targetSelectors, graceDuration)
 	}
 
 	return nil, nil

@@ -32,9 +32,14 @@ kubernetes_namespace: kt-ethereum
 fault_config:
   fault_type: ClockSkew
   target_client: reth
+  wait_before_first_test: 300s
   fault_config_dimensions:
     - skew: -2m
-      duration: 10m
+      duration: 1m
+      grace_period: 1800s
+    - skew: 2m
+      duration: 1m
+      grace_period: 1800s
   fault_targeting_dimensions:
     - MatchingNode
     - MatchingClient
