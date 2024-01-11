@@ -35,12 +35,7 @@ testConfig:
               #kurtosistech.com/id: cl-3-prysm-geth
               kurtosistech.com/id: el-1-geth-lighthouse
 
-          # for CL nodes
-          #path: '/consensus-data/**/*'
-          #volumePath: /consensus-data
-          # for EL nodes
-          path: '/execution-data/**/*'
-          volumePath: /execution-data
+          volumePath: /data/geth/execution-data
           errno: 5
           percent: 50
           duration: 30s

@@ -20,10 +20,18 @@
    4. To access chaos dashboard, use `kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333`
 4. Install kurtosis locally.
 5. Run `kurtosis cluster set cloud`
-6. In a separate terminal, run `kurtosis engine start`
-7. In a separate terminal, run `kurtosis gateway`. This process needs to stay alive during all attacknet testing and cannot be started via SDK.
+6. If running in digitalocean, edit the kurtosis-config.yml file from `kurtosis config path` and add the following setting under kubernetes-cluster-name: `storage-class: "do-block-storage"`
+7. In a separate terminal, run `kurtosis engine start`
+8. In a separate terminal, run `kurtosis gateway`. This process needs to stay alive during all attacknet testing and cannot be started via SDK.
 
-## Test Suite Configuration
+## Run modes
+
+There are three workflows in attacknet:
+1. Manually creating test suites/network configs
+2. Automatically creating test suites/network configs using the planner
+3. Running the test suite
+
+## Manually creating/configuring test suites
 
 Attacknet is configured using "test suites". These are yaml files found under `./test-suites` that define everything 
 Attacknet needs to genesis a network, test the network, and determine the health of the network.
@@ -51,25 +59,107 @@ harnessConfig:
   networkType: ethereum # no touchy
 
 # The list of tests to be run. As of right now, the first test is run and the tool terminates. In the future, we will genesis single-use devnets for each test, run the test, and terminate once all the tests are completed and all the enclaves are cleaned up.
-tests:
-- testName: packetdrop-1 # Name of the test. Used for logging/artifacts.
-  chaosFaultSpec: # The chaosFaultSpec is basically a pass-thru object for Chaos Mesh fault resources. This means we can support every possible fault out-of-the-box, but slightly complicates generating the configuration. To determine the schema for each fault type, check the Chaos Mesh docs: https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/. One issue with this method is that Attacknet can't verify whether your faultSpec is valid until it tries to create the resource in Kubernetes, and that comes after genesis which takes a long time on its own. If you run into schema validation issues, try creating these objects directly in Kubernetes to hasten the debug cycle. 
-    kind: NetworkChaos
-    apiVersion: chaos-mesh.org/v1alpha1
-    spec:
-      selector:
-        labelSelectors:
-          kurtosistech.com/id: cl-1-lighthouse-geth-validator
-      mode: all
-      action: loss
-      duration: 1m
-      loss:
-        loss: '10'
-        correlation: '0'
-      direction: to
-
+testConfig:
+   tests:
+   - testName: packetdrop-1 # Name of the test. Used for logging/artifacts.
+     health:
+        enableChecks: true # whether health checks should be run after the test concludes
+        gracePeriod: 2m0s # how long the health checks will attempt to pass before marking the test a failure
+     planSteps: # the list of steps to facilitate the test, executed in order
+      - stepType: injectFault # this step injects a fault, the continues to the next step without waiting for the fault to terminate
+        description: "inject fault"
+        chaosFaultSpec: # The chaosFaultSpec is basically a pass-thru object for Chaos Mesh fault resources. This means we can support every possible fault out-of-the-box, but slightly complicates generating the configuration. To determine the schema for each fault type, check the Chaos Mesh docs: https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/. One issue with this method is that Attacknet can't verify whether your faultSpec is valid until it tries to create the resource in Kubernetes, and that comes after genesis which takes a long time on its own. If you run into schema validation issues, try creating these objects directly in Kubernetes to hasten the debug cycle. 
+          kind: NetworkChaos
+          apiVersion: chaos-mesh.org/v1alpha1
+          spec:
+            selector:
+              labelSelectors:
+                kurtosistech.com/id: cl-1-lighthouse-geth-validator
+            mode: all
+            action: loss
+            duration: 1m
+            loss:
+              loss: '10'
+              correlation: '0'
+            direction: to
+      - stepType: waitForFaultCompletion # this step waits for all previous running faults to complete before continuing
+        description: wait for faults to terminate
 ```
-## Running the tool
+
+## Automatically creating test suites/network configs using the planner
+
+Attacknet can automatically create test suites based off a pre-defined test plan. This can be used to create large, comprehensive test suites that test against a variety of different client combos.
+
+An example test plan can be found in the `planner-configs/` directory
+Here's an annotated version:
+
+```yaml
+execution: # list of execution clients that will be used in the network topology
+  - name: geth
+    image: ethereum/client-go:latest
+  - name: reth
+    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+consensus: # list of consensus clients that will be used in the network topology
+  - name: lighthouse
+    image: sigp/lighthouse:latest
+    has_sidecar: true
+  - name: prysm
+    image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    has_sidecar: true
+network_params:
+  num_validator_keys_per_node: 32 # required. 
+kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
+kubernetes_namespace: kt-ethereum
+fault_config:
+  fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
+  target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
+  wait_before_first_test: 300s # how long to wait before running the first test. Set this to 25 minutes to test against a finalized network.
+  fault_config_dimensions: # the different fault configurations to use when creating tests. At least one config dimension is required.
+    - skew: -2m # these configs differ for each fault
+      duration: 1m
+      grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
+    - skew: 2m
+      duration: 1m
+      grace_period: 1800s
+  fault_targeting_dimensions: # Defines how we want to impact the targets. We can inject faults into the client and only the client, or we can inject faults into the node (injects into cl, el, validator)
+    - MatchingNode
+    - MatchingClient
+  fault_attack_size_dimensions: # Defines how many of the matching targets we actually want to attack. 
+    - AttackOneMatching # attacks only one matching target
+    - AttackMinorityMatching # attacks <33% 
+    - AttackSuperminorityMatching # attacks >33% but <50%
+    - AttackMajorityMatching # attacks >50% but <66%
+    - AttackSupermajorityMatching # attacks >66%
+    - AttackAllMatching # attacks all
+```
+
+The total number of tests generated by a plan is equal to `len(fault_config_dimensions) * len(fault_targeting_dimensions) * len(fault_attack_size_dimensions)`
+
+You can create a test plan by invoking `attacknet plan <suitename> <planner config path>`
+
+The suite plan will be written to `./test-suites/plan/<suitename>.yaml`
+
+The network config will be written to `./network-configs/plan/<suitename>.yaml`
+
+and can be executed by attacknet using `attacknet start plan/suitename`
+
+### Faults supported by planner
+
+#### ClockSkew
+Config:
+```yaml
+    - skew: -2m # how far to skew the clock. can be positive or negative
+      duration: 1m # how long to skew the clock for
+      grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
+```
+
+#### RestartContainers
+Config:
+```yaml
+    - grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
+```
+
+## Running test suites
 
 Once you've got your configuration set up, you can run Attacknet:
 
@@ -91,24 +181,3 @@ At this time, health checks will be run in perpetuity once the fault has conclud
    - `brew install pre-commit`
    - `pre-commit install`
 
-## Other stuff
-
-Everything below this line is old and can be ignored. It'll be deleted when I have time to do a pass.
-
-### Prom queries
-
-Head slot, beacon nodes
-`beacon_head_slot{service=~"beacon-follower-prysm|beacon-follower1-prysm|beacon-follower2-prysm|beacon-follower3-prysm|beacon-follower4-prysm|beacon-follower5-prysm|beacon-follower6-prysm|beacon-prysm"}`
-
-current justified epoch, beacon nodes
-`beacon_current_justified_epoch{service=~"beacon-follower-prysm|beacon-follower1-prysm|beacon-follower2-prysm|beacon-follower3-prysm|beacon-follower4-prysm|beacon-follower5-prysm|beacon-follower6-prysm|beacon-prysm"}`
-
-restarts
-`kube_pod_container_status_restarts_total{namespace="default"}`
-
-
-`beacondb_all_deposits{}`
-`powchain_valid_deposits_received`
-`current_eth1_data_deposit_count`
-`beacondb_pending_deposits`
-`beacon_processed_deposits_total`
