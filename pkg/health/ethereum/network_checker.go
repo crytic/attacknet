@@ -39,7 +39,7 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context, prevHealthCheckRes
 	}
 
 	log.Debug("Ready to query for health checks")
-	latestResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "latest", 5)
+	latestResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "latest", 15)
 	if err != nil {
 		return nil, err
 	}
