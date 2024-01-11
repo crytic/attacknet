@@ -51,5 +51,3 @@ func composeNodeRestartTest(description string, targets []*ChaosTargetSelector, 
 
 	return test, nil
 }
-
-//func buildCpuPressureTest(description string, targets []*ChaosTargetSelector, pressure int) (*types.SuiteTest, error) {

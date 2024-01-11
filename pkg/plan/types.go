@@ -37,6 +37,7 @@ type EthKurtosisConfig struct {
 	NetParams           network.GenesisConfig `yaml:"network_params"`
 	AdditionalServices  []string              `yaml:"additional_services"`
 	ParallelKeystoreGen bool                  `yaml:"parallel_keystore_generation"`
+	Persistent          bool                  `yaml:"persistent"`
 }
 
 type Participant struct {
