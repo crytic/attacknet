@@ -28,8 +28,8 @@ type SuiteTestConfigs struct {
 }
 
 type HealthCheckConfig struct {
-	EnableChecks bool          `yaml:"enableChecks"`
-	GracePeriod  time.Duration `yaml:"gracePeriod"`
+	EnableChecks bool           `yaml:"enableChecks"`
+	GracePeriod  *time.Duration `yaml:"gracePeriod"`
 }
 
 type SuiteTest struct {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"time"
 )
 
@@ -72,10 +73,23 @@ func ComposeTestSuite(
 			}
 		}
 	}
-
-	log.Infof("ESTIMATE: Running this test suite will take, at minimum, %d minutes", runtimeEstimate/60)
+	log.Infof("Tests generated: %d", len(tests))
+	log.Infof("ESTIMATE: Running this test suite will take, at minimum, %d minutes based on fault durations.", runtimeEstimate/60)
 
 	return tests, nil
+}
+
+func getDurationValue(key string, m map[string]string) (*time.Duration, error) {
+
+	valueStr, ok := m[key]
+	if !ok {
+		return nil, stacktrace.NewError("missing %s field", key)
+	}
+	duration, err := time.ParseDuration(valueStr)
+	if err != nil {
+		return nil, stacktrace.NewError("unable to convert %s field to a time duration", key)
+	}
+	return &duration, nil
 }
 
 func composeTestForFaultType(
@@ -95,28 +109,46 @@ func composeTestForFaultType(
 		if !ok {
 			return nil, stacktrace.NewError("missing duration field for clock skew fault")
 		}
-		grace, ok := config["grace_period"]
-		if !ok {
-			return nil, stacktrace.NewError("missing grace_period field for clock skew fault")
-		}
-		graceDuration, err := time.ParseDuration(grace)
+		graceDuration, err := getDurationValue("grace_period", config)
 		if err != nil {
-			return nil, stacktrace.NewError("unable to convert grace_period field to a time duration for clock skew fault")
+			return nil, err
 		}
 
 		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s", skew, duration, len(targetSelectors), targetingDescription)
 		return composeNodeClockSkewTest(description, targetSelectors, skew, duration, graceDuration)
 	case FaultContainerRestart:
-		grace, ok := config["grace_period"]
-		if !ok {
-			return nil, stacktrace.NewError("missing grace_period field for restsrt fault")
-		}
-		graceDuration, err := time.ParseDuration(grace)
+
+		graceDuration, err := getDurationValue("grace_period", config)
 		if err != nil {
-			return nil, stacktrace.NewError("unable to convert grace_period field to a time duration for clock skew fault")
+			return nil, err
 		}
 		description := fmt.Sprintf("Restarting %d targets. %s", len(targetSelectors), targetingDescription)
 		return composeNodeRestartTest(description, targetSelectors, graceDuration)
+	case FaultIOLatency:
+		grace, err := getDurationValue("grace_period", config)
+		if err != nil {
+			return nil, err
+		}
+		delay, err := getDurationValue("delay", config)
+		if err != nil {
+			return nil, err
+		}
+		faultDuration, err := getDurationValue("duration", config)
+		if err != nil {
+			return nil, err
+		}
+
+		percent, ok := config["percent"]
+		if !ok {
+			return nil, stacktrace.NewError("missing percent field in io latency fault")
+		}
+		percentInt, err := strconv.Atoi(percent)
+		if err != nil {
+			return nil, stacktrace.Propagate(err, "unable to parse io latency fault percent field")
+		}
+		description := fmt.Sprintf("Apply %s i/o latency for %s. Impacting %d pct of i/o calls. against %d targets. %s", delay, faultDuration, percentInt, len(targetSelectors), targetingDescription)
+
+		return composeIOLatencyTest(description, targetSelectors, delay, percentInt, faultDuration, grace)
 	}
 
 	return nil, nil

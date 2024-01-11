@@ -2,8 +2,11 @@ package suite
 
 import (
 	"attacknet/cmd/pkg/types"
+	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	"gopkg.in/yaml.v3"
+	"strings"
+	"time"
 )
 
 // We can't use chaos mesh's types because type-inlining is not supported in yaml.v3, making it so you can't serialize
@@ -53,6 +56,27 @@ type PodChaosFault struct {
 
 type PodChaosWrapper struct {
 	PodChaosFault `yaml:"chaosFaultSpec"`
+}
+
+type IOChaosSpec struct {
+	Selector `yaml:"selector"`
+	Mode     string `yaml:"mode"`
+
+	Action     string         `yaml:"action"`
+	VolumePath string         `yaml:"volumePath"`
+	Delay      *time.Duration `yaml:"delay"`
+	Percent    int            `yaml:"percent"`
+	Duration   *time.Duration `yaml:"duration"`
+}
+
+type IOChaosFault struct {
+	Spec       IOChaosSpec `yaml:"spec"`
+	Kind       string      `yaml:"kind"`
+	ApiVersion string      `yaml:"apiVersion"`
+}
+
+type IOChaosWrapper struct {
+	IOChaosFault `yaml:"chaosFaultSpec"`
 }
 
 func convertFaultSpecToMap(s interface{}) (map[string]interface{}, error) {
@@ -127,4 +151,63 @@ func buildPodRestartFault(description string, expressionSelectors []ChaosExpress
 		Spec:            faultSpec,
 	}
 	return step, nil
+}
+
+func getVolumePathForIOFault(podName string) (string, error) {
+	var nodeType string
+	parts := strings.Split(podName, "-")
+	if parts[0] == "el" {
+		nodeType = "execution"
+	} else {
+		nodeType = "consensus"
+	}
+	if parts[len(parts)-1] == "validator" {
+		return "", stacktrace.NewError("cannot create an i/o latency fault on a validator sidecar pod. Try to target matching clients only: %s", podName)
+	}
+	clientName := parts[2]
+	volumeTarget := fmt.Sprintf("/data/%s/%s-data", clientName, nodeType)
+	return volumeTarget, nil
+}
+
+func buildIOLatencyFault(description string, expressionSelector ChaosExpressionSelector, delay *time.Duration, percent int, duration *time.Duration) ([]types.PlanStep, error) {
+	var steps []types.PlanStep
+
+	for _, podName := range expressionSelector.Values {
+		volumePath, err := getVolumePathForIOFault(podName)
+		if err != nil {
+			return nil, err
+		}
+
+		t := IOChaosWrapper{
+			IOChaosFault: IOChaosFault{
+				Kind:       "IOChaos",
+				ApiVersion: "chaos-mesh.org/v1alpha1",
+				Spec: IOChaosSpec{
+					Duration: duration,
+					Mode:     "all",
+					Selector: Selector{
+						ExpressionSelectors: []ChaosExpressionSelector{expressionSelector},
+					},
+					Action:     "latency",
+					VolumePath: volumePath,
+					Delay:      delay,
+					Percent:    percent,
+				},
+			},
+		}
+
+		faultSpec, err := convertFaultSpecToMap(t)
+		if err != nil {
+			return nil, err
+		}
+
+		step := types.PlanStep{
+			StepType:        types.InjectFault,
+			StepDescription: description,
+			Spec:            faultSpec,
+		}
+		steps = append(steps, step)
+	}
+
+	return steps, nil
 }
