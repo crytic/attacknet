@@ -5,8 +5,8 @@ participants:
       cl_client_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
-      el_min_mem: 2048
-      el_max_mem: 2048
+      el_min_mem: 1024
+      el_max_mem: 1024
       bn_min_cpu: 1000
       bn_max_cpu: 1000
       bn_min_mem: 2048
@@ -22,8 +22,8 @@ participants:
       cl_client_image: consensys/teku:23.12.0
       el_min_cpu: 1000
       el_max_cpu: 1000
-      el_min_mem: 2048
-      el_max_mem: 2048
+      el_min_mem: 1024
+      el_max_mem: 1024
       bn_min_cpu: 1000
       bn_max_cpu: 1000
       bn_min_mem: 2048
@@ -35,8 +35,8 @@ participants:
       cl_client_image: chainsafe/lodestar:v1.12.1
       el_min_cpu: 1000
       el_max_cpu: 1000
-      el_min_mem: 2048
-      el_max_mem: 2048
+      el_min_mem: 1024
+      el_max_mem: 1024
       bn_min_cpu: 1000
       bn_max_cpu: 1000
       bn_min_mem: 2048
@@ -52,8 +52,8 @@ participants:
       cl_client_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
-      el_min_mem: 2048
-      el_max_mem: 2048
+      el_min_mem: 1024
+      el_max_mem: 1024
       bn_min_cpu: 1000
       bn_max_cpu: 1000
       bn_min_mem: 2048
@@ -69,8 +69,8 @@ participants:
       cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
-      el_min_mem: 2048
-      el_max_mem: 2048
+      el_min_mem: 1024
+      el_max_mem: 1024
       bn_min_cpu: 1000
       bn_max_cpu: 1000
       bn_min_mem: 2048
