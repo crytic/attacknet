@@ -159,6 +159,16 @@ Config:
     - grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
 ```
 
+#### IOLatency
+Config:
+```yaml
+    - grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
+      delay: 1000ms # how long the i/o delay should be
+      duration: 1m # how long the fault should last
+      percent: 50 # the percentage of i/o requests impacted.
+```
+
+
 ## Running test suites
 
 Once you've got your configuration set up, you can run Attacknet:
