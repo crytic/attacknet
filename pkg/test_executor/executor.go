@@ -32,7 +32,7 @@ func (te *TestExecutor) RunTestPlan(ctx context.Context) error {
 		if err != nil {
 			return stacktrace.Propagate(err, "could not marshal plan step %s", genericStep.Spec)
 		}
-		log.Infof("Running test step (%d/%d): '%s'", i, len(te.planSteps), genericStep.StepDescription)
+		log.Infof("Running test step (%d/%d): '%s'", i+1, len(te.planSteps), genericStep.StepDescription)
 		switch genericStep.StepType {
 		case types.InjectFault:
 			var s PlanStepSingleFault

@@ -44,7 +44,7 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 	var testArtifacts []*artifacts.TestArtifact
 
 	for i, test := range cfg.TestConfig.Tests {
-		log.Infof("Running test (%d/%d): '%s'", i, len(cfg.TestConfig.Tests), test.TestName)
+		log.Infof("Running test (%d/%d): '%s'", i+1, len(cfg.TestConfig.Tests), test.TestName)
 		executor := test_executor.CreateTestExecutor(chaosClient, test)
 
 		err = executor.RunTestPlan(ctx)
