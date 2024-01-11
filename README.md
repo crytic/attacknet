@@ -185,6 +185,14 @@ At this time, health checks will be run in perpetuity once the fault has conclud
 **Dec 15, 2023 version v0.1 (internal)**
 - Initial internal release
 
+**Jan 11, 2023 version v0.2 (internal)**
+- Updated to kurtosis v0.86.1
+- Updated to Go 1.21
+- Grafana port-forwarding has been temporarily disabled
+- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
+- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
+- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+- 
 ## Developing (wip)
 
 1. Install pre-commit
