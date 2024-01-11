@@ -27,12 +27,12 @@ func (te *TestExecutor) RunTestPlan(ctx context.Context) error {
 	if te.planCompleted {
 		return stacktrace.NewError("test executor %s has already been run", te.testName)
 	}
-	for _, genericStep := range te.planSteps {
+	for i, genericStep := range te.planSteps {
 		marshalledSpec, err := yaml.Marshal(genericStep.Spec)
 		if err != nil {
 			return stacktrace.Propagate(err, "could not marshal plan step %s", genericStep.Spec)
 		}
-		log.Infof("Running test step '%s'", genericStep.StepDescription)
+		log.Infof("Running test step (%d/%d): '%s'", i, len(te.planSteps), genericStep.StepDescription)
 		switch genericStep.StepType {
 		case types.InjectFault:
 			var s PlanStepSingleFault
