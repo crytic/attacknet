@@ -52,10 +52,11 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			log.Errorf("Error while running test #%d", i+1)
 			return err
 		} else {
-			log.Infof("Test #%d completed.", i+1)
+			log.Infof("Test #%d steps completed.", i+1)
 		}
 
 		if test.HealthConfig.EnableChecks {
+			log.Info("Starting health checks")
 			podsUnderTest, err := executor.GetPodsUnderTest()
 			if err != nil {
 				return err
@@ -75,6 +76,8 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 				log.Warn("Some health checks failed. Stopping test suite.")
 				break
 			}
+		} else {
+			log.Info("Skipping health checks")
 		}
 	}
 	err = artifacts.SerializeTestArtifacts(testArtifacts)
