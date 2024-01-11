@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"attacknet/cmd/pkg/artifacts"
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
@@ -40,8 +41,10 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 
 	log.Infof("Running %d tests", len(cfg.TestConfig.Tests))
 
+	var testArtifacts []*artifacts.TestArtifact
+
 	for i, test := range cfg.TestConfig.Tests {
-		log.Infof("Running test #%d, '%s'", i, test.TestName)
+		log.Infof("Running test (%d/%d): '%s'", i+1, len(cfg.TestConfig.Tests), test.TestName)
 		executor := test_executor.CreateTestExecutor(chaosClient, test)
 
 		err = executor.RunTestPlan(ctx)
@@ -66,84 +69,20 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			if err != nil {
 				return err
 			}
-			// todo: log here
-			_ = results
+			testArtifact := artifacts.BuildTestArtifact(results, podsUnderTest, test)
+			testArtifacts = append(testArtifacts, testArtifact)
+			if !testArtifact.TestPassed {
+				log.Warn("Some health checks failed. Stopping test suite.")
+				break
+			}
 		}
+	}
+	err = artifacts.SerializeTestArtifacts(testArtifacts)
+	if err != nil {
+		return err
 	}
 
 	enclave.Destroy(ctx)
 
 	return nil
-	/*
-		faultSession, err := chaosClient.StartFault(ctx, cfg.Tests[0].FaultSpec)
-		if err != nil {
-			grafanaTunnel.Cleanup(true)
-			return err
-		}
-
-		// start core logic loop here.
-		err = waitForInjectionCompleted(ctx, faultSession)
-		if err != nil {
-			grafanaTunnel.Cleanup(true)
-			return err
-		}
-		var timeToSleep time.Duration
-		if faultSession.TestDuration != nil {
-			durationSeconds := int(faultSession.TestDuration.Seconds())
-			log.Infof("Fault injected successfully. Fault will run for %d seconds before recovering.", durationSeconds)
-			timeToSleep = *faultSession.TestDuration
-		} else {
-			log.Infof("Fault injected successfully. This fault has no specific duration.")
-		}
-		time.Sleep(timeToSleep)
-
-		// we can build the health checker once the fault is injected
-		log.Info("creating health checker")
-		hc, err := health.BuildHealthChecker(cfg, kubeClient, faultSession.PodsUnderTest)
-		if err != nil {
-			return err
-		}
-		_ = hc
-
-		err = waitForFaultRecovery(ctx, faultSession)
-		if err != nil {
-			grafanaTunnel.Cleanup(true)
-			return err
-		}
-
-		_, err = hc.RunChecksUntilTimeout(ctx)
-
-		return err*/
 }
-
-// todo: move to fault session?
-/*
-
-
-func waitForFaultRecovery(ctx context.Context, session *chaos_mesh.FaultSession) error {
-	for {
-		status, err := session.GetStatus(ctx)
-		if err != nil {
-			return err
-		}
-
-		switch status {
-		case chaos_mesh.InProgress:
-			log.Infof("The fault is still finishing up. Sleeping for 10s")
-			time.Sleep(10 * time.Second)
-		case chaos_mesh.Stopping:
-			log.Infof("The fault is being stopped. Sleeping for 10s")
-			time.Sleep(10 * time.Second)
-		case chaos_mesh.Error:
-			log.Errorf("there was an error returned by chaos-mesh")
-			return errors.New("there was an unspecified error returned by chaos-mesh. inspect the fault resource")
-		case chaos_mesh.Completed:
-			log.Infof("The fault terminated successfully!")
-			return nil
-		default:
-			return stacktrace.NewError("unknown chaos session state %s", status)
-		}
-		// todo: add timeout break if no changes in k8s resource after fault duration elapses
-	}
-}
-*/

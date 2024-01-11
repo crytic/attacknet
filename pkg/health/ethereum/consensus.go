@@ -16,7 +16,7 @@ type ClientForkChoice struct {
 	BlockHash   string
 }
 
-func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecRpcClient, blockType string) ([]*ClientForkChoice, error) {
+func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecClientRPC, blockType string) ([]*ClientForkChoice, error) {
 	clientForkVotes := make([]*ClientForkChoice, len(nodeClients))
 	for i, client := range nodeClients {
 		choice, err := client.GetLatestBlockBy(ctx, blockType)

@@ -15,7 +15,7 @@ testConfig:
   - testName: clock-skew
     health:
       enableChecks: true
-      gracePeriod: 2m0s
+      gracePeriod: 30s
     planSteps:
     - stepType: injectFault
       description: 'Inject clock skew on target'
@@ -30,6 +30,6 @@ testConfig:
           mode: all
           action: delay
           timeOffset: '-5m'
-          duration: 10m
+          duration: 1m
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate

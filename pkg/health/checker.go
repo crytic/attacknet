@@ -33,16 +33,18 @@ func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.Kube
 	return &CheckOrchestrator{checkerImpl: checkerImpl, gracePeriod: healthCheckConfig.GracePeriod}, nil
 }
 
-func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResult, error) {
+func (hc *CheckOrchestrator) RunChecks(ctx context.Context) (*types.HealthCheckResult, error) {
 	start := time.Now()
 	latestAllowable := start.Add(hc.gracePeriod)
 	log.Infof("Allowing up to %.0f seconds for health checks to pass on all nodes", hc.gracePeriod.Seconds())
 
+	lastHealthCheckResult := &types.HealthCheckResult{}
 	for {
-		results, err := hc.checkerImpl.RunAllChecks(ctx)
+		results, err := hc.checkerImpl.RunAllChecks(ctx, lastHealthCheckResult)
 		if err != nil {
 			return nil, err
 		}
+		lastHealthCheckResult = results
 		if AllChecksPassed(results) {
 			timeToPass := time.Since(start).Seconds()
 			pctGraceUsed := timeToPass / hc.gracePeriod.Seconds() * 100
@@ -52,7 +54,7 @@ func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResul
 
 		if time.Now().After(latestAllowable) {
 			log.Warn("Grace period elapsed and a health check is still failing")
-			return results, stacktrace.NewError("tests failed")
+			return results, nil
 		} else {
 			log.Warn("Health checks failed but still in grace period")
 			time.Sleep(1 * time.Second)
@@ -60,11 +62,19 @@ func (hc *CheckOrchestrator) RunChecks(ctx context.Context) ([]*types.CheckResul
 	}
 }
 
-func AllChecksPassed(checks []*types.CheckResult) bool {
-	for _, r := range checks {
-		if len(r.PodsFailing) != 0 {
-			return false
-		}
+func AllChecksPassed(checks *types.HealthCheckResult) bool {
+	if len(checks.LatestElBlockResult.FailingClientsReportedBlock) > 0 {
+		return false
 	}
+	if len(checks.LatestElBlockResult.FailingClientsReportedHash) > 0 {
+		return false
+	}
+	if len(checks.FinalizedElBlockResult.FailingClientsReportedBlock) > 0 {
+		return false
+	}
+	if len(checks.FinalizedElBlockResult.FailingClientsReportedHash) > 0 {
+		return false
+	}
+
 	return true
 }
