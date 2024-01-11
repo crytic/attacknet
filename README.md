@@ -159,6 +159,16 @@ Config:
     - grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
 ```
 
+#### IOLatency
+Config:
+```yaml
+    - grace_period: 1800s # how long to wait for health checks to pass before marking the test as failed
+      delay: 1000ms # how long the i/o delay should be
+      duration: 1m # how long the fault should last
+      percent: 50 # the percentage of i/o requests impacted.
+```
+
+
 ## Running test suites
 
 Once you've got your configuration set up, you can run Attacknet:
@@ -175,6 +185,14 @@ At this time, health checks will be run in perpetuity once the fault has conclud
 **Dec 15, 2023 version v0.1 (internal)**
 - Initial internal release
 
+**Jan 11, 2023 version v0.2 (internal)**
+- Updated to kurtosis v0.86.1
+- Updated to Go 1.21
+- Grafana port-forwarding has been temporarily disabled
+- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
+- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
+- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+- 
 ## Developing (wip)
 
 1. Install pre-commit

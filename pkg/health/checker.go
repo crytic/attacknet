@@ -14,7 +14,7 @@ import (
 
 type CheckOrchestrator struct {
 	checkerImpl types.GenericNetworkChecker
-	gracePeriod time.Duration
+	gracePeriod *time.Duration
 }
 
 func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
@@ -35,7 +35,7 @@ func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.Kube
 
 func (hc *CheckOrchestrator) RunChecks(ctx context.Context) (*types.HealthCheckResult, error) {
 	start := time.Now()
-	latestAllowable := start.Add(hc.gracePeriod)
+	latestAllowable := start.Add(*hc.gracePeriod)
 	log.Infof("Allowing up to %.0f seconds for health checks to pass on all nodes", hc.gracePeriod.Seconds())
 
 	lastHealthCheckResult := &types.HealthCheckResult{}

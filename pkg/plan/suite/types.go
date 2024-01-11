@@ -41,11 +41,13 @@ type FaultTypeEnum string
 const (
 	FaultClockSkew        FaultTypeEnum = "ClockSkew"
 	FaultContainerRestart FaultTypeEnum = "RestartContainers"
+	FaultIOLatency        FaultTypeEnum = "IOLatency"
 )
 
 var FaultTypes = map[FaultTypeEnum]bool{
 	FaultClockSkew:        true,
 	FaultContainerRestart: true,
+	FaultIOLatency:        true,
 }
 
 type PlannerFaultConfiguration struct {
