@@ -4,16 +4,16 @@ import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 import "attacknet/cmd/pkg/health/types"
 
 type EthNetworkChecker struct {
-	kubeClient          *kubernetes.KubeClient
-	podsUnderTest       []*chaos_mesh.PodUnderTest
-	podsUnderTestLookup map[string]*chaos_mesh.PodUnderTest
+	kubeClient           *kubernetes.KubeClient
+	podsUnderTest        []*chaos_mesh.PodUnderTest
+	podsUnderTestLookup  map[string]*chaos_mesh.PodUnderTest
+	healthCheckStartTime time.Time
 }
 
 func CreateEthNetworkChecker(kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest) *EthNetworkChecker {
@@ -25,124 +25,92 @@ func CreateEthNetworkChecker(kubeClient *kubernetes.KubeClient, podsUnderTest []
 	}
 
 	return &EthNetworkChecker{
-		podsUnderTest:       podsUnderTest,
-		podsUnderTestLookup: podsUnderTestMap,
-		kubeClient:          kubeClient,
+		podsUnderTest:        podsUnderTest,
+		podsUnderTestLookup:  podsUnderTestMap,
+		kubeClient:           kubeClient,
+		healthCheckStartTime: time.Now(),
 	}
 }
 
-func (e *EthNetworkChecker) RunAllChecks(ctx context.Context) ([]*types.CheckResult, error) {
-	labelKey := "kurtosistech.com.custom/ethereum-package.client-type"
-	labelValue := "execution"
-
-	var podsToHealthCheck []kubernetes.KubePod
-	// add pods under test that match the label criteria
-	for _, pod := range e.podsUnderTest {
-		if pod.MatchesLabel(labelKey, labelValue) && !pod.ExpectDeath {
-			podsToHealthCheck = append(podsToHealthCheck, pod)
-		}
-	}
-	// add pods that were not targeted by a fault
-	bystanders, err := e.kubeClient.PodsMatchingLabel(ctx, labelKey, labelValue)
+func (e *EthNetworkChecker) RunAllChecks(ctx context.Context, prevHealthCheckResult *types.HealthCheckResult) (*types.HealthCheckResult, error) {
+	execRpcClients, err := e.dialToExecutionClients(ctx)
 	if err != nil {
 		return nil, err
-	}
-	for _, pod := range bystanders {
-		_, match := e.podsUnderTestLookup[pod.GetName()]
-		// don't add pods we've already added
-		if !match {
-			podsToHealthCheck = append(podsToHealthCheck, pod)
-		}
-	}
-
-	log.Infof("Starting port forward sessions to %d pods", len(podsToHealthCheck))
-	portForwardSessions, err := e.kubeClient.StartMultiPortForwardToLabeledPods(
-		podsToHealthCheck,
-		labelKey,
-		labelValue,
-		8545)
-	if err != nil {
-		return nil, err
-	}
-
-	// dial out to clients
-	rpcClients := make([]*ExecRpcClient, len(portForwardSessions))
-	for i, s := range portForwardSessions {
-		client, err := CreateExecRpcClient(s)
-		if err != nil {
-			return nil, err
-		}
-		rpcClients[i] = client
 	}
 
 	log.Debug("Ready to query for health checks")
-	latestResult, err := e.getBlockConsensus(ctx, rpcClients, "latest", 3)
+	latestResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "latest", 5)
 	if err != nil {
 		return nil, err
 	}
-	finalResult, err := e.getBlockConsensus(ctx, rpcClients, "finalized", 3)
+	latestArtifact := e.convertResultToArtifact(prevHealthCheckResult.LatestElBlockResult, latestResult)
+
+	finalResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "finalized", 3)
 	if err != nil {
 		return nil, err
 	}
+	finalArtifact := e.convertResultToArtifact(prevHealthCheckResult.FinalizedElBlockResult, finalResult)
 
-	log.Infof("Finalization -> latest lag: %d", latestResult.ConsensusBlockNum-finalResult.ConsensusBlockNum)
+	log.Debugf("Finalization -> latest lag: %d", latestResult.ConsensusBlock-finalResult.ConsensusBlock)
 
-	// construct results
-	results := make([]*types.CheckResult, 4)
-	results[0] = latestResult.BlockNumResult
-	results[1] = latestResult.BlockHashResult
-	results[2] = finalResult.BlockNumResult
-	results[3] = finalResult.BlockHashResult
+	results := &types.HealthCheckResult{
+		LatestElBlockResult:    latestArtifact,
+		FinalizedElBlockResult: finalArtifact,
+	}
 
 	return results, nil
 }
 
-type getBlockConsensusResult struct {
-	BlockNumResult     *types.CheckResult
-	BlockHashResult    *types.CheckResult
-	ConsensusBlockNum  uint64
-	ConsensusBlockHash string
-}
+func (e *EthNetworkChecker) convertResultToArtifact(
+	prevArtifact *types.BlockConsensusArtifact,
+	result *types.BlockConsensusTestResult) *types.BlockConsensusArtifact {
 
-func (e *EthNetworkChecker) getBlockConsensus(ctx context.Context, clients []*ExecRpcClient, blockType string, maxAttempts int) (*getBlockConsensusResult, error) {
-	forkChoice, err := getExecNetworkConsensus(ctx, clients, blockType)
-	if err != nil {
-		return nil, err
-	}
-	// determine whether the nodes are in consensus
-	consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash := determineForkConsensus(forkChoice)
-	if len(wrongBlockNum) > 0 {
-		if maxAttempts > 0 {
-			log.Debugf("Nodes not at consensus for %s block. Waiting and re-trying in case we're on block propagation boundary. Attempts left: %d", blockType, maxAttempts-1)
-			time.Sleep(2 * time.Second)
-			return e.getBlockConsensus(ctx, clients, blockType, maxAttempts-1)
-		} else {
-			reportConsensusDataToLogger(blockType, consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
+	timeSinceChecksStarted := time.Since(e.healthCheckStartTime)
+	recoveredClients := make(map[string]int)
+
+	if prevArtifact != nil {
+		// we only mark clients as recovered if at some point they were failing health checks.
+		for client := range prevArtifact.FailingClientsReportedHash {
+			if _, stillFailing := result.FailingClientsReportedHash[client]; !stillFailing {
+				recoveredClients[client] = int(timeSinceChecksStarted.Seconds())
+			}
+		}
+
+		for client := range prevArtifact.FailingClientsReportedBlock {
+			if _, stillFailing := result.FailingClientsReportedBlock[client]; !stillFailing {
+				recoveredClients[client] = int(timeSinceChecksStarted.Seconds())
+			}
+		}
+
+		// merge previously recovered clients with the new
+		for k, v := range prevArtifact.NodeRecoveryTimeSeconds {
+			recoveredClients[k] = v
 		}
 	}
 
-	blockNumResult := &types.CheckResult{}
-	blockNumResult.TestName = fmt.Sprintf("All nodes agree on %s block number", blockType)
-	for _, node := range consensusBlockNum {
-		blockNumResult.PodsPassing = append(blockNumResult.PodsPassing, node.Pod.GetName())
-	}
-	for _, node := range wrongBlockNum {
-		blockNumResult.PodsFailing = append(blockNumResult.PodsFailing, node.Pod.GetName())
+	didUnfaultedNodesNeedToRecover := false
+	for client := range recoveredClients {
+		if _, wasUnderTest := e.podsUnderTestLookup[client]; !wasUnderTest {
+			didUnfaultedNodesNeedToRecover = true
+		}
 	}
 
-	blockHashResult := &types.CheckResult{}
-	blockHashResult.TestName = fmt.Sprintf("All nodes agree on %s block hash", blockType)
-	for _, node := range consensusBlockHash {
-		blockHashResult.PodsPassing = append(blockHashResult.PodsPassing, node.Pod.GetName())
+	didUnfaultedNodesFail := false
+	for client := range result.FailingClientsReportedBlock {
+		if _, wasUnderTest := e.podsUnderTestLookup[client]; !wasUnderTest {
+			didUnfaultedNodesFail = true
+		}
 	}
-	for _, node := range wrongBlockHash {
-		blockHashResult.PodsFailing = append(blockHashResult.PodsFailing, node.Pod.GetName())
+	for client := range result.FailingClientsReportedHash {
+		if _, wasUnderTest := e.podsUnderTestLookup[client]; !wasUnderTest {
+			didUnfaultedNodesFail = true
+		}
 	}
-	reportConsensusDataToLogger(blockType, consensusBlockNum, wrongBlockNum, consensusBlockHash, wrongBlockHash)
-	return &getBlockConsensusResult{
-		blockNumResult,
-		blockHashResult,
-		consensusBlockNum[0].BlockNumber,
-		consensusBlockHash[0].BlockHash,
-	}, nil
+
+	return &types.BlockConsensusArtifact{
+		BlockConsensusTestResult:       result,
+		DidUnfaultedNodesFail:          didUnfaultedNodesFail,
+		DidUnfaultedNodesNeedToRecover: didUnfaultedNodesNeedToRecover,
+		NodeRecoveryTimeSeconds:        recoveredClients,
+	}
 }
