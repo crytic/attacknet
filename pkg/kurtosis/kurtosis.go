@@ -108,7 +108,7 @@ func CreateOrImportContext(ctx context.Context, kurtosisCtx *kurtosis_context.Ku
 		}
 
 		log.Infof("No existing kurtosis enclave by the name of %s was found. Creating a new one.", enclaveName)
-		enclaveCtxNew, err := kurtosisCtx.CreateEnclave(ctx, enclaveName)
+		enclaveCtxNew, err := kurtosisCtx.CreateProductionEnclave(ctx, enclaveName)
 		if err != nil {
 			return nil, false, err
 		}
