@@ -209,7 +209,7 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
 - Attack sizes in the test planner now refer to size in the context of the entire network. 
   - A supermajority-sized attack will try to target 66%+ nodes in the entire network, not just 66% of the nodes that match the test target criteria.
 - Peer scoring is now disabled for all planner-generated network configurations.
-
+- Bootnodes are no longer targetable by planner-generated test suites.
 
 ## Developing (wip)
 
