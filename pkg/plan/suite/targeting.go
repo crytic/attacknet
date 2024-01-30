@@ -21,7 +21,7 @@ func (e CannotMeetConstraintError) Error() string {
 }
 
 type NodeFilterCriteria func(n *network.Node) bool
-type TargetCriteriaFilter func(AttackSize, []*network.Node) ([]*network.Node, error)
+type TargetCriteriaFilter func(AttackSize, int, []*network.Node) ([]*network.Node, error)
 type NodeImpactSelector func(node *network.Node) *ChaosTargetSelector
 
 func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
@@ -42,8 +42,8 @@ func filterNodes(nodes []*network.Node, criteria NodeFilterCriteria) []*network.
 	return result
 }
 
-func chooseTargetsUsingAttackSize(size AttackSize, targetable []*network.Node) ([]*network.Node, error) {
-	totalTargetable := float32(len(targetable))
+func chooseTargetsUsingAttackSize(size AttackSize, networkSize int, targetable []*network.Node) ([]*network.Node, error) {
+	networkSizeFloat := float32(networkSize)
 	var nodesToTarget int
 	switch size {
 	case AttackOne:
@@ -51,41 +51,47 @@ func chooseTargetsUsingAttackSize(size AttackSize, targetable []*network.Node) (
 	case AttackAll:
 		nodesToTarget = len(targetable)
 	case AttackMinority:
-		nodesToTarget = int(totalTargetable * 0.32)
+		nodesToTarget = int(networkSizeFloat * 0.32)
+		if nodesToTarget > len(targetable) {
+			return nil, CannotMeetConstraintError{
+				AttackSize:      size,
+				TargetableCount: networkSize,
+			}
+		}
 	case AttackSuperminority:
-		nodesToTarget = int(totalTargetable * 0.34)
-		if float32(nodesToTarget)/totalTargetable < 0.333333333 {
+		nodesToTarget = int(networkSizeFloat * 0.34)
+		if float32(nodesToTarget)/networkSizeFloat < 0.333333333 {
 			nodesToTarget += 1
 		}
-		if float32(nodesToTarget)/totalTargetable >= 0.50 {
+		if float32(nodesToTarget)/networkSizeFloat >= 0.50 || nodesToTarget > len(targetable) {
 			// not enough nodes to use this attack size
 			return nil, CannotMeetConstraintError{
 				AttackSize:      size,
-				TargetableCount: len(targetable),
+				TargetableCount: networkSize,
 			}
 		}
 	case AttackMajority:
-		nodesToTarget = int(totalTargetable * 0.51)
-		if float32(nodesToTarget)/totalTargetable <= 0.50 {
+		nodesToTarget = int(networkSizeFloat * 0.51)
+		if float32(nodesToTarget)/networkSizeFloat <= 0.50 {
 			nodesToTarget += 1
 		}
-		if float32(nodesToTarget)/totalTargetable >= 0.66 {
+		if float32(nodesToTarget)/networkSizeFloat >= 0.66 || nodesToTarget > len(targetable) {
 			// not enough nodes to use this attack size
 			return nil, CannotMeetConstraintError{
 				AttackSize:      size,
-				TargetableCount: len(targetable),
+				TargetableCount: networkSize,
 			}
 		}
 	case AttackSupermajority:
-		nodesToTarget = int(totalTargetable * 0.67)
-		if float32(nodesToTarget)/totalTargetable <= 0.666666666 {
+		nodesToTarget = int(networkSizeFloat * 0.67)
+		if float32(nodesToTarget)/networkSizeFloat <= 0.666666666 {
 			nodesToTarget += 1
 		}
-		if float32(nodesToTarget)/totalTargetable > 1 {
+		if float32(nodesToTarget)/networkSizeFloat > 1 || nodesToTarget > len(targetable) {
 			// not enough nodes to use this attack size
 			return nil, CannotMeetConstraintError{
 				AttackSize:      size,
-				TargetableCount: len(targetable),
+				TargetableCount: networkSize,
 			}
 		}
 	}
@@ -184,40 +190,40 @@ func targetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (fu
 }
 
 func filterNodesByExecClient(elClientType string) TargetCriteriaFilter {
-	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+	return func(size AttackSize, targetableSetSize int, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Execution.Type == elClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
 
-		return chooseTargetsUsingAttackSize(size, targetableNodes)
+		return chooseTargetsUsingAttackSize(size, targetableSetSize, targetableNodes)
 	}
 }
 
 func filterNodesByConsensusClient(clClientType string) TargetCriteriaFilter {
-	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+	return func(size AttackSize, targetableSetSize int, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
 
-		return chooseTargetsUsingAttackSize(size, targetableNodes)
+		return chooseTargetsUsingAttackSize(size, targetableSetSize, targetableNodes)
 	}
 }
 
 func filterNodesByClientCombo(elClientType, clClientType string) TargetCriteriaFilter {
-	return func(size AttackSize, nodes []*network.Node) ([]*network.Node, error) {
+	return func(size AttackSize, targetableSetSize int, nodes []*network.Node) ([]*network.Node, error) {
 		criteria := func(n *network.Node) bool {
 			return n.Consensus.Type == clClientType && n.Execution.Type == elClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
 
-		return chooseTargetsUsingAttackSize(size, targetableNodes)
+		return chooseTargetsUsingAttackSize(size, targetableSetSize, targetableNodes)
 	}
 }
 
 func buildChaosMeshTargetSelectors(nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*ChaosTargetSelector, error) {
-	targets, err := targetCriteria(size, nodes)
+	targets, err := targetCriteria(size, len(nodes)+1, nodes)
 	if err != nil {
 		return nil, err
 	}
