@@ -2,13 +2,13 @@ execution:
   - name: geth
     image: ethereum/client-go:latest
   - name: reth
-    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.16
+    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
   - name: erigon
     image: thorax/erigon:v2.53.4
   - name: nethermind
-    image: nethermind/nethermind:1.23.0
- # - name: besu
- #   image: hyperledger/besu:23.10.0
+    image: nethermind/nethermind:1.25.1
+  #- name: besu
+  #  image: hyperledger/besu:latest
 consensus:
   - name: lighthouse
     image: sigp/lighthouse:latest
@@ -28,16 +28,32 @@ consensus:
 network_params:
   num_validator_keys_per_node: 32
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
-kubernetes_namespace: kt-ethereum
+kubernetes_namespace: kt-nethermind
 fault_config:
-  fault_type: IOLatency
-  target_client: reth
-  wait_before_first_test: 60s
+  fault_type: ClockSkew
+  target_client: nethermind
+  bootnode_el: nethermind
+  bootnode_cl: prysm
+  wait_before_first_test: 300s
   fault_config_dimensions:
-    - delay: 0ms
+    - skew: -30s
+      duration: 5m
+      grace_period: 300s
+    - skew: 30s
+      duration: 5m
+      grace_period: 300s
+    - skew: -2m
       duration: 1m
-      grace_period: 120s
-      percent: 100
+      grace_period: 300s
+    - skew: 2m
+      duration: 1m
+      grace_period: 300s
+    - skew: -10m
+      duration: 1m
+      grace_period: 300s
+    - skew: 10m
+      duration: 1m
+      grace_period: 300s
   fault_targeting_dimensions:
     - MatchingClient
   fault_attack_size_dimensions:

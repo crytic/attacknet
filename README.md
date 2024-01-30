@@ -2,15 +2,18 @@
 
 ## Getting started
 
+Ahead of public release, please add _any_ issues discovered with Attacknet to this Github tracker: https://github.com/crytic/attacknet/issues/59
+Adding issues there will help guide the development of the tool and avoid time wasted on features that don't find good bugs.
+
 ### Installation/Building
 
-1. Install Go 1.20 or newer
+1. Install Go 1.21 or newer
 2. In the project root, run `go build ./cmd/attacknet`
 3. Copy the "attacknet" binary to your PATH or directly invoke it.
 
 ### Setting up the other bits
 
-1. Set up a containerd k8s cluster. (1.26 or older) (todo: recommended resourcing. Also note that auto-scaling can 
+1. Set up a containerd k8s cluster. (1.27 or older) (todo: recommended resourcing. Also note that auto-scaling can 
    sometimes be too slow, and kurtosis will time out before the nodes for its workload can be provisioned.)
 2. Authenticate to the cluster for kubectl
 3. Install chaos-mesh
@@ -34,13 +37,14 @@ There are three workflows in attacknet:
 ## Manually creating/configuring test suites
 
 Attacknet is configured using "test suites". These are yaml files found under `./test-suites` that define everything 
-Attacknet needs to genesis a network, test the network, and determine the health of the network.
+Attacknet needs to genesis a network, test the network, and determine the health of the network. You may have to manually add/remove
+targeting criteria from these configs depending on the network being tested.
 
 Test suite configuration is broken into 3 sections:
 - Attacknet configuration.
 - Harness configuration. This is used to configure the Kurtosis package that will be used to genesis the network. 
 - Test configuration. This is used to determine which tests should be run against the devnet and how those tests 
-  should be configured. As of right now, only the first test in the array is run before exiting.
+  should be configured.
 
 Here is an annotated test suite configuration that explains what each bit is for:
 ```yaml
@@ -86,9 +90,11 @@ testConfig:
         description: wait for faults to terminate
 ```
 
+Over the long term, expect manual fault configuration to be deprecated in favor of the fault planner.
+
 ## Automatically creating test suites/network configs using the planner
 
-Attacknet can automatically create test suites based off a pre-defined test plan. This can be used to create large, comprehensive test suites that test against a variety of different client combos.
+Attacknet can automatically create test suites based off a pre-defined test plan. This can be used to create large, comprehensive test suites that test against a variety of different client combos. This feature is highly experimental at this time.
 
 An example test plan can be found in the `planner-configs/` directory
 Here's an annotated version:
@@ -114,6 +120,8 @@ fault_config:
   fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
   target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
   wait_before_first_test: 300s # how long to wait before running the first test. Set this to 25 minutes to test against a finalized network.
+  bootnode_el: geth
+  bootnode_cl: prysm
   fault_config_dimensions: # the different fault configurations to use when creating tests. At least one config dimension is required.
     - skew: -2m # these configs differ for each fault
       duration: 1m
@@ -178,21 +186,31 @@ Once you've got your configuration set up, you can run Attacknet:
 If your suite config is located at `./test-suites/suite.yaml`, you would run `attacknet start suite`. This will 
 probably be changed.
 
-At this time, health checks will be run in perpetuity once the fault has concluded. Simply ctrl+c to terminate.
+Depending on the state of the Kurtosis package and tons of other variables, a lot of the example test suites/networks might not work out of the box.
+If you're just trying to test things out, use `attacknet start suite`. This refers to a demo test suite that was tested on Jan 30.
 
 ## Changelog
 
 **Dec 15, 2023 version v0.1 (internal)**
 - Initial internal release
 
-**Jan 11, 2023 version v0.2 (internal)**
+**Jan 11, 2024 version v0.2 (internal)**
 - Updated to kurtosis v0.86.1
 - Updated to Go 1.21
 - Grafana port-forwarding has been temporarily disabled
 - Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
 - Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
 - Successful & failed test suites now emit test artifacts summarizing the results of the test.
-- 
+
+**Jan 30, 2024 version v0.3 (internal)**
+- Fixed the demo example suite
+- Fixed issues with the test planner and pod-restart faults.
+- Added bootnode configuration for the test planner.
+- Attack sizes in the test planner now refer to size in the context of the entire network. 
+  - A supermajority-sized attack will try to target 66%+ nodes in the entire network, not just 66% of the nodes that match the test target criteria.
+- Peer scoring is now disabled for all planner-generated network configurations.
+- Bootnodes are no longer targetable by planner-generated test suites.
+
 ## Developing (wip)
 
 1. Install pre-commit

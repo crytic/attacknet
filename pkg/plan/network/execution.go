@@ -7,7 +7,7 @@ import (
 const defaultElCpu = 1000
 const defaultElMem = 1024
 
-func composeExecTesterNetwork(execClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
+func composeExecTesterNetwork(bootEl, bootCl, execClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func composeExecTesterNetwork(execClient string, execClients, consClients []Clie
 
 	var nodes []*Node
 	index := 1
-	bootnode, err := composeBootnode(execClientMap, consClientMap)
+	bootnode, err := composeBootnode(bootEl, bootCl, execClientMap, consClientMap)
 	if err != nil {
 		return nil, err
 	}

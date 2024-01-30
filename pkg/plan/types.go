@@ -38,6 +38,7 @@ type EthKurtosisConfig struct {
 	AdditionalServices  []string              `yaml:"additional_services"`
 	ParallelKeystoreGen bool                  `yaml:"parallel_keystore_generation"`
 	Persistent          bool                  `yaml:"persistent"`
+	DisablePeerScoring  bool                  `yaml:"disable_peer_scoring"`
 }
 
 type Participant struct {

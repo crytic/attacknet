@@ -14,13 +14,21 @@ func BuildPlan(planName string, config *PlannerConfig) error {
 		return err
 	}
 
-	nodes, err := network.ComposeNetworkTopology(config.FaultConfig.TargetClient, config.ExecutionClients, config.ConsensusClients)
+	nodes, err := network.ComposeNetworkTopology(
+		config.FaultConfig.BootnodeEL,
+		config.FaultConfig.BootnodeCl,
+		config.FaultConfig.TargetClient,
+		config.ExecutionClients,
+		config.ConsensusClients,
+	)
 	if err != nil {
 		return err
 	}
 
 	isExecTarget := config.IsTargetExecutionClient()
-	tests, err := suite.ComposeTestSuite(config.FaultConfig, isExecTarget, nodes)
+	// exclude the bootnode from test targeting
+	potentialNodesUnderTest := nodes[1:]
+	tests, err := suite.ComposeTestSuite(config.FaultConfig, isExecTarget, potentialNodesUnderTest)
 	if err != nil {
 		return err
 	}

@@ -46,6 +46,7 @@ type PodChaosSpec struct {
 	Selector `yaml:"selector"`
 	Mode     string `yaml:"mode"`
 	Duration string `yaml:"duration"`
+	Action   string `yaml:"action"`
 }
 
 type PodChaosFault struct {
@@ -131,8 +132,9 @@ func buildPodRestartFault(description string, expressionSelectors []ChaosExpress
 			Kind:       "PodChaos",
 			ApiVersion: "chaos-mesh.org/v1alpha1",
 			Spec: PodChaosSpec{
-				Duration: "1s",
+				Duration: "5s",
 				Mode:     "all",
+				Action:   "pod-failure",
 				Selector: Selector{
 					ExpressionSelectors: expressionSelectors,
 				},
