@@ -88,7 +88,7 @@ testConfig:
 
 ## Automatically creating test suites/network configs using the planner
 
-Attacknet can automatically create test suites based off a pre-defined test plan. This can be used to create large, comprehensive test suites that test against a variety of different client combos.
+Attacknet can automatically create test suites based off a pre-defined test plan. This can be used to create large, comprehensive test suites that test against a variety of different client combos. This feature is highly experimental at this time.
 
 An example test plan can be found in the `planner-configs/` directory
 Here's an annotated version:
