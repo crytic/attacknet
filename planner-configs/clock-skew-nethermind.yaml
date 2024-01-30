@@ -28,16 +28,18 @@ consensus:
 network_params:
   num_validator_keys_per_node: 32
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
-kubernetes_namespace: kt-ethereum
+kubernetes_namespace: kt-nethermind
 fault_config:
   fault_type: ClockSkew
-  target_client: reth
+  target_client: nethermind
+  bootnode_el: nethermind
+  bootnode_cl: prysm
   wait_before_first_test: 300s
   fault_config_dimensions:
-    - skew: 30s
+    - skew: -30s
       duration: 5m
       grace_period: 300s
-    - skew: -30s
+    - skew: 30s
       duration: 5m
       grace_period: 300s
     - skew: -2m
@@ -46,13 +48,18 @@ fault_config:
     - skew: 2m
       duration: 1m
       grace_period: 300s
+    - skew: -10m
+      duration: 1m
+      grace_period: 300s
+    - skew: 10m
+      duration: 1m
+      grace_period: 300s
   fault_targeting_dimensions:
-    - MatchingNode
     - MatchingClient
   fault_attack_size_dimensions:
     - AttackOneMatching
     - AttackMinorityMatching
     - AttackSuperminorityMatching
     - AttackMajorityMatching
-    #- AttackSupermajorityMatching
-    #- AttackAllMatching
+    - AttackSupermajorityMatching
+    - AttackAllMatching

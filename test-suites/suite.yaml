@@ -8,7 +8,7 @@ attacknetConfig:
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: devnet-12.yaml
+  networkConfig: default.yaml
   networkType: ethereum
 testConfig:
   tests:
