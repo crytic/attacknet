@@ -30,7 +30,7 @@ func clientListsToMaps(execClients, consClients []ClientVersion) (execClientMap,
 	return execClientMap, consClientMap, nil
 }
 
-func ComposeNetworkTopology(client string, execClients, consClients []ClientVersion) ([]*Node, error) {
+func ComposeNetworkTopology(bootEl, bootCl, client string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	if client == "all" {
 		return nil, stacktrace.NewError("target client 'all' not supported yet")
 	}
@@ -44,8 +44,8 @@ func ComposeNetworkTopology(client string, execClients, consClients []ClientVers
 	}
 	// assume already checked client is a member of consClients or execClients
 	if isExecutionClient {
-		return composeExecTesterNetwork(client, execClients, consClients)
+		return composeExecTesterNetwork(bootEl, bootCl, client, execClients, consClients)
 	} else {
-		return composeConsensusTesterNetwork(client, execClients, consClients)
+		return composeConsensusTesterNetwork(bootEl, bootCl, client, execClients, consClients)
 	}
 }

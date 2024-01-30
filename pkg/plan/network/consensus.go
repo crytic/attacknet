@@ -11,7 +11,7 @@ const defaultValCpu = 1000
 const defaultClMem = 2048
 const defaultValMem = 1024
 
-func composeConsensusTesterNetwork(consensusClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
+func composeConsensusTesterNetwork(bootEl, bootCl, consensusClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func composeConsensusTesterNetwork(consensusClient string, execClients, consClie
 
 	var nodes []*Node
 	index := 1
-	bootnode, err := composeBootnode(execClientMap, consClientMap)
+	bootnode, err := composeBootnode(bootEl, bootCl, execClientMap, consClientMap)
 	if err != nil {
 		return nil, err
 	}

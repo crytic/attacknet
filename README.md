@@ -114,6 +114,8 @@ fault_config:
   fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
   target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
   wait_before_first_test: 300s # how long to wait before running the first test. Set this to 25 minutes to test against a finalized network.
+  bootnode_el: nethermind
+  bootnode_cl: prysm
   fault_config_dimensions: # the different fault configurations to use when creating tests. At least one config dimension is required.
     - skew: -2m # these configs differ for each fault
       duration: 1m

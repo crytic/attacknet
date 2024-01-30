@@ -34,10 +34,10 @@ fault_config:
   target_client: reth
   wait_before_first_test: 300s
   fault_config_dimensions:
-    - skew: 30s
+    - skew: -30s
       duration: 5m
       grace_period: 300s
-    - skew: -30s
+    - skew: 30s
       duration: 5m
       grace_period: 300s
     - skew: -2m
@@ -48,7 +48,6 @@ fault_config:
       grace_period: 300s
   fault_targeting_dimensions:
     - MatchingNode
-    - MatchingClient
   fault_attack_size_dimensions:
     - AttackOneMatching
     - AttackMinorityMatching

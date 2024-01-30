@@ -14,7 +14,13 @@ func BuildPlan(planName string, config *PlannerConfig) error {
 		return err
 	}
 
-	nodes, err := network.ComposeNetworkTopology(config.FaultConfig.TargetClient, config.ExecutionClients, config.ConsensusClients)
+	nodes, err := network.ComposeNetworkTopology(
+		config.FaultConfig.BootnodeEL,
+		config.FaultConfig.BootnodeCl,
+		config.FaultConfig.TargetClient,
+		config.ExecutionClients,
+		config.ConsensusClients,
+	)
 	if err != nil {
 		return err
 	}

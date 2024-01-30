@@ -19,7 +19,7 @@ func SerializeNetworkTopology(nodes []*network.Node, config *network.GenesisConf
 			"dora",
 		},
 		ParallelKeystoreGen: false,
-		Persistent:          true,
+		Persistent:          false,
 	}
 
 	bs, err := yaml.Marshal(netConfig)

@@ -12,14 +12,14 @@ func buildNode(index int, execConf, consensusConf ClientVersion) *Node {
 	}
 }
 
-func composeBootnode(execClients, consensusClients map[string]ClientVersion) (*Node, error) {
-	execConf, ok := execClients["nethermind"]
+func composeBootnode(bootEl, bootCl string, execClients, consensusClients map[string]ClientVersion) (*Node, error) {
+	execConf, ok := execClients[bootEl]
 	if !ok {
-		return nil, stacktrace.NewError("unable to load configuration for exec client geth")
+		return nil, stacktrace.NewError("unable to load configuration for exec client %s", bootEl)
 	}
-	consConf, ok := consensusClients["lighthouse"]
+	consConf, ok := consensusClients[bootCl]
 	if !ok {
-		return nil, stacktrace.NewError("unable to load configuration for exec client lighthouse")
+		return nil, stacktrace.NewError("unable to load configuration for exec client %s", bootCl)
 	}
 	return buildNode(1, execConf, consConf), nil
 }
