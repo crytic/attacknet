@@ -20,6 +20,7 @@ func SerializeNetworkTopology(nodes []*network.Node, config *network.GenesisConf
 		},
 		ParallelKeystoreGen: false,
 		Persistent:          false,
+		DisablePeerScoring:  true,
 	}
 
 	bs, err := yaml.Marshal(netConfig)
