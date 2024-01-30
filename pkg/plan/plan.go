@@ -20,7 +20,9 @@ func BuildPlan(planName string, config *PlannerConfig) error {
 	}
 
 	isExecTarget := config.IsTargetExecutionClient()
-	tests, err := suite.ComposeTestSuite(config.FaultConfig, isExecTarget, nodes)
+	// exclude the bootnode from test targeting
+	potentialNodesUnderTest := nodes[1:]
+	tests, err := suite.ComposeTestSuite(config.FaultConfig, isExecTarget, potentialNodesUnderTest)
 	if err != nil {
 		return err
 	}

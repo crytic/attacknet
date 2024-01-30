@@ -13,7 +13,7 @@ func buildNode(index int, execConf, consensusConf ClientVersion) *Node {
 }
 
 func composeBootnode(execClients, consensusClients map[string]ClientVersion) (*Node, error) {
-	execConf, ok := execClients["geth"]
+	execConf, ok := execClients["nethermind"]
 	if !ok {
 		return nil, stacktrace.NewError("unable to load configuration for exec client geth")
 	}
@@ -21,5 +21,5 @@ func composeBootnode(execClients, consensusClients map[string]ClientVersion) (*N
 	if !ok {
 		return nil, stacktrace.NewError("unable to load configuration for exec client lighthouse")
 	}
-	return buildNode(0, execConf, consConf), nil
+	return buildNode(1, execConf, consConf), nil
 }
