@@ -11,7 +11,7 @@ const defaultValCpu = 1000
 const defaultClMem = 2048
 const defaultValMem = 1024
 
-func composeConsensusTesterNetwork(consensusClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
+func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
 
 	// make sure consensusClient actually exists
 	clientUnderTest, ok := consClientMap[consensusClient]
@@ -21,18 +21,20 @@ func composeConsensusTesterNetwork(consensusClient string, execClientMap, consCl
 
 	// start from 2 because bootnode is index 1
 	index := 2
-	nodes, err := composeNodesForClTesting(index, clientUnderTest, execClientMap)
+	nodes, err := composeNodesForClTesting(nodeMultiplier, index, clientUnderTest, execClientMap)
 	return nodes, err
 }
 
-func composeNodesForClTesting(index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {
+func composeNodesForClTesting(nodeMultiplier, index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {
 	var nodes []*Node
 
 	for _, execClient := range execClients {
-		node := buildNode(index, execClient, consensusClient)
-		nodes = append(nodes, node)
+		for i := 0; i < nodeMultiplier; i++ {
+			node := buildNode(index, execClient, consensusClient)
+			nodes = append(nodes, node)
 
-		index += 1
+			index += 1
+		}
 	}
 	return nodes, nil
 }

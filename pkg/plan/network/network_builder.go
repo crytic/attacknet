@@ -56,12 +56,18 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	}
 	nodes = append(nodes, bootnode)
 
+	// determine whether a node multiplier is applied.
+	var nodeMultiplier int = 1
+	if topology.TargetNodeMultiplier != 0 {
+		nodeMultiplier = int(topology.TargetNodeMultiplier)
+	}
+
 	// assume already checked clientUnderTest is a member of consClients or execClients
 	var nodesToTest []*Node
 	if isExecutionClient {
-		nodesToTest, err = composeExecTesterNetwork(clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeExecTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
 	} else {
-		nodesToTest, err = composeConsensusTesterNetwork(clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeConsensusTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
 	}
 	if err != nil {
 		return nil, err

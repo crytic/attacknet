@@ -22,6 +22,7 @@ type Topology struct {
 	BootnodeEL                string  `yaml:"bootnode_el"`
 	BootnodeCl                string  `yaml:"bootnode_cl"`
 	TargetsAsPercentOfNetwork float32 `yaml:"targets_as_percent_of_network"`
+	TargetNodeMultiplier      uint    `yaml:"target_node_multiplier"`
 }
 
 type ClientVersion struct {

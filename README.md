@@ -120,6 +120,7 @@ topology:
   bootnode_el: geth  # self explanatory
   bootnode_cl: prysm
   targets_as_percent_of_network: 0.25 # [optional] defines what percentage of the network contains the target client. 0.25 means only 25% of nodes will contain the client defined in the fault spec. Warning: low percentages may lead to massive networks.
+  target_node_multiplier: 2 # optional, default:1. Adds duplicate el/cl combinations based on the multiplier. Useful for testing weird edge cases in consensus
 fault_config:
   fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
   target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
