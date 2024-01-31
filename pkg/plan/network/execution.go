@@ -7,11 +7,7 @@ import (
 const defaultElCpu = 1000
 const defaultElMem = 1024
 
-func composeExecTesterNetwork(bootEl, bootCl, execClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
-	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
-	if err != nil {
-		return nil, err
-	}
+func composeExecTesterNetwork(nodeMultiplier int, execClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
 
 	// make sure execClient actually exists
 	clientUnderTest, ok := execClientMap[execClient]
@@ -19,32 +15,22 @@ func composeExecTesterNetwork(bootEl, bootCl, execClient string, execClients, co
 		return nil, stacktrace.NewError("unknown execution client %s", execClient)
 	}
 
-	var nodes []*Node
-	index := 1
-	bootnode, err := composeBootnode(bootEl, bootCl, execClientMap, consClientMap)
-	if err != nil {
-		return nil, err
-	}
-	nodes = append(nodes, bootnode)
-	index += 1
-
-	n, err := composeNodesForElTesting(index, clientUnderTest, consClientMap)
-	nodes = append(nodes, n...)
-	if err != nil {
-		return nil, err
-	}
-
-	return nodes, nil
+	// start from 2 because bootnode is index 1
+	index := 2
+	nodes, err := composeNodesForElTesting(nodeMultiplier, index, clientUnderTest, consClientMap)
+	return nodes, err
 }
 
-func composeNodesForElTesting(index int, execClient ClientVersion, consensusClients map[string]ClientVersion) ([]*Node, error) {
+func composeNodesForElTesting(nodeMultiplier, index int, execClient ClientVersion, consensusClients map[string]ClientVersion) ([]*Node, error) {
 	var nodes []*Node
 
 	for _, consensusClient := range consensusClients {
-		node := buildNode(index, execClient, consensusClient)
-		nodes = append(nodes, node)
+		for i := 0; i < nodeMultiplier; i++ {
+			node := buildNode(index, execClient, consensusClient)
+			nodes = append(nodes, node)
 
-		index += 1
+			index += 1
+		}
 	}
 	return nodes, nil
 }

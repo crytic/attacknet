@@ -53,8 +53,6 @@ var FaultTypes = map[FaultTypeEnum]bool{
 type PlannerFaultConfiguration struct {
 	FaultType             FaultTypeEnum       `yaml:"fault_type"`
 	TargetClient          string              `yaml:"target_client"`
-	BootnodeEL            string              `yaml:"bootnode_el"`
-	BootnodeCl            string              `yaml:"bootnode_cl"`
 	WaitBeforeFirstTest   time.Duration       `yaml:"wait_before_first_test"`
 	FaultConfigDimensions []map[string]string `yaml:"fault_config_dimensions"`
 	TargetingDimensions   []TargetingSpec     `yaml:"fault_targeting_dimensions"`
