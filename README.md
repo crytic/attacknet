@@ -116,12 +116,14 @@ network_params:
   num_validator_keys_per_node: 32 # required. 
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
 kubernetes_namespace: kt-ethereum
+topology:
+  bootnode_el: geth  # self explanatory
+  bootnode_cl: prysm
+  targets_as_percent_of_network: 0.25 # [optional] defines what percentage of the network contains the target client. 0.25 means only 25% of nodes will contain the client defined in the fault spec. Warning: low percentages may lead to massive networks.
 fault_config:
   fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
   target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
   wait_before_first_test: 300s # how long to wait before running the first test. Set this to 25 minutes to test against a finalized network.
-  bootnode_el: geth
-  bootnode_cl: prysm
   fault_config_dimensions: # the different fault configurations to use when creating tests. At least one config dimension is required.
     - skew: -2m # these configs differ for each fault
       duration: 1m

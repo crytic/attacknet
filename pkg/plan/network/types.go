@@ -18,6 +18,12 @@ type GenesisConfig struct {
 	NumValKeysPerNode                  int     `yaml:"num_validator_keys_per_node"`
 }
 
+type Topology struct {
+	BootnodeEL                string  `yaml:"bootnode_el"`
+	BootnodeCl                string  `yaml:"bootnode_cl"`
+	TargetsAsPercentOfNetwork float32 `yaml:"targets_as_percent_of_network"`
+}
+
 type ClientVersion struct {
 	Name       string `yaml:"name"`
 	Image      string `yaml:"image"`

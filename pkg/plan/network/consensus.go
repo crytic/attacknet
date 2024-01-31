@@ -11,11 +11,7 @@ const defaultValCpu = 1000
 const defaultClMem = 2048
 const defaultValMem = 1024
 
-func composeConsensusTesterNetwork(bootEl, bootCl, consensusClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
-	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
-	if err != nil {
-		return nil, err
-	}
+func composeConsensusTesterNetwork(consensusClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
 
 	// make sure consensusClient actually exists
 	clientUnderTest, ok := consClientMap[consensusClient]
@@ -23,22 +19,10 @@ func composeConsensusTesterNetwork(bootEl, bootCl, consensusClient string, execC
 		return nil, stacktrace.NewError("unknown consensus client %s", consensusClient)
 	}
 
-	var nodes []*Node
-	index := 1
-	bootnode, err := composeBootnode(bootEl, bootCl, execClientMap, consClientMap)
-	if err != nil {
-		return nil, err
-	}
-	nodes = append(nodes, bootnode)
-	index += 1
-
-	n, err := composeNodesForClTesting(index, clientUnderTest, execClientMap)
-	nodes = append(nodes, n...)
-	if err != nil {
-		return nil, err
-	}
-
-	return nodes, nil
+	// start from 2 because bootnode is index 1
+	index := 2
+	nodes, err := composeNodesForClTesting(index, clientUnderTest, execClientMap)
+	return nodes, err
 }
 
 func composeNodesForClTesting(index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {

@@ -25,6 +25,10 @@ consensus:
 # https://github.com/kurtosis-tech/ethereum-package/issues/417
 #  - name: nimbus
 #    image: statusim/nimbus-eth2:amd64-v23.11.0
+topology:
+  bootnode_el: nethermind
+  bootnode_cl: prysm
+  targets_as_percent_of_network: 0.25
 network_params:
   num_validator_keys_per_node: 32
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
@@ -32,8 +36,6 @@ kubernetes_namespace: kt-restart-reth
 fault_config:
   fault_type: RestartContainers
   target_client: reth
-  bootnode_el: nethermind
-  bootnode_cl: prysm
   wait_before_first_test: 300s
   fault_config_dimensions:
     - grace_period: 300s
