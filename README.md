@@ -194,16 +194,10 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
 
 ## Changelog
 
-**Dec 15, 2023 version v0.1 (internal)**
-- Initial internal release
-
-**Jan 11, 2024 version v0.2 (internal)**
-- Updated to kurtosis v0.86.1
-- Updated to Go 1.21
-- Grafana port-forwarding has been temporarily disabled
-- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
-- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
-- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+**TBD**
+- Added two new configuration options in the test planner:
+  - target_node_multiplier, which duplicates the number of nodes on the network containing the client under test
+  - targets_as_percent_of_network, which adds more non-test nodes to the network to improve client diversity testing
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite
@@ -213,6 +207,17 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
   - A supermajority-sized attack will try to target 66%+ nodes in the entire network, not just 66% of the nodes that match the test target criteria.
 - Peer scoring is now disabled for all planner-generated network configurations.
 - Bootnodes are no longer targetable by planner-generated test suites.
+
+**Jan 11, 2024 version v0.2 (internal)**
+- Updated to kurtosis v0.86.1
+- Updated to Go 1.21
+- Grafana port-forwarding has been temporarily disabled
+- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
+- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
+- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+
+**Dec 15, 2023 version v0.1 (internal)**
+- Initial internal release
 
 ## Developing (wip)
 
