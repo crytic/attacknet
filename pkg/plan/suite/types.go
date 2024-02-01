@@ -42,12 +42,14 @@ const (
 	FaultClockSkew        FaultTypeEnum = "ClockSkew"
 	FaultContainerRestart FaultTypeEnum = "RestartContainers"
 	FaultIOLatency        FaultTypeEnum = "IOLatency"
+	FaultNetworkLatency   FaultTypeEnum = "NetworkLatency"
 )
 
 var FaultTypes = map[FaultTypeEnum]bool{
 	FaultClockSkew:        true,
 	FaultContainerRestart: true,
 	FaultIOLatency:        true,
+	FaultNetworkLatency:   true,
 }
 
 type PlannerFaultConfiguration struct {

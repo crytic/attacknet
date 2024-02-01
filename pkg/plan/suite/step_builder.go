@@ -101,3 +101,18 @@ func composeIOLatencySteps(targetsSelected []*ChaosTargetSelector, delay *time.D
 	return steps, nil
 
 }
+
+func composeNetworkLatencySteps(targetsSelected []*ChaosTargetSelector, delay, jitter, duration *time.Duration, correlation float32) ([]types.PlanStep, error) {
+	var steps []types.PlanStep
+	for _, target := range targetsSelected {
+		description := fmt.Sprintf("Inject network latency on target %s", target.Description)
+
+		skewStep, err := buildNetworkLatencyFault(description, target.Selector, delay, jitter, duration, correlation)
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, *skewStep)
+	}
+
+	return steps, nil
+}
