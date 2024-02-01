@@ -198,6 +198,8 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
 - Added two new configuration options in the test planner:
   - target_node_multiplier, which duplicates the number of nodes on the network containing the client under test
   - targets_as_percent_of_network, which adds more non-test nodes to the network to improve client diversity testing
+- Added new fault options to the test planner:
+  - Network latency faults
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite

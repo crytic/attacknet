@@ -92,6 +92,30 @@ func getDurationValue(key string, m map[string]string) (*time.Duration, error) {
 	return &duration, nil
 }
 
+func getUintValue(key string, m map[string]string) (uint32, error) {
+	valueStr, ok := m[key]
+	if !ok {
+		return 0, stacktrace.NewError("missing %s field", key)
+	}
+	uintValue, err := strconv.ParseUint(valueStr, 10, 32)
+	if err != nil {
+		return 0, stacktrace.NewError("unable to convert %s field to a uint32", key)
+	}
+	return uint32(uintValue), nil
+}
+
+func getFloat32Value(key string, m map[string]string) (float32, error) {
+	valueStr, ok := m[key]
+	if !ok {
+		return 0, stacktrace.NewError("missing %s field", key)
+	}
+	floatValue, err := strconv.ParseFloat(valueStr, 32)
+	if err != nil {
+		return 0, stacktrace.NewError("unable to convert %s field to a uint32", key)
+	}
+	return float32(floatValue), nil
+}
+
 func composeTestForFaultType(
 	faultType FaultTypeEnum,
 	config map[string]string,
@@ -149,6 +173,29 @@ func composeTestForFaultType(
 		description := fmt.Sprintf("Apply %s i/o latency for %s. Impacting %d pct of i/o calls. against %d targets. %s", delay, faultDuration, percentInt, len(targetSelectors), targetingDescription)
 
 		return composeIOLatencyTest(description, targetSelectors, delay, percentInt, faultDuration, grace)
+	case FaultNetworkLatency:
+		grace, err := getDurationValue("grace_period", config)
+		if err != nil {
+			return nil, err
+		}
+		delay, err := getDurationValue("delay", config)
+		if err != nil {
+			return nil, err
+		}
+		jitter, err := getDurationValue("jitter", config)
+		if err != nil {
+			return nil, err
+		}
+		duration, err := getDurationValue("duration", config)
+		if err != nil {
+			return nil, err
+		}
+		correlation, err := getFloat32Value("correlation", config)
+		if err != nil {
+			return nil, err
+		}
+		description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %.2f against %d targets. %s", delay, duration, jitter, correlation, len(targetSelectors), targetingDescription)
+		return composeNetworkLatencyTest(description, targetSelectors, delay, jitter, duration, grace, correlation)
 	}
 
 	return nil, nil

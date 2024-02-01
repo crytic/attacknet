@@ -75,3 +75,26 @@ func composeIOLatencyTest(description string, targets []*ChaosTargetSelector, de
 
 	return test, nil
 }
+
+func composeNetworkLatencyTest(description string, targets []*ChaosTargetSelector, delay, jitter, duration, grace *time.Duration, correlation float32) (*types.SuiteTest, error) {
+	var steps []types.PlanStep
+	s, err := composeNetworkLatencySteps(targets, delay, jitter, duration, correlation)
+	if err != nil {
+		return nil, err
+	}
+	steps = append(steps, s...)
+
+	waitStep := composeWaitForFaultCompletionStep()
+	steps = append(steps, *waitStep)
+
+	test := &types.SuiteTest{
+		TestName:  description,
+		PlanSteps: steps,
+		HealthConfig: types.HealthCheckConfig{
+			EnableChecks: true,
+			GracePeriod:  grace,
+		},
+	}
+
+	return test, nil
+}

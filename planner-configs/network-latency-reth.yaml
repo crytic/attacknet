@@ -35,11 +35,15 @@ network_params:
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
 kubernetes_namespace: kt-restart-reth
 fault_config:
-  fault_type: RestartContainers
+  fault_type: NetworkLatency
   target_client: reth
   wait_before_first_test: 300s
   fault_config_dimensions:
     - grace_period: 300s
+      delay: 500ms
+      jitter: 500ms
+      duration: 1m
+      correlation: 1.0
   fault_targeting_dimensions:
     - MatchingClient
   fault_attack_size_dimensions:
