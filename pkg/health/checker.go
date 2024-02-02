@@ -75,6 +75,18 @@ func AllChecksPassed(checks *types.HealthCheckResult) bool {
 	if len(checks.FinalizedElBlockResult.FailingClientsReportedHash) > 0 {
 		return false
 	}
+	if len(checks.LatestClBlockResult.FailingClientsReportedBlock) > 0 {
+		return false
+	}
+	if len(checks.LatestClBlockResult.FailingClientsReportedHash) > 0 {
+		return false
+	}
+	if len(checks.FinalizedClBlockResult.FailingClientsReportedBlock) > 0 {
+		return false
+	}
+	if len(checks.FinalizedClBlockResult.FailingClientsReportedHash) > 0 {
+		return false
+	}
 
 	return true
 }

@@ -56,24 +56,15 @@ func (e *EthNetworkChecker) getExecBlockConsensus(ctx context.Context, clients [
 func (e *EthNetworkChecker) dialToExecutionClients(ctx context.Context) ([]*ExecClientRPC, error) {
 	labelKey := "kurtosistech.com.custom/ethereum-package.client-type"
 	labelValue := "execution"
-	var podsToHealthCheck []kubernetes.KubePod
-	// add pods under test that match the label criteria
-	for _, pod := range e.podsUnderTest {
-		if pod.MatchesLabel(labelKey, labelValue) && !pod.ExpectDeath {
-			podsToHealthCheck = append(podsToHealthCheck, pod)
-		}
-	}
-	// add pods that were not targeted by a fault
-	bystanders, err := e.kubeClient.PodsMatchingLabel(ctx, labelKey, labelValue)
+	podsToHealthCheck, err := getPodsToHealthCheck(
+		ctx,
+		e.kubeClient,
+		e.podsUnderTest,
+		e.podsUnderTestLookup,
+		labelKey,
+		labelValue)
 	if err != nil {
 		return nil, err
-	}
-	for _, pod := range bystanders {
-		_, match := e.podsUnderTestLookup[pod.GetName()]
-		// don't add pods we've already added
-		if !match {
-			podsToHealthCheck = append(podsToHealthCheck, pod)
-		}
 	}
 
 	log.Debugf("Starting port forward sessions to %d pods", len(podsToHealthCheck))

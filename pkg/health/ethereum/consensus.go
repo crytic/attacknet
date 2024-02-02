@@ -29,6 +29,19 @@ func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecClientRPC, 
 	return clientForkVotes, nil
 }
 
+func getBeaconNetworkConsensus(ctx context.Context, nodeClients []*BeaconClientRpc, blockType string) ([]*ClientForkChoice, error) {
+	clientForkVotes := make([]*ClientForkChoice, len(nodeClients))
+	for i, client := range nodeClients {
+		choice, err := client.GetLatestBlockBy(ctx, blockType)
+		if err != nil {
+			return nil, err
+		}
+
+		clientForkVotes[i] = choice
+	}
+	return clientForkVotes, nil
+}
+
 func determineForkConsensus(nodes []*ClientForkChoice) (
 	consensusBlockNum []*ClientForkChoice,
 	wrongBlockNum []*ClientForkChoice,

@@ -37,25 +37,43 @@ func (e *EthNetworkChecker) RunAllChecks(ctx context.Context, prevHealthCheckRes
 	if err != nil {
 		return nil, err
 	}
+	beaconRpcClients, err := e.dialToBeaconClients(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Debug("Ready to query for health checks")
-	latestResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "latest", 15)
+	latestElResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "latest", 15)
 	if err != nil {
 		return nil, err
 	}
-	latestArtifact := e.convertResultToArtifact(prevHealthCheckResult.LatestElBlockResult, latestResult)
+	latestElArtifact := e.convertResultToArtifact(prevHealthCheckResult.LatestElBlockResult, latestElResult)
 
-	finalResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "finalized", 3)
+	finalElResult, err := e.getExecBlockConsensus(ctx, execRpcClients, "finalized", 3)
 	if err != nil {
 		return nil, err
 	}
-	finalArtifact := e.convertResultToArtifact(prevHealthCheckResult.FinalizedElBlockResult, finalResult)
+	finalElArtifact := e.convertResultToArtifact(prevHealthCheckResult.FinalizedElBlockResult, finalElResult)
 
-	log.Debugf("Finalization -> latest lag: %d", latestResult.ConsensusBlock-finalResult.ConsensusBlock)
+	log.Debugf("Finalization -> latest lag: %d", latestElResult.ConsensusBlock-finalElResult.ConsensusBlock)
+
+	latestClResult, err := e.getBeaconClientConsensus(ctx, beaconRpcClients, "head", 15)
+	if err != nil {
+		return nil, err
+	}
+	latestClArtifact := e.convertResultToArtifact(prevHealthCheckResult.LatestClBlockResult, latestClResult)
+
+	finalClResult, err := e.getBeaconClientConsensus(ctx, beaconRpcClients, "finalized", 3)
+	if err != nil {
+		return nil, err
+	}
+	finalClArtifact := e.convertResultToArtifact(prevHealthCheckResult.FinalizedClBlockResult, finalClResult)
 
 	results := &types.HealthCheckResult{
-		LatestElBlockResult:    latestArtifact,
-		FinalizedElBlockResult: finalArtifact,
+		LatestElBlockResult:    latestElArtifact,
+		FinalizedElBlockResult: finalElArtifact,
+		LatestClBlockResult:    latestClArtifact,
+		FinalizedClBlockResult: finalClArtifact,
 	}
 
 	return results, nil

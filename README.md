@@ -200,6 +200,7 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
   - targets_as_percent_of_network, which adds more non-test nodes to the network to improve client diversity testing
 - Added new fault options to the test planner:
   - Network latency faults
+- Beacon chain clients are now included in health checking.
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite

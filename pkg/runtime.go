@@ -8,9 +8,8 @@ import (
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
-	"time"
-
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
