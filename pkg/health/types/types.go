@@ -23,4 +23,7 @@ type BlockConsensusArtifact struct {
 type HealthCheckResult struct {
 	LatestElBlockResult    *BlockConsensusArtifact `yaml:"latest_el_block_health_result"`
 	FinalizedElBlockResult *BlockConsensusArtifact `yaml:"finalized_el_block_health_result"`
+	LatestClBlockResult    *BlockConsensusArtifact `yaml:"latest_cl_block_health_result"`
+	JustifiedClBlockResult *BlockConsensusArtifact `yaml:"justified_cl_block_health_result"`
+	FinalizedClBlockResult *BlockConsensusArtifact `yaml:"finalized_cl_block_health_result"`
 }
