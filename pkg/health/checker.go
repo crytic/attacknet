@@ -17,8 +17,8 @@ type CheckOrchestrator struct {
 	gracePeriod *time.Duration
 }
 
-func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
-	networkType := cfg.HarnessConfig.NetworkType
+func BuildHealthChecker(kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
+	networkType := "ethereum"
 
 	var checkerImpl types.GenericNetworkChecker
 

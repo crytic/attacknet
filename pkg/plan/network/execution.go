@@ -4,8 +4,8 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 )
 
-const defaultElCpu = 1000
-const defaultElMem = 1024
+const defaultElCpu = 512
+const defaultElMem = 512
 
 func composeExecTesterNetwork(nodeMultiplier int, execClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
 

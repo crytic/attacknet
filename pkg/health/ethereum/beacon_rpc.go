@@ -5,6 +5,7 @@ import (
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -143,16 +144,37 @@ func (c *BeaconClientRpc) GetLatestBlockBy(ctx context.Context, blockType string
 	// todo: handle pods that died and we didn't expect it
 	result, err := c.client.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{Block: blockType})
 	if err != nil {
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) {
+			switch apiErr.StatusCode {
+			case 404:
+				if blockType == "finalized" {
+					choice := &ClientForkChoice{
+						Pod:         c.session.Pod,
+						BlockNumber: 0,
+						BlockHash:   "None",
+					}
+					return choice, nil
+				}
+			}
+		}
 		return nil, stacktrace.Propagate(err, "Unable to query for blockType %s with client for %s", blockType, c.session.Pod.GetName())
 	}
 
 	slot := uint64(result.Data.Header.Message.Slot)
 	bodyHash := hex.EncodeToString(result.Data.Header.Message.BodyRoot[:])
 
-	choice := &ClientForkChoice{
-		Pod:         c.session.Pod,
-		BlockNumber: slot,
-		BlockHash:   bodyHash,
+	if slot == 0 && blockType == "finalized" {
+		return &ClientForkChoice{
+			Pod:         c.session.Pod,
+			BlockNumber: slot,
+			BlockHash:   "None",
+		}, nil
+	} else {
+		return &ClientForkChoice{
+			Pod:         c.session.Pod,
+			BlockNumber: slot,
+			BlockHash:   bodyHash,
+		}, nil
 	}
-	return choice, nil
 }

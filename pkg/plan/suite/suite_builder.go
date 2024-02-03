@@ -18,16 +18,16 @@ func ComposeTestSuite(
 	var tests []types.SuiteTest
 	runtimeEstimate := 0
 
-	nodeFilter := buildNodeFilteringLambda(config.TargetClient, isExecClient)
+	nodeFilter := BuildNodeFilteringLambda(config.TargetClient, isExecClient)
 
 	for _, targetDimension := range config.TargetingDimensions {
-		targetFilter, err := targetSpecEnumToLambda(targetDimension, isExecClient)
+		targetFilter, err := TargetSpecEnumToLambda(targetDimension, isExecClient)
 		if err != nil {
 			return nil, err
 		}
 		nodeCountsTested := make(map[int]bool)
 		for _, attackSize := range config.AttackSizeDimensions {
-			targetSelectors, err := buildChaosMeshTargetSelectors(nodes, attackSize, nodeFilter, targetFilter)
+			targetSelectors, err := BuildChaosMeshTargetSelectors(len(nodes)+1, nodes, attackSize, nodeFilter, targetFilter)
 			if err != nil {
 				cannotMeet, ok := err.(CannotMeetConstraintError)
 				if !ok {
@@ -190,12 +190,12 @@ func composeTestForFaultType(
 		if err != nil {
 			return nil, err
 		}
-		correlation, err := getFloat32Value("correlation", config)
+		correlation, err := getUintValue("correlation", config)
 		if err != nil {
 			return nil, err
 		}
-		description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %.2f against %d targets. %s", delay, duration, jitter, correlation, len(targetSelectors), targetingDescription)
-		return composeNetworkLatencyTest(description, targetSelectors, delay, jitter, duration, grace, correlation)
+		description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %d against %d targets. %s", delay, duration, jitter, correlation, len(targetSelectors), targetingDescription)
+		return ComposeNetworkLatencyTest(description, targetSelectors, delay, jitter, duration, grace, int(correlation))
 	}
 
 	return nil, nil

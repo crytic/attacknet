@@ -72,6 +72,7 @@ func (te *TestExecutor) GetPodsUnderTest() ([]*chaos_mesh.PodUnderTest, error) {
 		return nil, stacktrace.NewError("test %s has not been executed yet. cannot determine pods under test", te.testName)
 	}
 	pods := make(map[string]*chaos_mesh.PodUnderTest)
+	var retPods []*chaos_mesh.PodUnderTest
 
 	for _, session := range te.faultSessions {
 		for _, pod := range session.PodsUnderTest {
@@ -83,6 +84,7 @@ func (te *TestExecutor) GetPodsUnderTest() ([]*chaos_mesh.PodUnderTest, error) {
 					TouchedByFault: pod.TouchedByFault,
 				}
 				pods[pod.Name] = p
+				retPods = append(retPods, pod)
 			} else {
 				if pod.ExpectDeath && !val.ExpectDeath {
 					val.ExpectDeath = true
@@ -93,11 +95,7 @@ func (te *TestExecutor) GetPodsUnderTest() ([]*chaos_mesh.PodUnderTest, error) {
 			}
 		}
 	}
-
-	var retPods []*chaos_mesh.PodUnderTest
-	for _, pod := range pods {
-		retPods = append(retPods, pod)
-	}
+	
 	return retPods, nil
 }
 

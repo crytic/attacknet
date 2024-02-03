@@ -76,7 +76,7 @@ func composeIOLatencyTest(description string, targets []*ChaosTargetSelector, de
 	return test, nil
 }
 
-func composeNetworkLatencyTest(description string, targets []*ChaosTargetSelector, delay, jitter, duration, grace *time.Duration, correlation float32) (*types.SuiteTest, error) {
+func ComposeNetworkLatencyTest(description string, targets []*ChaosTargetSelector, delay, jitter, duration, grace *time.Duration, correlation int) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
 	s, err := composeNetworkLatencySteps(targets, delay, jitter, duration, correlation)
 	if err != nil {

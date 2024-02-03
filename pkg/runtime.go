@@ -61,7 +61,7 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 				return err
 			}
 
-			hc, err := health.BuildHealthChecker(cfg, kubeClient, podsUnderTest, test.HealthConfig)
+			hc, err := health.BuildHealthChecker(kubeClient, podsUnderTest, test.HealthConfig)
 			if err != nil {
 				return err
 			}

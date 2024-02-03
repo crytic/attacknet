@@ -6,10 +6,10 @@ import (
 )
 
 const defaultClCpu = 1000
-const defaultValCpu = 1000
+const defaultValCpu = 500
 
-const defaultClMem = 2048
-const defaultValMem = 1024
+const defaultClMem = 1536
+const defaultValMem = 512
 
 func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
 
