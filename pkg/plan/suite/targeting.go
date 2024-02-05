@@ -113,14 +113,14 @@ func chooseTargetsUsingAttackSize(size AttackSize, networkSize int, targetable [
 func createTargetSelectorForNode(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
 	var targets []string
 
-	elId := convertToNodeIdTag(networkNodeCount, node, Execution)
+	elId := ConvertToNodeIdTag(networkNodeCount, node, Execution)
 	targets = append(targets, elId)
 
-	clId := convertToNodeIdTag(networkNodeCount, node, Consensus)
+	clId := ConvertToNodeIdTag(networkNodeCount, node, Consensus)
 	targets = append(targets, clId)
 
 	if node.Consensus.HasValidatorSidecar {
-		valId := convertToNodeIdTag(networkNodeCount, node, Validator)
+		valId := ConvertToNodeIdTag(networkNodeCount, node, Validator)
 		targets = append(targets, valId)
 	}
 
@@ -138,7 +138,7 @@ func createTargetSelectorForNode(networkNodeCount int, node *network.Node) *Chao
 }
 
 func createTargetSelectorForExecClient(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
-	elId := convertToNodeIdTag(networkNodeCount, node, Execution)
+	elId := ConvertToNodeIdTag(networkNodeCount, node, Execution)
 	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
@@ -154,11 +154,11 @@ func createTargetSelectorForExecClient(networkNodeCount int, node *network.Node)
 
 func createTargetSelectorForConsensusClient(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
 	var targets []string
-	clId := convertToNodeIdTag(networkNodeCount, node, Consensus)
+	clId := ConvertToNodeIdTag(networkNodeCount, node, Consensus)
 	targets = append(targets, clId)
 
 	if node.Consensus.HasValidatorSidecar {
-		valId := convertToNodeIdTag(networkNodeCount, node, Validator)
+		valId := ConvertToNodeIdTag(networkNodeCount, node, Validator)
 		targets = append(targets, valId)
 	}
 

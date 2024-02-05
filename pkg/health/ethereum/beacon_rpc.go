@@ -119,21 +119,32 @@ func (e *EthNetworkChecker) dialToBeaconClients(ctx context.Context) ([]*BeaconC
 }
 
 func dialBeaconRpcClient(ctx context.Context, session *kubernetes.PortForwardsSession) (*BeaconClientRpc, error) {
-	httpClient, err := http.New(ctx,
-		http.WithAddress(fmt.Sprintf("http://localhost:%d", session.LocalPort)),
-		http.WithLogLevel(zerolog.WarnLevel),
-	)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "err while dialing RPC for %s", session.Pod.GetName())
+	// 3 attempts
+	retryCount := 8
+	for i := 0; i <= retryCount; i++ {
+		httpClient, err := http.New(ctx,
+			http.WithAddress(fmt.Sprintf("http://localhost:%d", session.LocalPort)),
+			http.WithLogLevel(zerolog.WarnLevel),
+		)
+		if err != nil {
+			if i == retryCount {
+				return nil, stacktrace.Propagate(err, "err while dialing RPC for %s", session.Pod.GetName())
+			} else {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+		}
+		provider, isProvider := httpClient.(eth2client.BeaconBlockHeadersProvider)
+		if !isProvider {
+			return nil, stacktrace.NewError("unable to cast http client to beacon rpc provider for %s", session.Pod.GetName())
+		}
+		return &BeaconClientRpc{
+			session: session,
+			client:  provider,
+		}, nil
 	}
-	provider, isProvider := httpClient.(eth2client.BeaconBlockHeadersProvider)
-	if !isProvider {
-		return nil, stacktrace.NewError("unable to cast http client to beacon rpc provider for %s", session.Pod.GetName())
-	}
-	return &BeaconClientRpc{
-		session: session,
-		client:  provider,
-	}, nil
+	return nil, stacktrace.NewError("unreachable beacon rpc")
 }
 
 func (c *BeaconClientRpc) Close() {
@@ -158,7 +169,14 @@ func (c *BeaconClientRpc) GetLatestBlockBy(ctx context.Context, blockType string
 				}
 			}
 		}
-		return nil, stacktrace.Propagate(err, "Unable to query for blockType %s with client for %s", blockType, c.session.Pod.GetName())
+		// chock it up to a failure we need to retry
+		choice := &ClientForkChoice{
+			Pod:         c.session.Pod,
+			BlockNumber: 0,
+			BlockHash:   "N/A",
+		}
+		return choice, nil
+		//return nil, stacktrace.Propagate(err, "Unable to query for blockType %s with client for %s", blockType, c.session.Pod.GetName())
 	}
 
 	slot := uint64(result.Data.Header.Message.Slot)

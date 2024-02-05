@@ -65,9 +65,9 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	// assume already checked clientUnderTest is a member of consClients or execClients
 	var nodesToTest []*Node
 	if isExecutionClient {
-		nodesToTest, err = composeExecTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeExecTesterNetwork(nodeMultiplier, clientUnderTest, consClients, execClientMap)
 	} else {
-		nodesToTest, err = composeConsensusTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeConsensusTesterNetwork(nodeMultiplier, clientUnderTest, execClients, consClientMap)
 	}
 	if err != nil {
 		return nil, err
@@ -78,6 +78,7 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	extraNodes, err := composeNodesToSatisfyTargetPercent(
 		topology.TargetsAsPercentOfNetwork,
 		len(nodes)-1,
+		nodes[len(nodes)-1].Index+1,
 		clientUnderTest,
 		execClients,
 		consClients,
@@ -89,7 +90,7 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	return nodes, nil
 }
 
-func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
+func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount int, startIndex int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	// percent target is unconfigured
 	if percentTarget == 0 {
 		return []*Node{}, nil
@@ -100,8 +101,7 @@ func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount
 		return nil, err
 	}
 
-	startNodeIndex := targetedNodeCount + 2
-	nodes, err := pickExtraNodeClients(startNodeIndex, nodesToAdd, clientUnderTest, execClients, consClients)
+	nodes, err := pickExtraNodeClients(startIndex, nodesToAdd, clientUnderTest, execClients, consClients)
 	return nodes, err
 }
 

@@ -4,10 +4,10 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 )
 
-const defaultElCpu = 512
-const defaultElMem = 512
+const defaultElCpu = 768
+const defaultElMem = 1024
 
-func composeExecTesterNetwork(nodeMultiplier int, execClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
+func composeExecTesterNetwork(nodeMultiplier int, execClient string, consClientList []ClientVersion, execClientMap map[string]ClientVersion) ([]*Node, error) {
 
 	// make sure execClient actually exists
 	clientUnderTest, ok := execClientMap[execClient]
@@ -17,14 +17,14 @@ func composeExecTesterNetwork(nodeMultiplier int, execClient string, execClientM
 
 	// start from 2 because bootnode is index 1
 	index := 2
-	nodes, err := composeNodesForElTesting(nodeMultiplier, index, clientUnderTest, consClientMap)
+	nodes, err := composeNodesForElTesting(nodeMultiplier, index, clientUnderTest, consClientList)
 	return nodes, err
 }
 
-func composeNodesForElTesting(nodeMultiplier, index int, execClient ClientVersion, consensusClients map[string]ClientVersion) ([]*Node, error) {
+func composeNodesForElTesting(nodeMultiplier, index int, execClient ClientVersion, consClientList []ClientVersion) ([]*Node, error) {
 	var nodes []*Node
 
-	for _, consensusClient := range consensusClients {
+	for _, consensusClient := range consClientList {
 		for i := 0; i < nodeMultiplier; i++ {
 			node := buildNode(index, execClient, consensusClient)
 			nodes = append(nodes, node)

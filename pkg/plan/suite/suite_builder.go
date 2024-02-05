@@ -139,7 +139,7 @@ func composeTestForFaultType(
 		}
 
 		description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s", skew, duration, len(targetSelectors), targetingDescription)
-		return composeNodeClockSkewTest(description, targetSelectors, skew, duration, graceDuration)
+		return ComposeNodeClockSkewTest(description, targetSelectors, skew, duration, graceDuration)
 	case FaultContainerRestart:
 
 		graceDuration, err := getDurationValue("grace_period", config)

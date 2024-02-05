@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func composeNodeClockSkewTest(description string, targets []*ChaosTargetSelector, skew, duration string, graceDuration *time.Duration) (*types.SuiteTest, error) {
+func ComposeNodeClockSkewTest(description string, targets []*ChaosTargetSelector, skew, duration string, graceDuration *time.Duration) (*types.SuiteTest, error) {
 	var steps []types.PlanStep
 	s, err := composeNodeClockSkewPlanSteps(targets, skew, duration)
 	if err != nil {

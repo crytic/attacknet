@@ -12,8 +12,10 @@ import (
 	"attacknet/cmd/pkg/types"
 	"context"
 	"fmt"
+	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,7 +23,7 @@ import (
 )
 
 const WaitBetweenTestsSecs = 60
-const Seed = 555
+const Seed = 557
 
 func getRandomAttackSize() suite.AttackSize {
 	//return suite.AttackOne
@@ -51,7 +53,7 @@ func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.C
 	minDelayMilliSeconds := 10
 	maxDelayMilliSeconds := 1000
 	minDurationSeconds := 10
-	maxDurationSeconds := 1000
+	maxDurationSeconds := 300
 	minJitterMilliseconds := 10
 	maxJitterMilliseconds := 1000
 	minCorrelation := 0
@@ -73,6 +75,38 @@ func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.C
 		&grace,
 		correlation,
 	)
+}
+
+func buildRandomClockSkewTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
+	minDelaySeconds := -600
+	maxDelaySeconds := 600
+	minDurationSeconds := 10
+	maxDurationSeconds := 300
+
+	grace := time.Second * 300
+	delay := fmt.Sprintf("%ds", rand.Intn(maxDelaySeconds-minDelaySeconds)+minDelaySeconds)
+	duration := fmt.Sprintf("%ds", rand.Intn(maxDurationSeconds-minDurationSeconds)+minDurationSeconds)
+
+	description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s", delay, duration, len(targetSelectors), targetDescription)
+	log.Info(description)
+	return suite.ComposeNodeClockSkewTest(
+		description,
+		targetSelectors,
+		delay,
+		duration,
+		&grace,
+	)
+}
+
+func buildRandomTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
+	testId := rand.Intn(2)
+	if testId == 0 {
+		return buildRandomLatencyTest(targetDescription, targetSelectors)
+	}
+	if testId == 1 {
+		return buildRandomClockSkewTest(targetDescription, targetSelectors)
+	}
+	return nil, stacktrace.NewError("unknown test id")
 }
 
 func pickRandomClient(config *plan.PlannerConfig) (string, bool) {
@@ -104,6 +138,11 @@ func StartExploration(config *plan.PlannerConfig) error {
 	}
 	testableNodes := nodes[1:]
 
+	for _, n := range nodes {
+		log.Infof("%s", suite.ConvertToNodeIdTag(len(nodes), n, "execution"))
+		log.Infof("%s", suite.ConvertToNodeIdTag(len(nodes), n, "consensus"))
+	}
+
 	// dedupe from runtime?
 	kubeClient, err := kubernetes.CreateKubeClient(config.KubernetesNamespace)
 	if err != nil {
@@ -118,22 +157,29 @@ func StartExploration(config *plan.PlannerConfig) error {
 	}
 
 	var testArtifacts []*artifacts.TestArtifact
-	var done = make(chan bool, 1)
-	sigs := make(chan os.Signal, 1)
+	var done = make(chan bool, 2)
+	sigs := make(chan os.Signal, 2)
 	signal.Notify(sigs, syscall.SIGINT)
 	go func() {
 		sig := <-sigs
 		fmt.Println()
 		fmt.Println(sig, "Signal received. Ending after next test is completed.")
 		done <- true // Signal that we're done
-	}()
 
+	}()
+	killall := false
 	for {
+		loc := time.FixedZone("GMT", 0)
+		log.Infof("Start loop. GMT time: %s", time.Now().In(loc).Format(http.TimeFormat))
 		select {
 		case <-done:
 			fmt.Println("Writing test artifacts")
 			return cleanup(testArtifacts)
 		default:
+			if killall {
+				fmt.Println("Writing test artifacts")
+				return cleanup(testArtifacts)
+			}
 			clientUnderTest, isExec := pickRandomClient(config)
 			targetSpec := getTargetSpec()
 			attackSize := getRandomAttackSize()
@@ -149,6 +195,17 @@ func StartExploration(config *plan.PlannerConfig) error {
 				continue
 			}
 
+			for _, selector := range targetSelectors {
+				for _, s := range selector.Selector {
+					msg := "Hitting "
+					for _, target := range s.Values {
+						msg = fmt.Sprintf("%s %s,", msg, target)
+					}
+					log.Info(msg)
+				}
+			}
+			log.Infof("time: %d", time.Now().Unix())
+
 			var targetingDescription string
 			if targetSpec == suite.TargetMatchingNode {
 				targetingDescription = fmt.Sprintf("Impacting the full node of targeted %s clients. Injecting into %s of the matching targets.", clientUnderTest, attackSize)
@@ -156,7 +213,7 @@ func StartExploration(config *plan.PlannerConfig) error {
 				targetingDescription = fmt.Sprintf("Impacting the client of targeted %s clients. Injecting into %s of the matching targets.", clientUnderTest, attackSize)
 			}
 
-			test, err := buildRandomLatencyTest(
+			test, err := buildRandomTest(
 				targetingDescription,
 				targetSelectors,
 			)
@@ -169,12 +226,13 @@ func StartExploration(config *plan.PlannerConfig) error {
 			err = executor.RunTestPlan(ctx)
 			if err != nil {
 				log.Errorf("Error while running test")
-				return err
+				fmt.Println("Writing test artifacts")
+				return cleanup(testArtifacts)
 			} else {
 				log.Infof("Test steps completed.")
 			}
 
-			log.Info("Starting health checks")
+			log.Infof("Starting health checks at %s", time.Now().In(loc).Format(http.TimeFormat))
 			podsUnderTest, err := executor.GetPodsUnderTest()
 			if err != nil {
 				return err
@@ -186,6 +244,9 @@ func StartExploration(config *plan.PlannerConfig) error {
 			}
 			results, err := hc.RunChecks(ctx)
 			if err != nil {
+
+				fmt.Println("Writing test artifacts")
+				err := cleanup(testArtifacts)
 				return err
 			}
 			testArtifact := artifacts.BuildTestArtifact(results, podsUnderTest, *test)

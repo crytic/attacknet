@@ -17,7 +17,7 @@ const (
 	Validator clientType = "validator"
 )
 
-func convertToNodeIdTag(networkNodeCount int, node *network.Node, client clientType) string {
+func ConvertToNodeIdTag(networkNodeCount int, node *network.Node, client clientType) string {
 	nodeNumStr := ""
 
 	if networkNodeCount < 10 {

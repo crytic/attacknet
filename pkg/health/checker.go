@@ -53,7 +53,7 @@ func (hc *CheckOrchestrator) RunChecks(ctx context.Context) (*types.HealthCheckR
 		}
 
 		if time.Now().After(latestAllowable) {
-			log.Warn("Grace period elapsed and a health check is still failing")
+			log.Warnf("Grace period elapsed and a health check is still failing. Time: %d", time.Now().Unix())
 			return results, nil
 		} else {
 			log.Warn("Health checks failed but still in grace period")
