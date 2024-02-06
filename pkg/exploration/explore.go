@@ -23,7 +23,7 @@ import (
 )
 
 const WaitBetweenTestsSecs = 60
-const Seed = 557
+const Seed = 558
 
 func getRandomAttackSize() suite.AttackSize {
 	//return suite.AttackOne
@@ -78,10 +78,10 @@ func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.C
 }
 
 func buildRandomClockSkewTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
-	minDelaySeconds := -600
-	maxDelaySeconds := 600
+	minDelaySeconds := -900
+	maxDelaySeconds := 900
 	minDurationSeconds := 10
-	maxDurationSeconds := 300
+	maxDurationSeconds := 600
 
 	grace := time.Second * 300
 	delay := fmt.Sprintf("%ds", rand.Intn(maxDelaySeconds-minDelaySeconds)+minDelaySeconds)

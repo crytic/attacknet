@@ -114,8 +114,8 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, 
 	portForwardIssueCh := make(chan error, 1)
 	defer close(portForwardIssueCh)
 
-	retriesRem := 5
-	/*go func(retriesRem int) {
+	retries := 5
+	go func(retriesRem int, ready chan struct{}) {
 		for retriesRem > 0 {
 			if err = portForward.ForwardPorts(); err != nil {
 				retriesRem--
@@ -123,28 +123,22 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, 
 				if retriesRem == 0 {
 					portForwardIssueCh <- stacktrace.Propagate(err, "unable to start port forward session")
 				}
+			} else {
+				return
 			}
 		}
-	}(retries)*/
+	}(retries, readyCh)
 
-	for retriesRem > 0 {
-		if err = portForward.ForwardPorts(); err != nil {
-			retriesRem--
-			time.Sleep(200 * time.Millisecond)
-		} else {
-			return stopCh, nil
-		}
-	}
 	//portForwardIssueCh <- stacktrace.Propagate(err, "unable to start port forward session")
-	return nil, errors.New("Failed to establish port forward")
-
-	/*select {
+	//return nil, errors.New("Failed to establish port forward")
+	select {
 	case <-readyCh:
 		log.Debugf("Port-forward established to pod/%s:%d", pod, remotePort)
 	case <-time.After(time.Minute):
 		return nil, errors.New("timed out after waiting to establish port forward")
-	case err = <-portForwardIssueCh:
-		return nil, err
+		//case err = <-portForwardIssueCh:
+		//	return nil, err
+		//}
 	}
-	return stopCh, nil*/
+	return stopCh, nil
 }
