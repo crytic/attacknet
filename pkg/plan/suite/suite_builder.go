@@ -116,6 +116,14 @@ func getFloat32Value(key string, m map[string]string) (float32, error) {
 	return float32(floatValue), nil
 }
 
+func getStringValue(key string, m map[string]string) (string, error) {
+	valueStr, ok := m[key]
+	if !ok {
+		return "", stacktrace.NewError("missing %s field", key)
+	}
+	return valueStr, nil
+}
+
 func composeTestForFaultType(
 	faultType FaultTypeEnum,
 	config map[string]string,
@@ -196,6 +204,25 @@ func composeTestForFaultType(
 		}
 		description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %d against %d targets. %s", delay, duration, jitter, correlation, len(targetSelectors), targetingDescription)
 		return ComposeNetworkLatencyTest(description, targetSelectors, delay, jitter, duration, grace, int(correlation))
+	case FaultPacketLoss:
+		grace, err := getDurationValue("grace_period", config)
+		if err != nil {
+			return nil, err
+		}
+		duration, err := getDurationValue("duration", config)
+		if err != nil {
+			return nil, err
+		}
+		lossPercent, err := getUintValue("loss_percent", config)
+		if err != nil {
+			return nil, err
+		}
+		direction, err := getStringValue("direction", config)
+		if err != nil {
+			return nil, err
+		}
+		description := fmt.Sprintf("Apply %d packet drop for %s, direction: %s against %d targets. %s", lossPercent, duration, direction, len(targetSelectors), targetingDescription)
+		return ComposePacketDropTest(description, targetSelectors, int(lossPercent), direction, duration, grace)
 	}
 
 	return nil, nil

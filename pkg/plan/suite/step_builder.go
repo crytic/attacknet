@@ -126,3 +126,18 @@ func composeNetworkLatencySteps(targetsSelected []*ChaosTargetSelector, delay, j
 
 	return steps, nil
 }
+
+func composePacketDropSteps(targetsSelected []*ChaosTargetSelector, percent int, direction string, duration *time.Duration) ([]types.PlanStep, error) {
+	var steps []types.PlanStep
+	for _, target := range targetsSelected {
+		description := fmt.Sprintf("Inject network latency on target %s", target.Description)
+
+		skewStep, err := buildPacketDropFault(description, target.Selector, percent, direction, duration)
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, *skewStep)
+	}
+
+	return steps, nil
+}
