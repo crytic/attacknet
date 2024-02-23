@@ -325,6 +325,5 @@ func buildPacketDropFault(description string, expressionSelectors []ChaosExpress
 			},
 		},
 	}
-
 	return convertFaultSpecToInjectStepSpecial(description, t)
 }

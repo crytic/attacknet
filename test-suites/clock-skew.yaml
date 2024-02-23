@@ -1,9 +1,10 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 300
+  waitBeforeInjectionSeconds: 0
   reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
+  existingDevnetNamespace: kt-restart-reth
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
@@ -25,12 +26,11 @@ testConfig:
         spec:
           selector:
             labelSelectors:
-              kurtosistech.com.custom/ethereum-package.client: lighthouse
-              kurtosistech.com.custom/ethereum-package.client-type: beacon
+              kurtosistech.com/id: cl-04-teku-reth
           mode: all
           action: delay
-          timeOffset: '-1m'
-          duration: 1m
+          timeOffset: '832s'
+          duration: 1000s
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate
 

@@ -95,7 +95,6 @@ func (te *TestExecutor) GetPodsUnderTest() ([]*chaos_mesh.PodUnderTest, error) {
 			}
 		}
 	}
-
 	return retPods, nil
 }
 

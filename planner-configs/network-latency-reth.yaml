@@ -1,38 +1,39 @@
 execution:
   - name: geth
-    image: ethereum/client-go:latest
+    image: ethereum/client-go:v1.13.11
   - name: reth
-    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    image: parithoshj/reth:main-1a8440a-debug
   - name: erigon
-    image: thorax/erigon:v2.53.4
+    image: thorax/erigon:v2.57.3
   - name: nethermind
-    image: nethermind/nethermind:1.25.1
-  #- name: besu
-  #  image: hyperledger/besu:latest
+    image: nethermind/nethermind:1.25.3
+  - name: besu
+    image: hyperledger/besu:24.1.1
 consensus:
   - name: lighthouse
-    image: sigp/lighthouse:latest
+    image: sigp/lighthouse:v4.6.0
     has_sidecar: true
   - name: prysm
-    image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1,gcr.io/prysmaticlabs/prysm/validator:v4.2.1
     has_sidecar: true
-  #- name: teku
-  #  image: consensys/teku:23.12.0
-  #  has_sidecar: false
+  - name: teku
+    image: consensys/teku:24.1.1-amd64
+    has_sidecar: false
   - name: lodestar
-    image: chainsafe/lodestar:v1.12.1
+    image: chainsafe/lodestar:v1.15.0
     has_sidecar: true
-# https://github.com/kurtosis-tech/ethereum-package/issues/417
-#  - name: nimbus
-#    image: statusim/nimbus-eth2:amd64-v23.11.0
+  # https://github.com/kurtosis-tech/ethereum-package/issues/417
+  - name: nimbus
+    image: ethpandaops/nimbus:unstable
+    has_sidecar: false
 topology:
-  bootnode_el: nethermind
+  bootnode_el: geth
   bootnode_cl: prysm
-  target_node_multiplier: 2
-  targets_as_percent_of_network: 0.67
+  target_node_multiplier: 1
+  targets_as_percent_of_network: 0.40
 network_params:
   num_validator_keys_per_node: 32
-kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
+kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
 kubernetes_namespace: kt-restart-reth
 fault_config:
   fault_type: NetworkLatency
@@ -43,7 +44,7 @@ fault_config:
       delay: 500ms
       jitter: 500ms
       duration: 1m
-      correlation: 1.0
+      correlation: 100
   fault_targeting_dimensions:
     - MatchingClient
   fault_attack_size_dimensions:
