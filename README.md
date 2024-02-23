@@ -259,3 +259,4 @@ First public release!
    - `brew install pre-commit`
    - `pre-commit install`
 
+When making pull requests, target the `develop` branch, not main.
