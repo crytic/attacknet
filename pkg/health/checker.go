@@ -19,7 +19,6 @@ type CheckOrchestrator struct {
 
 func BuildHealthChecker(kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
 	networkType := "ethereum"
-
 	var checkerImpl types.GenericNetworkChecker
 
 	switch networkType {

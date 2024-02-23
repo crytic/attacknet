@@ -98,3 +98,26 @@ func ComposeNetworkLatencyTest(description string, targets []*ChaosTargetSelecto
 
 	return test, nil
 }
+
+func ComposePacketDropTest(description string, targets []*ChaosTargetSelector, percent int, direction string, duration, grace *time.Duration) (*types.SuiteTest, error) {
+	var steps []types.PlanStep
+	s, err := composePacketDropSteps(targets, percent, direction, duration)
+	if err != nil {
+		return nil, err
+	}
+	steps = append(steps, s...)
+
+	waitStep := composeWaitForFaultCompletionStep()
+	steps = append(steps, *waitStep)
+
+	test := &types.SuiteTest{
+		TestName:  description,
+		PlanSteps: steps,
+		HealthConfig: types.HealthCheckConfig{
+			EnableChecks: true,
+			GracePeriod:  grace,
+		},
+	}
+
+	return test, nil
+}

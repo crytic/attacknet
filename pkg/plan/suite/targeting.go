@@ -198,7 +198,6 @@ func filterNodesByExecClient(elClientType string) TargetCriteriaFilter {
 		if targetableNodes == nil {
 			return nil, stacktrace.NewError("unable to satisfy targeting constraint")
 		}
-
 		return chooseTargetsUsingAttackSize(size, targetableSetSize, targetableNodes)
 	}
 }

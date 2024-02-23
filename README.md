@@ -1,5 +1,32 @@
 # Attacknet
 
+Blockchain networks in the wild are subject to a lot of real life variances that have historically been difficult to capture 
+in local or controlled tests. Chaos testing is a disciplined approach to testing a system by proactively simulating and 
+identifying failures. Attacknet is a tool that allows you to simulate these real life variances in a controlled environment.
+Examples would include adding network latency between nodes, killing nodes at random, filesystem errors being returned.
+
+The overall architecture of Attacknet relies on Kubernetes to run the workloads, [Kurtosis](https://github.com/kurtosis-tech/kurtosis) to orchestrate a blockchain network and
+[Chaos Mesh](https://chaos-mesh.org/) to inject faults into it. Attacknet can then be configured to run healthchecks and 
+reports back the state of the network at the end of a test. 
+
+![architecture-diag.png](architecture-diag.png)
+
+### TLDR; Capabilities
+Attacknet can be used in the following ways:
+- Manually creating test suites/network configs
+- Manually running single tests against a network
+- Using the planner feature to define a matrix of faults and targets to auto generate test files
+- Running the test suites
+- (WIP) Exploratory testing
+
+The faults supported by Attacknet include:
+- Time based: Clock skew
+- Network based: Split networks, Packet loss, corruption, latency, bandwidth throttling
+- Container based: Restarting containers, killing containers
+- Filesystem based: I/O latency, I/O errors
+- Stress based: CPU stress, Memory stress
+- (WIP) Kernel based: Kernel faults
+
 ## Getting started
 
 Ahead of public release, please add _any_ issues discovered with Attacknet to this Github tracker: https://github.com/crytic/attacknet/issues/59
@@ -21,19 +48,13 @@ Adding issues there will help guide the development of the tool and avoid time w
    2. `helm repo add chaos-mesh https://charts.chaos-mesh.org`
    3. `helm install chaos-mesh chaos-mesh/chaos-mesh -n=chaos-mesh --version 2.6.1 --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dashboard.securityMode=false --set bpfki.create=true`
    4. To access chaos dashboard, use `kubectl --namespace chaos-mesh port-forward svc/chaos-dashboard 2333`
-4. Install kurtosis locally.
-5. Run `kurtosis cluster set cloud`
+4. Install [kurtosis locally](https://docs.kurtosis.com/install)
+5. Run `kurtosis cluster set cloud`, more information [here](https://docs.kurtosis.com/k8s)
 6. If running in digitalocean, edit the kurtosis-config.yml file from `kurtosis config path` and add the following setting under kubernetes-cluster-name: `storage-class: "do-block-storage"`
 7. In a separate terminal, run `kurtosis engine start`
 8. In a separate terminal, run `kurtosis gateway`. This process needs to stay alive during all attacknet testing and cannot be started via SDK.
 
-## Run modes
-
-There are three workflows in attacknet:
-1. Manually creating test suites/network configs
-2. Automatically creating test suites/network configs using the planner
-3. Running the test suite
-
+## Usage guides
 ## Manually creating/configuring test suites
 
 Attacknet is configured using "test suites". These are yaml files found under `./test-suites` that define everything 

@@ -57,6 +57,7 @@ const (
 	FaultContainerRestart FaultTypeEnum = "RestartContainers"
 	FaultIOLatency        FaultTypeEnum = "IOLatency"
 	FaultNetworkLatency   FaultTypeEnum = "NetworkLatency"
+	FaultPacketLoss       FaultTypeEnum = "PacketLoss"
 )
 
 var FaultTypes = map[FaultTypeEnum]bool{
@@ -71,6 +72,7 @@ var FaultTypesList = []FaultTypeEnum{
 	FaultContainerRestart,
 	FaultIOLatency,
 	FaultNetworkLatency,
+	FaultPacketLoss,
 }
 
 type PlannerFaultConfiguration struct {

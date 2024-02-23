@@ -107,7 +107,6 @@ func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount
 
 func pickExtraNodeClients(startNodeIndex, nodeCount int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	var nodes []*Node
-
 	//execIndex := 0
 	//consIndex := 0
 Exit:

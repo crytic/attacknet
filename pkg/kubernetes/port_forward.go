@@ -90,6 +90,7 @@ func openPortForward(target string, dialer httpstream.Dialer, printToStdout bool
 		errLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
 		stdLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
 	}
+  
 	portForward, err := portforward.New(dialer, []string{target}, stopCh, readyCh, stdLogger, errLogger)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create port forward dialer")

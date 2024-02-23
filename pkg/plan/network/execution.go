@@ -8,7 +8,6 @@ const defaultElCpu = 768
 const defaultElMem = 1024
 
 func composeExecTesterNetwork(nodeMultiplier int, execClient string, consClientList []ClientVersion, execClientMap map[string]ClientVersion) ([]*Node, error) {
-
 	// make sure execClient actually exists
 	clientUnderTest, ok := execClientMap[execClient]
 	if !ok {

@@ -12,7 +12,6 @@ const defaultClMem = 1536
 const defaultValMem = 512
 
 func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientList []ClientVersion, consClientMap map[string]ClientVersion) ([]*Node, error) {
-
 	// make sure consensusClient actually exists
 	clientUnderTest, ok := consClientMap[consensusClient]
 	if !ok {
