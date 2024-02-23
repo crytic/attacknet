@@ -161,10 +161,6 @@ func StartNetwork(ctx context.Context, enclaveCtx *EnclaveContextWrapper, harnes
 			return stacktrace.Propagate(errors.New("kurtosis deployment failed during execution"), "%s", e.String())
 		}
 
-		// ins := t.GetInstruction()
-		// if ins != nil {
-		// }
-
 		insRes := t.GetInstructionResult()
 		if insRes != nil {
 			log.Infof("[Kurtosis] %s", insRes.SerializedInstructionResult)

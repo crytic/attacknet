@@ -170,6 +170,8 @@ func (c *BeaconClientRpc) GetLatestBlockBy(ctx context.Context, blockType string
 			}
 		}
 		// chock it up to a failure we need to retry
+		// note: at this time this retry logic isn't actually hooked up. I havent seen any failures to hit this RPC
+		// endpoint yet, so setting up a retry mechanism may just be over-engineering.
 		choice := &ClientForkChoice{
 			Pod:         c.session.Pod,
 			BlockNumber: 0,

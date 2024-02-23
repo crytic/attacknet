@@ -19,7 +19,6 @@ import (
 )
 
 type ChaosClient struct {
-	//kubeApiClient *apiextensionclientset.Clientset
 	kubeApiClient  pkgclient.Client
 	chaosNamespace string
 }
@@ -101,95 +100,3 @@ func (c *ChaosClient) GetPodLabels(ctx context.Context, podName string) (map[str
 
 	return labels, nil
 }
-
-/*
-func Test(ctx context.Context) error {
-
-	kubeConfig, _, err := kubernetes.CreateKubeClient()
-	if err != nil {
-		return stacktrace.Propagate(err, "aaaaaaa")
-	}
-	chaosClient, err := CreateClient("kt-ethereum")
-	if err != nil {
-		return stacktrace.Propagate(err, "aaaaaaa")
-	}
-
-	test := map[string]interface{}{
-		"apiVersion": "chaos-mesh.org/v1alpha1",
-		"kind":       "NetworkChaos",
-		"metadata": map[string]interface{}{
-			"name":      "example-myresource",
-			"namespace": "chaos-mesh",
-		},
-		"spec": map[string]interface{}{
-			"myvalue": "Hello, World!",
-		},
-	}
-
-	_, err = chaosClient.StartFault(ctx, test)
-	return err
-
-	apiExtensionClient, err := apiextensionclientset.NewForConfig(kubeConfig)
-	if err != nil {
-		return stacktrace.Propagate(err, "aaaaaaa")
-	}
-	crdName := "networkchaos.chaos-mesh.org"
-
-	crd, err := apiExtensionClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdName, metav1.GetOptions{})
-	if err != nil {
-		return stacktrace.Propagate(err, "bbbbb")
-	}
-
-	//dynamicClient, err := dynamic.NewForConfig(kubeConfig)
-	if err != nil {
-		log.Log.Error(err, "See error")
-		// Handle the fatal error explicitly after logging
-		os.Exit(1)
-	}
-
-	//c := &v1alpha1.NetworkChaos{}
-	//gvr := schema.GroupVersionResource{Group: "chaos-mesh.org", Version: "v1", Resource: "networkchaos"}
-
-	client, err := pkgclient.New(kubeConfig, pkgclient.Options{})
-	if err != nil {
-		log.Log.Error(err, "See error")
-		// Handle the fatal error explicitly after logging
-		os.Exit(1)
-	}
-
-	myresourceInstance := &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "chaos-mesh.org/v1alpha1",
-			"kind":       "networkchaos",
-			"metadata": map[string]interface{}{
-				"name":      "example-myresource",
-				"namespace": "default",
-			},
-			"spec": map[string]interface{}{
-				"myvalue": "Hello, World!",
-			},
-		},
-	}
-
-	err = client.Create(ctx, myresourceInstance)
-	if err != nil {
-		log.Log.Error(err, "See error")
-		// Handle the fatal error explicitly after logging
-		os.Exit(1)
-	}
-
-	_ = crd
-
-	/*
-		crds, err := apiExtensionClient.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
-		if err != nil {
-			return stacktrace.Propagate(err, "bbbbb")
-		}
-
-		for _, crd := range crds.Items {
-			fmt.Printf("Found CRD: %s\n", crd.Name)
-		}
-*/
-
-//	return nil
-//}

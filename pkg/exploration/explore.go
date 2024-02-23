@@ -1,31 +1,9 @@
 package exploration
 
-import (
-	"attacknet/cmd/pkg/artifacts"
-	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
-	"attacknet/cmd/pkg/health"
-	"attacknet/cmd/pkg/kubernetes"
-	"attacknet/cmd/pkg/plan"
-	"attacknet/cmd/pkg/plan/network"
-	"attacknet/cmd/pkg/plan/suite"
-	"attacknet/cmd/pkg/runtime"
-	"attacknet/cmd/pkg/test_executor"
-	"attacknet/cmd/pkg/types"
-	"context"
-	"fmt"
-	"github.com/kurtosis-tech/stacktrace"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/exp/rand"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-)
-
 const WaitBetweenTestsSecs = 60
 const Seed = 666
 
+/*
 func getRandomAttackSize() suite.AttackSize {
 	//return suite.AttackOne
 	sizes := []suite.AttackSize{
@@ -296,3 +274,5 @@ func cleanup(testArtifacts []*artifacts.TestArtifact) error {
 	}
 	return nil
 }
+
+*/
