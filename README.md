@@ -9,7 +9,7 @@ The overall architecture of Attacknet relies on Kubernetes to run the workloads,
 [Chaos Mesh](https://chaos-mesh.org/) to inject faults into it. Attacknet can then be configured to run healthchecks and 
 reports back the state of the network at the end of a test. 
 
-![architecture-diag.png](architecture-diag.png)
+![docs/attacknet.svg](docs/attacknet.svg)
 
 ### TLDR; Capabilities
 Attacknet can be used in the following ways:
@@ -216,12 +216,22 @@ If you're just trying to test things out, use `attacknet start suite`. This refe
 ## Changelog
 
 **TBD**
+
+First public release!
+
+**New**
 - Added two new configuration options in the test planner:
   - target_node_multiplier, which duplicates the number of nodes on the network containing the client under test
   - targets_as_percent_of_network, which adds more non-test nodes to the network to improve client diversity testing
 - Added new fault options to the test planner:
   - Network latency faults
+  - Network packet loss faults
 - Beacon chain clients are now included in health checking.
+ 
+**Fixed**
+- Fixed an issue where the test planner's resultant network topology was non-deterministic
+- Fixed an issue where a dropped port-forwarding connection to a pod may result in a panic
+- Fixed an issue where Chaos Mesh would fail to find targets in networks with more than 10 nodes
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite
