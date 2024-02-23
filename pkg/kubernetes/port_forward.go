@@ -6,6 +6,7 @@ import (
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net"
@@ -79,6 +80,50 @@ func getFreeEphemeralPort() (int, error) {
 	return port, nil
 }
 
+func openPortForward(target string, dialer httpstream.Dialer, printToStdout bool, retriesRemaining int) (chan struct{}, error) {
+	readyCh := make(chan struct{}, 1)
+	stopCh := make(chan struct{}, 1)
+	errLogger := io.Discard
+	stdLogger := io.Discard
+	if printToStdout {
+		logger := log.New()
+		errLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
+		stdLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
+	}
+	portForward, err := portforward.New(dialer, []string{target}, stopCh, readyCh, stdLogger, errLogger)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "unable to create port forward dialer")
+	}
+
+	portForwardIssueCh := make(chan error, 1)
+	retryCh := make(chan bool, 1)
+	defer close(portForwardIssueCh)
+	defer close(retryCh)
+
+	go func() {
+		err = portForward.ForwardPorts()
+		if err != nil {
+			if retriesRemaining == 0 {
+				portForwardIssueCh <- stacktrace.Propagate(err, "unable to start port forward session")
+			} else {
+				retryCh <- true
+			}
+		}
+	}()
+
+	select {
+	case <-readyCh:
+		return stopCh, nil
+	case err = <-portForwardIssueCh:
+		return nil, err
+	case <-retryCh:
+		time.Sleep(200 * time.Millisecond)
+		return openPortForward(target, dialer, printToStdout, retriesRemaining-1)
+	case <-time.After(time.Minute):
+		return nil, errors.New("timed out after waiting to establish port forward")
+	}
+}
+
 func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, printToStdout bool) (stopCh chan struct{}, err error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(c.clientInternal)
 	if err != nil {
@@ -93,52 +138,10 @@ func (c *KubeClient) StartPortForwarding(pod string, localPort, remotePort int, 
 	serverURL.Path = path
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, serverURL)
-	portFwd := fmt.Sprintf("%d:%d", localPort, remotePort)
+	target := fmt.Sprintf("%d:%d", localPort, remotePort)
 
-	readyCh := make(chan struct{}, 1)
-	stopCh = make(chan struct{}, 1)
-	errLogger := io.Discard
-	stdLogger := io.Discard
-	if printToStdout {
-		logger := log.New()
-		errLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.ErrorLevel))
-		stdLogger = CreatePrefixWriter("[port-forward] ", logger.WriterLevel(log.InfoLevel))
-	}
+	stopCh, err = openPortForward(target, dialer, printToStdout, 5)
 
-	portForward, err := portforward.New(dialer, []string{portFwd}, stopCh, readyCh, stdLogger, errLogger)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "unable to create port forward dialer")
-	}
-	log.Debugf("Starting port-forward to pod/%s:%d", pod, remotePort)
-
-	portForwardIssueCh := make(chan error, 1)
-	defer close(portForwardIssueCh)
-
-	retries := 5
-	go func(retriesRem int, ready chan struct{}) {
-		for retriesRem > 0 {
-			if err = portForward.ForwardPorts(); err != nil {
-				retriesRem--
-				time.Sleep(200 * time.Millisecond)
-				if retriesRem == 0 {
-					portForwardIssueCh <- stacktrace.Propagate(err, "unable to start port forward session")
-				}
-			} else {
-				return
-			}
-		}
-	}(retries, readyCh)
-
-	//portForwardIssueCh <- stacktrace.Propagate(err, "unable to start port forward session")
-	//return nil, errors.New("Failed to establish port forward")
-	select {
-	case <-readyCh:
-		log.Debugf("Port-forward established to pod/%s:%d", pod, remotePort)
-	case <-time.After(time.Minute):
-		return nil, errors.New("timed out after waiting to establish port forward")
-		//case err = <-portForwardIssueCh:
-		//	return nil, err
-		//}
-	}
-	return stopCh, nil
+	log.Debugf("Port-forward established to pod/%s:%d", pod, remotePort)
+	return stopCh, err
 }
