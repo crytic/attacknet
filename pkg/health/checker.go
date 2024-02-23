@@ -17,9 +17,8 @@ type CheckOrchestrator struct {
 	gracePeriod *time.Duration
 }
 
-func BuildHealthChecker(cfg *confTypes.ConfigParsed, kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
-	networkType := cfg.HarnessConfig.NetworkType
-
+func BuildHealthChecker(kubeClient *kubernetes.KubeClient, podsUnderTest []*chaos_mesh.PodUnderTest, healthCheckConfig confTypes.HealthCheckConfig) (*CheckOrchestrator, error) {
+	networkType := "ethereum"
 	var checkerImpl types.GenericNetworkChecker
 
 	switch networkType {
@@ -53,7 +52,7 @@ func (hc *CheckOrchestrator) RunChecks(ctx context.Context) (*types.HealthCheckR
 		}
 
 		if time.Now().After(latestAllowable) {
-			log.Warn("Grace period elapsed and a health check is still failing")
+			log.Warnf("Grace period elapsed and a health check is still failing. Time: %d", time.Now().Unix())
 			return results, nil
 		} else {
 			log.Warn("Health checks failed but still in grace period")

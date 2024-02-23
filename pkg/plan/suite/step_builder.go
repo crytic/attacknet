@@ -17,14 +17,24 @@ const (
 	Validator clientType = "validator"
 )
 
-func convertToNodeIdTag(node *network.Node, client clientType) string {
+func ConvertToNodeIdTag(networkNodeCount int, node *network.Node, client clientType) string {
+	nodeNumStr := ""
+
+	if networkNodeCount < 10 {
+		nodeNumStr = fmt.Sprintf("%d", node.Index)
+	} else if networkNodeCount < 100 {
+		nodeNumStr = fmt.Sprintf("%02d", node.Index)
+	} else {
+		nodeNumStr = fmt.Sprintf("%03d", node.Index)
+	}
+
 	switch client {
 	case Execution:
-		return fmt.Sprintf("el-%d-%s-%s", node.Index, node.Execution.Type, node.Consensus.Type)
+		return fmt.Sprintf("el-%s-%s-%s", nodeNumStr, node.Execution.Type, node.Consensus.Type)
 	case Consensus:
-		return fmt.Sprintf("cl-%d-%s-%s", node.Index, node.Consensus.Type, node.Execution.Type)
+		return fmt.Sprintf("cl-%s-%s-%s", nodeNumStr, node.Consensus.Type, node.Execution.Type)
 	case Validator:
-		return fmt.Sprintf("cl-%d-%s-%s-validator", node.Index, node.Consensus.Type, node.Execution.Type)
+		return fmt.Sprintf("cl-%s-%s-%s-validator", nodeNumStr, node.Consensus.Type, node.Execution.Type)
 	default:
 		log.Errorf("Unrecognized node type %s", client)
 		return ""
@@ -102,12 +112,27 @@ func composeIOLatencySteps(targetsSelected []*ChaosTargetSelector, delay *time.D
 
 }
 
-func composeNetworkLatencySteps(targetsSelected []*ChaosTargetSelector, delay, jitter, duration *time.Duration, correlation float32) ([]types.PlanStep, error) {
+func composeNetworkLatencySteps(targetsSelected []*ChaosTargetSelector, delay, jitter, duration *time.Duration, correlation int) ([]types.PlanStep, error) {
 	var steps []types.PlanStep
 	for _, target := range targetsSelected {
 		description := fmt.Sprintf("Inject network latency on target %s", target.Description)
 
 		skewStep, err := buildNetworkLatencyFault(description, target.Selector, delay, jitter, duration, correlation)
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, *skewStep)
+	}
+
+	return steps, nil
+}
+
+func composePacketDropSteps(targetsSelected []*ChaosTargetSelector, percent int, direction string, duration *time.Duration) ([]types.PlanStep, error) {
+	var steps []types.PlanStep
+	for _, target := range targetsSelected {
+		description := fmt.Sprintf("Inject network latency on target %s", target.Description)
+
+		skewStep, err := buildPacketDropFault(description, target.Selector, percent, direction, duration)
 		if err != nil {
 			return nil, err
 		}

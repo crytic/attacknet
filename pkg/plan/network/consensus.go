@@ -6,13 +6,12 @@ import (
 )
 
 const defaultClCpu = 1000
-const defaultValCpu = 1000
+const defaultValCpu = 500
 
-const defaultClMem = 2048
-const defaultValMem = 1024
+const defaultClMem = 1536
+const defaultValMem = 512
 
-func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientMap, consClientMap map[string]ClientVersion) ([]*Node, error) {
-
+func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientList []ClientVersion, consClientMap map[string]ClientVersion) ([]*Node, error) {
 	// make sure consensusClient actually exists
 	clientUnderTest, ok := consClientMap[consensusClient]
 	if !ok {
@@ -21,11 +20,11 @@ func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, e
 
 	// start from 2 because bootnode is index 1
 	index := 2
-	nodes, err := composeNodesForClTesting(nodeMultiplier, index, clientUnderTest, execClientMap)
+	nodes, err := composeNodesForClTesting(nodeMultiplier, index, clientUnderTest, execClientList)
 	return nodes, err
 }
 
-func composeNodesForClTesting(nodeMultiplier, index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {
+func composeNodesForClTesting(nodeMultiplier, index int, consensusClient ClientVersion, execClients []ClientVersion) ([]*Node, error) {
 	var nodes []*Node
 
 	for _, execClient := range execClients {

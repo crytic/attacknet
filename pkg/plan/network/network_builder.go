@@ -65,9 +65,9 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	// assume already checked clientUnderTest is a member of consClients or execClients
 	var nodesToTest []*Node
 	if isExecutionClient {
-		nodesToTest, err = composeExecTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeExecTesterNetwork(nodeMultiplier, clientUnderTest, consClients, execClientMap)
 	} else {
-		nodesToTest, err = composeConsensusTesterNetwork(nodeMultiplier, clientUnderTest, execClientMap, consClientMap)
+		nodesToTest, err = composeConsensusTesterNetwork(nodeMultiplier, clientUnderTest, execClients, consClientMap)
 	}
 	if err != nil {
 		return nil, err
@@ -78,6 +78,7 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	extraNodes, err := composeNodesToSatisfyTargetPercent(
 		topology.TargetsAsPercentOfNetwork,
 		len(nodes)-1,
+		nodes[len(nodes)-1].Index+1,
 		clientUnderTest,
 		execClients,
 		consClients,
@@ -89,7 +90,7 @@ func ComposeNetworkTopology(topology Topology, clientUnderTest string, execClien
 	return nodes, nil
 }
 
-func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
+func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount int, startIndex int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	// percent target is unconfigured
 	if percentTarget == 0 {
 		return []*Node{}, nil
@@ -100,47 +101,52 @@ func composeNodesToSatisfyTargetPercent(percentTarget float32, targetedNodeCount
 		return nil, err
 	}
 
-	startNodeIndex := targetedNodeCount + 1
-	nodes, err := pickExtraNodeClients(startNodeIndex, nodesToAdd, clientUnderTest, execClients, consClients)
+	nodes, err := pickExtraNodeClients(startIndex, nodesToAdd, clientUnderTest, execClients, consClients)
 	return nodes, err
 }
 
 func pickExtraNodeClients(startNodeIndex, nodeCount int, clientUnderTest string, execClients, consClients []ClientVersion) ([]*Node, error) {
 	var nodes []*Node
+	//execIndex := 0
+	//consIndex := 0
+Exit:
+	for {
+		for execIndex := 0; execIndex < len(execClients); execIndex++ {
+			if execClients[execIndex].Name == clientUnderTest {
+				continue
+			}
 
-	execClientIndex := 0
-	consClientIndex := 0
-	for i := 0; i < nodeCount; i++ {
-		var execClient, consClient ClientVersion
-		var err error
-		execClient, execClientIndex, err = pickClient(execClientIndex, clientUnderTest, execClients)
-		if err != nil {
-			return nil, err
+			for consIndex := 0; consIndex < len(consClients); consIndex++ {
+				if consClients[consIndex].Name == clientUnderTest {
+					continue
+				}
+				nodes = append(nodes, buildNode(startNodeIndex, execClients[execIndex], consClients[consIndex]))
+				startNodeIndex += 1
+				if len(nodes) == nodeCount {
+					break Exit
+				}
+			}
 		}
-		consClient, consClientIndex, err = pickClient(consClientIndex, clientUnderTest, consClients)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, buildNode(startNodeIndex, execClient, consClient))
-		startNodeIndex += 1
 	}
 	return nodes, nil
 }
 
-func pickClient(startIndex int, clientUnderTest string, clients []ClientVersion) (ClientVersion, int, error) {
+func pickClient(startIndex int, clientUnderTest string, clients []ClientVersion) (ClientVersion, int, bool, error) {
+	looped := false
 	for i := 0; i < len(clients); i++ {
 		c := clients[startIndex]
 
 		startIndex += 1
 		if startIndex >= len(clients) {
+			looped = true
 			startIndex = 0
 		}
 
 		if c.Name != clientUnderTest {
-			return c, startIndex, nil
+			return c, startIndex, looped, nil
 		}
 	}
-	return ClientVersion{}, 0, stacktrace.NewError("Unable to find any clients defined other than %s. Cannot add more nodes.", clientUnderTest)
+	return ClientVersion{}, 0, looped, stacktrace.NewError("Unable to find any clients defined other than %s. Cannot add more nodes.", clientUnderTest)
 }
 
 func calcNodesNeededToSatisfyTarget(percentTarget float32, targetedNodeCount int) (int, error) {
