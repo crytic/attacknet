@@ -14,6 +14,11 @@ var TargetingSpecs = map[TargetingSpec]bool{
 	TargetMatchingClient: true,
 }
 
+var TargetingSpecList = []TargetingSpec{
+	TargetMatchingNode,
+	TargetMatchingClient,
+}
+
 type AttackSize string
 
 const (
@@ -36,6 +41,15 @@ var AttackSizes = map[AttackSize]bool{
 	AttackSupermajority: true,
 }
 
+var AttackSizesList = []AttackSize{
+	AttackOne,
+	AttackAll,
+	AttackMinority,
+	AttackSuperminority,
+	AttackMajority,
+	AttackSupermajority,
+}
+
 type FaultTypeEnum string
 
 const (
@@ -43,6 +57,7 @@ const (
 	FaultContainerRestart FaultTypeEnum = "RestartContainers"
 	FaultIOLatency        FaultTypeEnum = "IOLatency"
 	FaultNetworkLatency   FaultTypeEnum = "NetworkLatency"
+	FaultPacketLoss       FaultTypeEnum = "PacketLoss"
 )
 
 var FaultTypes = map[FaultTypeEnum]bool{
@@ -50,6 +65,14 @@ var FaultTypes = map[FaultTypeEnum]bool{
 	FaultContainerRestart: true,
 	FaultIOLatency:        true,
 	FaultNetworkLatency:   true,
+}
+
+var FaultTypesList = []FaultTypeEnum{
+	FaultClockSkew,
+	FaultContainerRestart,
+	FaultIOLatency,
+	FaultNetworkLatency,
+	FaultPacketLoss,
 }
 
 type PlannerFaultConfiguration struct {

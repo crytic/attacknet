@@ -22,9 +22,9 @@ func (e CannotMeetConstraintError) Error() string {
 
 type NodeFilterCriteria func(n *network.Node) bool
 type TargetCriteriaFilter func(AttackSize, int, []*network.Node) ([]*network.Node, error)
-type NodeImpactSelector func(node *network.Node) *ChaosTargetSelector
+type NodeImpactSelector func(networkNodeCount int, node *network.Node) *ChaosTargetSelector
 
-func buildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
+func BuildNodeFilteringLambda(clientType string, isExecClient bool) TargetCriteriaFilter {
 	if isExecClient {
 		return filterNodesByExecClient(clientType)
 	} else {
@@ -110,17 +110,17 @@ func chooseTargetsUsingAttackSize(size AttackSize, networkSize int, targetable [
 	return targets, nil
 }
 
-func createTargetSelectorForNode(node *network.Node) *ChaosTargetSelector {
+func createTargetSelectorForNode(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
 	var targets []string
 
-	elId := convertToNodeIdTag(node, Execution)
+	elId := ConvertToNodeIdTag(networkNodeCount, node, Execution)
 	targets = append(targets, elId)
 
-	clId := convertToNodeIdTag(node, Consensus)
+	clId := ConvertToNodeIdTag(networkNodeCount, node, Consensus)
 	targets = append(targets, clId)
 
 	if node.Consensus.HasValidatorSidecar {
-		valId := convertToNodeIdTag(node, Validator)
+		valId := ConvertToNodeIdTag(networkNodeCount, node, Validator)
 		targets = append(targets, valId)
 	}
 
@@ -137,8 +137,8 @@ func createTargetSelectorForNode(node *network.Node) *ChaosTargetSelector {
 	}
 }
 
-func createTargetSelectorForExecClient(node *network.Node) *ChaosTargetSelector {
-	elId := convertToNodeIdTag(node, Execution)
+func createTargetSelectorForExecClient(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
+	elId := ConvertToNodeIdTag(networkNodeCount, node, Execution)
 	selector := ChaosExpressionSelector{
 		Key:      "kurtosistech.com/id",
 		Operator: "In",
@@ -152,13 +152,13 @@ func createTargetSelectorForExecClient(node *network.Node) *ChaosTargetSelector 
 	}
 }
 
-func createTargetSelectorForConsensusClient(node *network.Node) *ChaosTargetSelector {
+func createTargetSelectorForConsensusClient(networkNodeCount int, node *network.Node) *ChaosTargetSelector {
 	var targets []string
-	clId := convertToNodeIdTag(node, Consensus)
+	clId := ConvertToNodeIdTag(networkNodeCount, node, Consensus)
 	targets = append(targets, clId)
 
 	if node.Consensus.HasValidatorSidecar {
-		valId := convertToNodeIdTag(node, Validator)
+		valId := ConvertToNodeIdTag(networkNodeCount, node, Validator)
 		targets = append(targets, valId)
 	}
 
@@ -175,7 +175,7 @@ func createTargetSelectorForConsensusClient(node *network.Node) *ChaosTargetSele
 	}
 }
 
-func targetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (func(node *network.Node) *ChaosTargetSelector, error) {
+func TargetSpecEnumToLambda(targetSelector TargetingSpec, isExecClient bool) (func(networkNodeCount int, node *network.Node) *ChaosTargetSelector, error) {
 	if targetSelector == TargetMatchingNode {
 		return createTargetSelectorForNode, nil
 	}
@@ -195,7 +195,9 @@ func filterNodesByExecClient(elClientType string) TargetCriteriaFilter {
 			return n.Execution.Type == elClientType
 		}
 		targetableNodes := filterNodes(nodes, criteria)
-
+		if targetableNodes == nil {
+			return nil, stacktrace.NewError("unable to satisfy targeting constraint")
+		}
 		return chooseTargetsUsingAttackSize(size, targetableSetSize, targetableNodes)
 	}
 }
@@ -222,7 +224,7 @@ func filterNodesByClientCombo(elClientType, clClientType string) TargetCriteriaF
 	}
 }
 
-func buildChaosMeshTargetSelectors(nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*ChaosTargetSelector, error) {
+func BuildChaosMeshTargetSelectors(networkNodeCount int, nodes []*network.Node, size AttackSize, targetCriteria TargetCriteriaFilter, impactSelector NodeImpactSelector) ([]*ChaosTargetSelector, error) {
 	targets, err := targetCriteria(size, len(nodes)+1, nodes)
 	if err != nil {
 		return nil, err
@@ -230,7 +232,7 @@ func buildChaosMeshTargetSelectors(nodes []*network.Node, size AttackSize, targe
 
 	var targetSelectors []*ChaosTargetSelector
 	for _, node := range targets {
-		targetSelectors = append(targetSelectors, impactSelector(node))
+		targetSelectors = append(targetSelectors, impactSelector(networkNodeCount, node))
 	}
 	return targetSelectors, nil
 }
