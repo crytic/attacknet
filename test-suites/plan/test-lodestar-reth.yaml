@@ -1,0 +1,13 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 300
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-lodestar-reth
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package
+    networkConfig: plan/test-lodestar-reth.yaml
+testConfig:
+    tests: []
