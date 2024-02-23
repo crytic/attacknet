@@ -8,6 +8,7 @@ import (
 	"attacknet/cmd/pkg/plan"
 	"attacknet/cmd/pkg/plan/network"
 	"attacknet/cmd/pkg/plan/suite"
+	"attacknet/cmd/pkg/runtime"
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
@@ -23,7 +24,7 @@ import (
 )
 
 const WaitBetweenTestsSecs = 60
-const Seed = 558
+const Seed = 666
 
 func getRandomAttackSize() suite.AttackSize {
 	//return suite.AttackOne
@@ -49,7 +50,7 @@ func getTargetSpec() suite.TargetingSpec {
 	return targetSpecs[rand.Intn(2)]
 }
 
-func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
+func buildRandomLatencyTest(testIdx int, targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
 	minDelayMilliSeconds := 10
 	maxDelayMilliSeconds := 1000
 	minDurationSeconds := 10
@@ -59,12 +60,14 @@ func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.C
 	minCorrelation := 0
 	maxCorrelation := 100
 
-	grace := time.Second * 300
+	grace := time.Second * 600
 	duration := time.Second * time.Duration(rand.Intn(maxDurationSeconds-minDurationSeconds)+minDurationSeconds)
 	delay := time.Millisecond * time.Duration(rand.Intn(maxDelayMilliSeconds-minDelayMilliSeconds)+minDelayMilliSeconds)
 	jitter := time.Millisecond * time.Duration(rand.Intn(maxJitterMilliseconds-minJitterMilliseconds)+minJitterMilliseconds)
 	correlation := rand.Intn(maxCorrelation-minCorrelation) + minCorrelation
-	description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %d against %d targets. %s", delay, duration, jitter, correlation, len(targetSelectors), targetDescription)
+	loc := time.FixedZone("GMT", 0)
+	timefmt := time.Now().In(loc).Format(http.TimeFormat)
+	description := fmt.Sprintf("Apply %s network latency for %s. Jitter: %s, correlation: %d against %d targets. %s. TestIdx: %d, TestTime: %d, %s", delay, duration, jitter, correlation, len(targetSelectors), targetDescription, testIdx, time.Now().Unix(), timefmt)
 	log.Info(description)
 	return suite.ComposeNetworkLatencyTest(
 		description,
@@ -77,17 +80,19 @@ func buildRandomLatencyTest(targetDescription string, targetSelectors []*suite.C
 	)
 }
 
-func buildRandomClockSkewTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
+func buildRandomClockSkewTest(testIdx int, targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
 	minDelaySeconds := -900
 	maxDelaySeconds := 900
 	minDurationSeconds := 10
 	maxDurationSeconds := 600
 
-	grace := time.Second * 300
+	grace := time.Second * 600
 	delay := fmt.Sprintf("%ds", rand.Intn(maxDelaySeconds-minDelaySeconds)+minDelaySeconds)
 	duration := fmt.Sprintf("%ds", rand.Intn(maxDurationSeconds-minDurationSeconds)+minDurationSeconds)
 
-	description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s", delay, duration, len(targetSelectors), targetDescription)
+	loc := time.FixedZone("GMT", 0)
+	timefmt := time.Now().In(loc).Format(http.TimeFormat)
+	description := fmt.Sprintf("Apply %s clock skew for %s against %d targets. %s. TestIdx: %d, TestTime: %d, %s", delay, duration, len(targetSelectors), targetDescription, testIdx, time.Now().Unix(), timefmt)
 	log.Info(description)
 	return suite.ComposeNodeClockSkewTest(
 		description,
@@ -98,13 +103,13 @@ func buildRandomClockSkewTest(targetDescription string, targetSelectors []*suite
 	)
 }
 
-func buildRandomTest(targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
+func buildRandomTest(testIdx int, targetDescription string, targetSelectors []*suite.ChaosTargetSelector) (*types.SuiteTest, error) {
 	testId := rand.Intn(2)
 	if testId == 0 {
-		return buildRandomLatencyTest(targetDescription, targetSelectors)
+		return buildRandomLatencyTest(testIdx, targetDescription, targetSelectors)
 	}
 	if testId == 1 {
-		return buildRandomClockSkewTest(targetDescription, targetSelectors)
+		return buildRandomClockSkewTest(testIdx, targetDescription, targetSelectors)
 	}
 	return nil, stacktrace.NewError("unknown test id")
 }
@@ -123,10 +128,17 @@ func pickRandomClient(config *plan.PlannerConfig) (string, bool) {
 	}
 }
 
-func StartExploration(config *plan.PlannerConfig) error {
+func StartExploration(config *plan.PlannerConfig, suitecfg *types.ConfigParsed) error {
 	// todo: big refactor
 	ctx, cancelCtxFunc := context.WithCancel(context.Background())
 	defer cancelCtxFunc()
+
+	enclave, err := runtime.SetupEnclave(ctx, suitecfg)
+	if err != nil {
+		return err
+	}
+	_ = enclave
+
 	nodes, err := network.ComposeNetworkTopology(
 		config.Topology,
 		config.FaultConfig.TargetClient,
@@ -168,6 +180,8 @@ func StartExploration(config *plan.PlannerConfig) error {
 
 	}()
 	killall := false
+	testIdx := 1
+	skipUntilTest := 29
 	for {
 		loc := time.FixedZone("GMT", 0)
 		log.Infof("Start loop. GMT time: %s", time.Now().In(loc).Format(http.TimeFormat))
@@ -214,12 +228,23 @@ func StartExploration(config *plan.PlannerConfig) error {
 			}
 
 			test, err := buildRandomTest(
+				testIdx,
 				targetingDescription,
 				targetSelectors,
 			)
+
 			if err != nil {
 				return err
 			}
+
+			if skipUntilTest != -1 {
+				if testIdx < skipUntilTest {
+					testIdx += 1
+					continue
+				}
+			}
+
+			testIdx += 1
 			log.Info("Running test")
 			executor := test_executor.CreateTestExecutor(chaosClient, *test)
 

@@ -5,6 +5,7 @@ import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
+	"attacknet/cmd/pkg/runtime"
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
@@ -13,7 +14,7 @@ import (
 )
 
 func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
-	enclave, err := setupEnclave(ctx, cfg)
+	enclave, err := runtime.SetupEnclave(ctx, cfg)
 	if err != nil {
 		return err
 	}

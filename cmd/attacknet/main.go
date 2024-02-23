@@ -2,10 +2,13 @@ package main
 
 import (
 	"attacknet/cmd/pkg"
+	"attacknet/cmd/pkg/exploration"
 	"attacknet/cmd/pkg/plan"
 	"attacknet/cmd/pkg/project"
 	"context"
+	"fmt"
 	"github.com/alecthomas/kong"
+	"github.com/disgoorg/disgo/webhook"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -22,6 +25,7 @@ var CLI struct {
 		Name string `arg:"" optional:"" name:"name" help:"The name of the test suite to be generated"`
 		Path string `arg:"" optional:"" type:"existingfile" name:"path" help:"Location of the planner configuration."`
 	} `cmd:"" help:"Construct an attacknet suite for a client"`
+	Explore struct{} `cmd:"" help:"Run in exploration mode"`
 }
 
 func main() {
@@ -68,6 +72,42 @@ func main() {
 			log.Fatal(err)
 			os.Exit(1)
 		}
+	case "explore":
+		topo, err := plan.LoadPlannerConfigFromPath("planner-configs/network-latency-reth.yaml")
+		if err != nil {
+			log.Fatal(err)
+		}
+		suiteCfg, err := project.LoadSuiteConfigFromName("plan/network-latency-reth")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		f, err := os.ReadFile("webhook")
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := string(f)
+		client, err := webhook.NewWithURL(w)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = exploration.StartExploration(topo, suiteCfg)
+		if err != nil {
+			message, err := client.CreateContent(fmt.Sprintf("attacknet run completed with error  %s", err.Error()))
+			if err != nil {
+				log.Fatal(err)
+			}
+			_ = message
+			log.Fatal(err)
+		}
+
+		message, err := client.CreateContent("attacknet run completed with error ")
+		if err != nil {
+			log.Fatal(err)
+		}
+		_ = message
+		os.Exit(1)
 	default:
 		log.Fatal("unrecognized arguments")
 	}
