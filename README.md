@@ -28,20 +28,15 @@ The faults supported by Attacknet include:
 - (WIP) Kernel based: Kernel faults
 
 ## Getting started
-
-Ahead of public release, please add _any_ issues discovered with Attacknet to this Github tracker: https://github.com/crytic/attacknet/issues/59
-Adding issues there will help guide the development of the tool and avoid time wasted on features that don't find good bugs.
-
 ### Installation/Building
 
 1. Install Go 1.21 or newer
 2. In the project root, run `go build ./cmd/attacknet`
-3. Copy the "attacknet" binary to your PATH or directly invoke it.
+3. Copy the "attacknet" binary path to your PATH variable or directly invoke it
 
 ### Setting up the other bits
 
-1. Set up a containerd k8s cluster. (1.27 or older) (todo: recommended resourcing. Also note that auto-scaling can 
-   sometimes be too slow, and kurtosis will time out before the nodes for its workload can be provisioned.)
+1. Set up a containerd k8s cluster. (1.27 or older), ideally without auto-scaling (as high provisioning time leads to timeouts on kurtosis) 
 2. Authenticate to the cluster for kubectl
 3. Install chaos-mesh
    1. `kubectl create ns chaos-mesh`
@@ -75,7 +70,7 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 10 
   # the number of seconds to wait between the genesis of the network and the injection of faults. To wait for finality, use 25 mins (1500 secs)
   reuseDevnetBetweenRuns: true # Whether attacknet should skip enclave deletion after the fault concludes. Defaults to false.
-  existingDevnetNamespace: kt-ethereum # If you don't want to genesis a new network, you can specify an existing namespace that contains a Kurtosis enclave and run tests against it instead. I'm expecting this to only be useful for dev/tool testing. Exclude this parameter for normal operation.
+  existingDevnetNamespace: kt-ethereum # Omit field for random namespace geneartion. If you want to reuse a running network, you can specify an existing namespace that contains a Kurtosis enclave and run tests against it.
   allowPostFaultInspection: true # When set to true, Attacknet will maintain the port-forward connection to Grafana once the fault has concluded to allow the operator to inspect metrics. Default: true
 
 harnessConfig:
@@ -83,7 +78,7 @@ harnessConfig:
   networkConfig: default.yaml # The configuration to use for the Kurtosis package. These live in ./network-configs and are referenced by their filename. 
   networkType: ethereum # no touchy
 
-# The list of tests to be run. As of right now, the first test is run and the tool terminates. In the future, we will genesis single-use devnets for each test, run the test, and terminate once all the tests are completed and all the enclaves are cleaned up.
+# The list of tests to be run before termination
 testConfig:
    tests:
    - testName: packetdrop-1 # Name of the test. Used for logging/artifacts.
@@ -93,7 +88,7 @@ testConfig:
      planSteps: # the list of steps to facilitate the test, executed in order
       - stepType: injectFault # this step injects a fault, the continues to the next step without waiting for the fault to terminate
         description: "inject fault"
-        chaosFaultSpec: # The chaosFaultSpec is basically a pass-thru object for Chaos Mesh fault resources. This means we can support every possible fault out-of-the-box, but slightly complicates generating the configuration. To determine the schema for each fault type, check the Chaos Mesh docs: https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/. One issue with this method is that Attacknet can't verify whether your faultSpec is valid until it tries to create the resource in Kubernetes, and that comes after genesis which takes a long time on its own. If you run into schema validation issues, try creating these objects directly in Kubernetes to hasten the debug cycle. 
+        chaosFaultSpec: # The chaosFaultSpec is basically a pass-thru object for Chaos Mesh fault resources. This means we can support every possible fault out-of-the-box. To determine the schema for each fault type, check the Chaos Mesh docs: https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/. One issue with this method is that Attacknet can't verify whether your faultSpec is valid until it tries to create the resource in Kubernetes, and that comes after genesis which takes a long time on its own. If you run into schema validation issues, try creating these objects directly in Kubernetes to hasten the debug cycle. 
           kind: NetworkChaos
           apiVersion: chaos-mesh.org/v1alpha1
           spec:
@@ -111,7 +106,8 @@ testConfig:
         description: wait for faults to terminate
 ```
 
-Over the long term, expect manual fault configuration to be deprecated in favor of the fault planner.
+Over the long term, expect manual fault configuration to be deprecated in favor of the fault planner and other automatic test
+generation tools.
 
 ## Automatically creating test suites/network configs using the planner
 
@@ -125,7 +121,7 @@ execution: # list of execution clients that will be used in the network topology
   - name: geth
     image: ethereum/client-go:latest
   - name: reth
-    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    image: ghcr.io/paradigmxyz/reth:latest
 consensus: # list of consensus clients that will be used in the network topology
   - name: lighthouse
     image: sigp/lighthouse:latest
@@ -209,6 +205,14 @@ probably be changed.
 
 Depending on the state of the Kurtosis package and tons of other variables, a lot of the example test suites/networks might not work out of the box.
 If you're just trying to test things out, use `attacknet start suite`. This refers to a demo test suite that was tested on Jan 30.
+
+## Contribution
+This tool was developed as a collaboration between [Trail of Bits](https://www.trailofbits.com/) and the [Ethereum Foundation](https://github.com/ethereum/).
+Thank you for considering helping out with the source code! We welcome contributions from anyone on the internet, and are grateful for even the smallest of fixes!
+
+If this tool was used for finding bugs, please do ensure that the bug is reported to the relevant project maintainers or to the 
+[Ethereum foundation Bug bounty program](https://ethereum.org/en/bug-bounty/). Please feel free to reach out to the tool
+maintainers on Discord, Email or Twitter for any feature requests. 
 
 ## Changelog
 

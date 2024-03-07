@@ -36,7 +36,7 @@ participants:
   - el_client_type: geth
     el_client_image: ethereum/client-go:latest
     cl_client_type: teku
-    cl_client_image: consensys/teku:23.12.0
+    cl_client_image: consensys/teku:24.2.0
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -51,7 +51,7 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: reth
-    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
     cl_client_type: prysm
     cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
     el_min_cpu: 1000
@@ -68,7 +68,7 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: reth
-    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
     cl_client_type: lighthouse
     cl_client_image: sigp/lighthouse:latest
     el_min_cpu: 1000
@@ -85,9 +85,9 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: reth
-    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
     cl_client_type: teku
-    cl_client_image: consensys/teku:23.12.0
+    cl_client_image: consensys/teku:24.2.0
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -102,9 +102,9 @@ participants:
     v_max_mem: 1028
     count: 1
   - el_client_type: reth
-    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+    el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
     cl_client_type: lodestar
-    cl_client_image: chainsafe/lodestar:v1.12.1
+    cl_client_image: chainsafe/lodestar:v1.16.0
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024

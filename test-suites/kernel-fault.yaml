@@ -1,14 +1,13 @@
 attacknetConfig:
   grafanaPodName: grafana
   grafanaPodPort: 3000
-  waitBeforeInjectionSeconds: 300
+  waitBeforeInjectionSeconds: 30
   reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 testConfig:
@@ -32,10 +31,10 @@ testConfig:
               # kurtosistech.com.custom/ethereum-package.client-type: beacon
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
-              kurtosistech.com/id: cl-2-prysm-geth
+              kurtosistech.com/id: el-3-geth-prysm
           failKernRequest:
             callchain:
-            - funcname: '__x64_sys_mount'
+            - funcname: '__x64_sys_close'
             failtype: 0
 
           probability: 100

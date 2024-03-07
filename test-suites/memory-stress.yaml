@@ -3,12 +3,11 @@ attacknetConfig:
   grafanaPodPort: 3000
   waitBeforeInjectionSeconds: 300
   reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: kt-ethereum
   allowPostFaultInspection: true
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 testConfig:
@@ -34,7 +33,7 @@ testConfig:
               # kurtosistech.com.custom/ethereum-package.client-type: beacon
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
-              kurtosistech.com/id: el-3-geth-prysm
+              kurtosistech.com/id: cl-2-teku-nethermind
           stressors:
             memory:
               workers: 50 # number of threads used to consume the memory defined by size. Memory to be allocated is split evenly between workers. Keep in mind threads have ~3MB overhead each.

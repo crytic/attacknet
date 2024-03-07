@@ -8,7 +8,7 @@ attacknetConfig:
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 
@@ -27,16 +27,15 @@ testConfig:
         spec:
           selector:
             labelSelectors:
-              kurtosistech.com/id: cl-3-prysm-erigon-validator
+              kurtosistech.com/id: el-3-geth-prysm
               #kurtosistech.com.custom/ethereum-package.client: prysm
               #kurtosistech.com.custom/ethereum-package.client-type: beacon
 
           mode: all
           action: loss
-          duration: 20s
+          duration: 120s
           loss:
-            loss: '1'
-            correlation: '100'
+            loss: '100'
           direction: to
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate
