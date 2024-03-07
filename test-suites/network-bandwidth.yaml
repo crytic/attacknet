@@ -4,11 +4,10 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 240
   reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
-  existingDevnetNamespace: kt-ethereum
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
-  networkConfig: default.yaml
+  networkConfig: devnet-12.yaml
   networkType: ethereum
 
 testConfig:
@@ -31,7 +30,7 @@ testConfig:
           target:
             mode: all
             labelSelectors:
-              kurtosistech.com/id: cl-2-prysm-geth
+              kurtosistech.com/id: cl-3-prysm-reth
           mode: all
           action: bandwidth
           duration: 1m

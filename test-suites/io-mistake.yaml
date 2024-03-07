@@ -15,35 +15,38 @@ testConfig:
   tests:
   # Note: io chaos will not work unless the "volumePath" actually maps to a volume mount. The root mount is not valid.
   # This means testing io chaos is blocked on Kurtosis supporting persistent volume mounts.
-  - testName: io-latency
+  - testName: io-fault
     health:
       enableChecks: true
       gracePeriod: 2m0s
     planSteps:
     - stepType: injectFault
-      description: 'Inject i/o latency'
+      description: 'Inject i/o faults'
       chaosFaultSpec:
         kind: IOChaos
         apiVersion: chaos-mesh.org/v1alpha1
         spec:
-          action: latency
+          action: fault
           mode: all
           selector:
             labelSelectors:
               # kurtosistech.com.custom/ethereum-package.client-type: beacon
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
-              kurtosistech.com/id: el-1-geth-lighthouse
+              kurtosistech.com/id: el-3-geth-prysm
 
-          # for CL nodes
-          #path: '/data/*/beacon-data'
-          #volumePath: /consensus-data
-          # for EL nodes
-          path: '/data/*/execution-data'
           volumePath: /data/geth/execution-data
-          delay: '5000ms'
-          percent: 50
-          duration: 120s
+          # Run errno -l on a linux system to get a list of supporter error numbers
+          errno: 16
+          mistake:
+            filling: zero
+            maxOccurrences: 1
+            maxLength: 10
+          methods:
+            - READ
+            - WRITE
+          percent: 100
+          duration: '10s'
     - stepType: waitForFaultCompletion
       description: wait for faults to terminate
 
