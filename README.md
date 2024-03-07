@@ -206,6 +206,14 @@ probably be changed.
 Depending on the state of the Kurtosis package and tons of other variables, a lot of the example test suites/networks might not work out of the box.
 If you're just trying to test things out, use `attacknet start suite`. This refers to a demo test suite that was tested on Jan 30.
 
+## Contribution
+This tool was developed as a collaboration between [Trail of Bits](https://www.trailofbits.com/) and the [Ethereum Foundation](https://github.com/ethereum/).
+Thank you for considering helping out with the source code! We welcome contributions from anyone on the internet, and are grateful for even the smallest of fixes!
+
+If this tool was used for finding bugs, please do ensure that the bug is reported to the relevant project maintainers or to the 
+[Ethereum foundation Bug bounty program](https://ethereum.org/en/bug-bounty/). Please feel free to reach out to the tool
+maintainers on Discord, Email or Twitter for any feature requests. 
+
 ## Changelog
 
 **Dec 15, 2023 version v0.1 (internal)**
