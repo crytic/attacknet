@@ -127,7 +127,7 @@ consensus: # list of consensus clients that will be used in the network topology
     image: sigp/lighthouse:latest
     has_sidecar: true
   - name: prysm
-    image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    image: prysmaticlabs/prysm-beacon-chain:latest
     has_sidecar: true
 network_params:
   num_validator_keys_per_node: 32 # required. 

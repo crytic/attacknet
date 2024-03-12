@@ -2,7 +2,7 @@ participants:
     - el_type: nethermind
       el_image: nethermind/nethermind:1.25.1
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -36,7 +36,7 @@ participants:
     - el_type: reth
       el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -87,7 +87,7 @@ participants:
     - el_type: erigon
       el_image: thorax/erigon:v2.53.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -138,7 +138,7 @@ participants:
     - el_type: erigon
       el_image: thorax/erigon:v2.53.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -189,7 +189,7 @@ participants:
     - el_type: erigon
       el_image: thorax/erigon:v2.53.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024

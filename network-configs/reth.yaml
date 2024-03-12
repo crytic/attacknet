@@ -19,7 +19,7 @@ participants:
   - el_type: geth
     el_image: ethereum/client-go:latest
     cl_type: prysm
-    cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    cl_image: prysmaticlabs/prysm-beacon-chain:latest
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -53,7 +53,7 @@ participants:
   - el_type: reth
     el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
     cl_type: prysm
-    cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    cl_image: prysmaticlabs/prysm-beacon-chain:latest
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024

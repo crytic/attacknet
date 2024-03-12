@@ -14,7 +14,7 @@ consensus:
     image: sigp/lighthouse:latest
     has_sidecar: true
   - name: prysm
-    image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    image: prysmaticlabs/prysm-beacon-chain:latest
     has_sidecar: true
   #- name: teku
   #  image: consensys/teku:23.12.0
