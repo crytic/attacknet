@@ -22,25 +22,29 @@ consensus:
   - name: lodestar
     image: chainsafe/lodestar:v1.15.0
     has_sidecar: true
-# https://github.com/kurtosis-tech/ethereum-package/issues/417
+  # https://github.com/kurtosis-tech/ethereum-package/issues/417
   - name: nimbus
     image: ethpandaops/nimbus:unstable
     has_sidecar: false
 topology:
-  bootnode_el: nethermind
+  bootnode_el: geth
   bootnode_cl: prysm
-  target_node_multiplier: 2
-  targets_as_percent_of_network: 0.67
+  target_node_multiplier: 1
+  targets_as_percent_of_network: 0.40
 network_params:
   num_validator_keys_per_node: 32
-kurtosis_package: "github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f"
+kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
 kubernetes_namespace: kt-restart-reth
 fault_config:
-  fault_type: RestartContainers
+  fault_type: NetworkLatency
   target_client: reth
   wait_before_first_test: 300s
   fault_config_dimensions:
     - grace_period: 300s
+      delay: 500ms
+      jitter: 500ms
+      duration: 1m
+      correlation: 100
   fault_targeting_dimensions:
     - MatchingClient
   fault_attack_size_dimensions:

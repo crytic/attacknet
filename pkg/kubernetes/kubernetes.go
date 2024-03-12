@@ -19,8 +19,7 @@ import (
 type KubeClient struct {
 	clientInternal *rest.Config
 	clientset      *kubernetes.Clientset
-	//clientWithSpecs pkgclient.Client
-	namespace string
+	namespace      string
 }
 
 func CreateKubeClient(namespace string) (*KubeClient, error) {
@@ -35,19 +34,6 @@ func CreateKubeClient(namespace string) (*KubeClient, error) {
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "Unable to build a kubernetes client for the default types")
 	}
-	/*
-		chaosScheme := runtime.NewScheme()
-		err = api.AddToScheme(chaosScheme)
-		if err != nil {
-			return nil, stacktrace.Propagate(err, "unable to add chaos-mesh v1alpha1 to scheme")
-		}
-
-		err = corev1.AddToScheme(chaosScheme)
-		if err != nil {
-			return nil, stacktrace.Propagate(err, "unable to add kubernetes core to scheme")
-		}
-	*/
-	//client, err := pkgclient.New(kubeConfig, pkgclient.Options{Scheme: chaosScheme})
 
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to create a kubernetes API client")
@@ -56,8 +42,7 @@ func CreateKubeClient(namespace string) (*KubeClient, error) {
 	c := &KubeClient{
 		clientInternal: kubeConfig,
 		clientset:      kubeClient,
-		//clientWithSpecs: client,
-		namespace: namespace,
+		namespace:      namespace,
 	}
 
 	return c, nil

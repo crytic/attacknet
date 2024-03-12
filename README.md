@@ -9,7 +9,7 @@ The overall architecture of Attacknet relies on Kubernetes to run the workloads,
 [Chaos Mesh](https://chaos-mesh.org/) to inject faults into it. Attacknet can then be configured to run healthchecks and 
 reports back the state of the network at the end of a test. 
 
-![architecture-diag.png](architecture-diag.png)
+![docs/attacknet.svg](docs/attacknet.svg)
 
 ### TLDR; Capabilities
 Attacknet can be used in the following ways:
@@ -133,12 +133,15 @@ network_params:
   num_validator_keys_per_node: 32 # required. 
 kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
 kubernetes_namespace: kt-ethereum
+topology:
+  bootnode_el: geth  # self explanatory
+  bootnode_cl: prysm
+  targets_as_percent_of_network: 0.25 # [optional] defines what percentage of the network contains the target client. 0.25 means only 25% of nodes will contain the client defined in the fault spec. Warning: low percentages may lead to massive networks.
+  target_node_multiplier: 2 # optional, default:1. Adds duplicate el/cl combinations based on the multiplier. Useful for testing weird edge cases in consensus
 fault_config:
   fault_type: ClockSkew  # which fault to use. A list of faults currently supported by the planner can be found in pkg/plan/suite/types.go in FaultTypeEnum
   target_client: reth # which client to test. this can be an exec client or a consensus client. must show up in the client definitions above.
   wait_before_first_test: 300s # how long to wait before running the first test. Set this to 25 minutes to test against a finalized network.
-  bootnode_el: geth
-  bootnode_cl: prysm
   fault_config_dimensions: # the different fault configurations to use when creating tests. At least one config dimension is required.
     - skew: -2m # these configs differ for each fault
       duration: 1m
@@ -216,16 +219,23 @@ maintainers on Discord, Email or Twitter for any feature requests.
 
 ## Changelog
 
-**Dec 15, 2023 version v0.1 (internal)**
-- Initial internal release
+**TBD**
 
-**Jan 11, 2024 version v0.2 (internal)**
-- Updated to kurtosis v0.86.1
-- Updated to Go 1.21
-- Grafana port-forwarding has been temporarily disabled
-- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
-- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
-- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+First public release!
+
+**New**
+- Added two new configuration options in the test planner:
+  - target_node_multiplier, which duplicates the number of nodes on the network containing the client under test
+  - targets_as_percent_of_network, which adds more non-test nodes to the network to improve client diversity testing
+- Added new fault options to the test planner:
+  - Network latency faults
+  - Network packet loss faults
+- Beacon chain clients are now included in health checking.
+ 
+**Fixed**
+- Fixed an issue where the test planner's resultant network topology was non-deterministic
+- Fixed an issue where a dropped port-forwarding connection to a pod may result in a panic
+- Fixed an issue where Chaos Mesh would fail to find targets in networks with more than 10 nodes
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite
@@ -236,9 +246,21 @@ maintainers on Discord, Email or Twitter for any feature requests.
 - Peer scoring is now disabled for all planner-generated network configurations.
 - Bootnodes are no longer targetable by planner-generated test suites.
 
+**Jan 11, 2024 version v0.2 (internal)**
+- Updated to kurtosis v0.86.1
+- Updated to Go 1.21
+- Grafana port-forwarding has been temporarily disabled
+- Introduces multi-step tests. This allows multiple faults and other actions to be composed into a single test.
+- Introduces the suite planner. The suite planner allows the user to define a set of testing criteria/dimensions, which the planner turns into a suite containing multiple tests.
+- Successful & failed test suites now emit test artifacts summarizing the results of the test.
+
+**Dec 15, 2023 version v0.1 (internal)**
+- Initial internal release
+
 ## Developing (wip)
 
 1. Install pre-commit
    - `brew install pre-commit`
    - `pre-commit install`
 
+When making pull requests, target the `develop` branch, not main.

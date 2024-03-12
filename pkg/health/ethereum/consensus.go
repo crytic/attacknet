@@ -4,6 +4,7 @@ import (
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // var UnableToReachLatestConsensusError = fmt.Errorf("there are nodes that disagree on the latest block")
@@ -17,6 +18,19 @@ type ClientForkChoice struct {
 }
 
 func getExecNetworkConsensus(ctx context.Context, nodeClients []*ExecClientRPC, blockType string) ([]*ClientForkChoice, error) {
+	clientForkVotes := make([]*ClientForkChoice, len(nodeClients))
+	for i, client := range nodeClients {
+		choice, err := client.GetLatestBlockBy(ctx, blockType)
+		if err != nil {
+			return nil, err
+		}
+
+		clientForkVotes[i] = choice
+	}
+	return clientForkVotes, nil
+}
+
+func getBeaconNetworkConsensus(ctx context.Context, nodeClients []*BeaconClientRpc, blockType string) ([]*ClientForkChoice, error) {
 	clientForkVotes := make([]*ClientForkChoice, len(nodeClients))
 	for i, client := range nodeClients {
 		choice, err := client.GetLatestBlockBy(ctx, blockType)
@@ -88,7 +102,7 @@ func reportConsensusDataToLogger(consensusType string,
 
 	log.Infof("Consensus %s block height: %d", consensusType, consensusBlockNum[0].BlockNumber)
 	if len(wrongBlockNum) > 0 {
-		log.Warnf("Some nodes are out of consensus for block type '%s'", consensusType)
+		log.Warnf("Some nodes are out of consensus for block type '%s'. Time: %d", consensusType, time.Now().Unix())
 		for _, n := range wrongBlockNum {
 			log.Warnf("---> Node: %s %s BlockHeight: %d BlockHash: %s", n.Pod.GetName(), consensusType, n.BlockNumber, n.BlockHash)
 		}

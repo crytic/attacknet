@@ -5,16 +5,16 @@ import (
 	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
+	"attacknet/cmd/pkg/runtime"
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
-	"time"
-
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
-	enclave, err := setupEnclave(ctx, cfg)
+	enclave, err := runtime.SetupEnclave(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 				return err
 			}
 
-			hc, err := health.BuildHealthChecker(cfg, kubeClient, podsUnderTest, test.HealthConfig)
+			hc, err := health.BuildHealthChecker(kubeClient, podsUnderTest, test.HealthConfig)
 			if err != nil {
 				return err
 			}

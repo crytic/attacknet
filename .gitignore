@@ -3,7 +3,10 @@ geth/execution/geth
 .test/
 deposit_manifest.json
 /attacknet
-/.DS_Store
+.DS_Store
 .idea
 .vscode
 artifacts
+webhook
+attacknetruns
+metrics-server.yaml

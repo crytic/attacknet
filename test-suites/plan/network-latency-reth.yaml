@@ -1,0 +1,288 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 300
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-restart-reth
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package
+    networkConfig: plan/network-latency-reth.yaml
+testConfig:
+    tests:
+        - testName: 'Apply 500ms network latency for 1m0s. Jitter: 500ms, correlation: 100 against 1 targets. Impacting the client of targeted reth clients. Injecting into AttackOneMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-02-reth-lighthouse
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 500ms network latency for 1m0s. Jitter: 500ms, correlation: 100 against 3 targets. Impacting the client of targeted reth clients. Injecting into AttackMinorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-02-reth-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-03-reth-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-04-reth-teku
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 500ms network latency for 1m0s. Jitter: 500ms, correlation: 100 against 4 targets. Impacting the client of targeted reth clients. Injecting into AttackSuperminorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-02-reth-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-03-reth-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-04-reth-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-05-reth-lodestar
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 500ms network latency for 1m0s. Jitter: 500ms, correlation: 100 against 5 targets. Impacting the client of targeted reth clients. Injecting into AttackAllMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-02-reth-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-03-reth-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-04-reth-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-05-reth-lodestar
+            - stepType: injectFault
+              description: 'Inject network latency on target reth client of reth/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: delay
+                    delay:
+                        correlation: "100"
+                        jitter: 500ms
+                        latency: 500ms
+                    duration: 1m0s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-06-reth-nimbus
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s

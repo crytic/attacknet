@@ -6,49 +6,34 @@ import (
 )
 
 const defaultClCpu = 1000
-const defaultValCpu = 1000
+const defaultValCpu = 500
 
-const defaultClMem = 2048
-const defaultValMem = 1024
+const defaultClMem = 1536
+const defaultValMem = 512
 
-func composeConsensusTesterNetwork(bootEl, bootCl, consensusClient string, execClients, consClients []ClientVersion) ([]*Node, error) {
-	execClientMap, consClientMap, err := clientListsToMaps(execClients, consClients)
-	if err != nil {
-		return nil, err
-	}
-
+func composeConsensusTesterNetwork(nodeMultiplier int, consensusClient string, execClientList []ClientVersion, consClientMap map[string]ClientVersion) ([]*Node, error) {
 	// make sure consensusClient actually exists
 	clientUnderTest, ok := consClientMap[consensusClient]
 	if !ok {
 		return nil, stacktrace.NewError("unknown consensus client %s", consensusClient)
 	}
 
-	var nodes []*Node
-	index := 1
-	bootnode, err := composeBootnode(bootEl, bootCl, execClientMap, consClientMap)
-	if err != nil {
-		return nil, err
-	}
-	nodes = append(nodes, bootnode)
-	index += 1
-
-	n, err := composeNodesForClTesting(index, clientUnderTest, execClientMap)
-	nodes = append(nodes, n...)
-	if err != nil {
-		return nil, err
-	}
-
-	return nodes, nil
+	// start from 2 because bootnode is index 1
+	index := 2
+	nodes, err := composeNodesForClTesting(nodeMultiplier, index, clientUnderTest, execClientList)
+	return nodes, err
 }
 
-func composeNodesForClTesting(index int, consensusClient ClientVersion, execClients map[string]ClientVersion) ([]*Node, error) {
+func composeNodesForClTesting(nodeMultiplier, index int, consensusClient ClientVersion, execClients []ClientVersion) ([]*Node, error) {
 	var nodes []*Node
 
 	for _, execClient := range execClients {
-		node := buildNode(index, execClient, consensusClient)
-		nodes = append(nodes, node)
+		for i := 0; i < nodeMultiplier; i++ {
+			node := buildNode(index, execClient, consensusClient)
+			nodes = append(nodes, node)
 
-		index += 1
+			index += 1
+		}
 	}
 	return nodes, nil
 }

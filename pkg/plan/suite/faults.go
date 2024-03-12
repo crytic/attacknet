@@ -4,7 +4,8 @@ import (
 	"attacknet/cmd/pkg/types"
 	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -80,7 +81,61 @@ type IOChaosWrapper struct {
 	IOChaosFault `yaml:"chaosFaultSpec"`
 }
 
-func convertFaultSpecToMap(s interface{}) (map[string]interface{}, error) {
+type NetworkDelaySpec struct {
+	Latency     *time.Duration `yaml:"latency"`
+	Correlation string         `yaml:"correlation,omitempty"`
+	Jitter      *time.Duration `yaml:"jitter,omitempty"`
+}
+type NetworkLossSpec struct {
+	Loss        string `yaml:"loss"`
+	Correlation string `yaml:"correlation,omitempty"`
+}
+
+type NetworkDuplicateSpec struct {
+	Duplicate   float32 `yaml:"duplicate"`
+	Correlation string  `yaml:"correlation,omitempty"`
+}
+
+type NetworkCorruptSpec struct {
+	Corrupt     float32 `yaml:"duplicate"`
+	Correlation string  `yaml:"correlation,omitempty"`
+}
+
+type NetworkBandwidthSpec struct {
+	Rate     string  `yaml:"rate"`
+	Limit    uint32  `yaml:"limit"`
+	Buffer   uint32  `yaml:"buffer"`
+	PeakRate *uint64 `yaml:"peak_rate,omitempty"`
+}
+
+type NetworkDropSpec struct {
+	Loss uint32 `yaml:"loss"`
+}
+
+type NetworkChaosSpec struct {
+	Selector  `yaml:"selector"`
+	Mode      string                `yaml:"mode"`
+	Action    string                `yaml:"action"`
+	Duration  *time.Duration        `yaml:"duration"`
+	Delay     *NetworkDelaySpec     `yaml:"delay,omitempty"`
+	Loss      *NetworkLossSpec      `yaml:"loss,omitempty"`
+	Duplicate *NetworkDuplicateSpec `yaml:"duplicate,omitempty"`
+	Corrupt   *NetworkCorruptSpec   `yaml:"corrupt,omitempty"`
+	Bandwidth *NetworkBandwidthSpec `yaml:"bandwidth,omitempty"`
+	Direction string                `yaml:"direction,omitempty"`
+}
+
+type NetworkChaosFault struct {
+	Spec       NetworkChaosSpec `yaml:"spec"`
+	Kind       string           `yaml:"kind"`
+	ApiVersion string           `yaml:"apiVersion"`
+}
+
+type NetworkChaosWrapper struct {
+	NetworkChaosFault `yaml:"chaosFaultSpec"`
+}
+
+func convertFaultSpecToMap[T any](s T) (map[string]interface{}, error) {
 	// convert to map[string]interface{} using yaml intermediate. seriously.
 	bs, err := yaml.Marshal(s)
 	if err != nil {
@@ -95,8 +150,48 @@ func convertFaultSpecToMap(s interface{}) (map[string]interface{}, error) {
 	return faultSpec, nil
 }
 
-func buildClockSkewFault(description, timeOffset, duration string, expressionSelectors []ChaosExpressionSelector) (*types.PlanStep, error) {
+func convertFaultSpecToMapSpecial(s NetworkChaosWrapper) (map[string]interface{}, error) {
+	// convert to map[string]interface{} using yaml intermediate. seriously.
+	bs, err := yaml.Marshal(s)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "intermediate yaml marshalling failed")
+	}
 
+	var faultSpec map[string]interface{}
+	err = yaml.Unmarshal(bs, &faultSpec)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "unable to deserialize intermediate yaml")
+	}
+	return faultSpec, nil
+}
+
+func convertFaultSpecToInjectStep(description string, s interface{}) (*types.PlanStep, error) {
+	faultSpecMap, err := convertFaultSpecToMap(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.PlanStep{
+		StepType:        types.InjectFault,
+		StepDescription: description,
+		Spec:            faultSpecMap,
+	}, nil
+}
+
+func convertFaultSpecToInjectStepSpecial(description string, s NetworkChaosWrapper) (*types.PlanStep, error) {
+	faultSpecMap, err := convertFaultSpecToMapSpecial(s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.PlanStep{
+		StepType:        types.InjectFault,
+		StepDescription: description,
+		Spec:            faultSpecMap,
+	}, nil
+}
+
+func buildClockSkewFault(description, timeOffset, duration string, expressionSelectors []ChaosExpressionSelector) (*types.PlanStep, error) {
 	t := TimeChaosWrapper{
 		TimeChaosFault: TimeChaosFault{
 			Kind:       "TimeChaos",
@@ -112,18 +207,7 @@ func buildClockSkewFault(description, timeOffset, duration string, expressionSel
 			},
 		},
 	}
-
-	faultSpec, err := convertFaultSpecToMap(t)
-	if err != nil {
-		return nil, err
-	}
-
-	step := &types.PlanStep{
-		StepType:        types.InjectFault,
-		StepDescription: description,
-		Spec:            faultSpec,
-	}
-	return step, nil
+	return convertFaultSpecToInjectStep(description, t)
 }
 
 func buildPodRestartFault(description string, expressionSelectors []ChaosExpressionSelector) (*types.PlanStep, error) {
@@ -142,17 +226,7 @@ func buildPodRestartFault(description string, expressionSelectors []ChaosExpress
 		},
 	}
 
-	faultSpec, err := convertFaultSpecToMap(t)
-	if err != nil {
-		return nil, err
-	}
-
-	step := &types.PlanStep{
-		StepType:        types.InjectFault,
-		StepDescription: description,
-		Spec:            faultSpec,
-	}
-	return step, nil
+	return convertFaultSpecToInjectStep(description, t)
 }
 
 func getVolumePathForIOFault(podName string) (string, error) {
@@ -198,18 +272,58 @@ func buildIOLatencyFault(description string, expressionSelector ChaosExpressionS
 			},
 		}
 
-		faultSpec, err := convertFaultSpecToMap(t)
+		step, err := convertFaultSpecToInjectStep(description, t)
 		if err != nil {
 			return nil, err
 		}
-
-		step := types.PlanStep{
-			StepType:        types.InjectFault,
-			StepDescription: description,
-			Spec:            faultSpec,
-		}
-		steps = append(steps, step)
+		steps = append(steps, *step)
 	}
 
 	return steps, nil
+}
+
+func buildNetworkLatencyFault(description string, expressionSelectors []ChaosExpressionSelector, delay, jitter, duration *time.Duration, correlation int) (*types.PlanStep, error) {
+	t := NetworkChaosWrapper{
+		NetworkChaosFault: NetworkChaosFault{
+			Kind:       "NetworkChaos",
+			ApiVersion: "chaos-mesh.org/v1alpha1",
+			Spec: NetworkChaosSpec{
+				Duration: duration,
+				Mode:     "all",
+				Action:   "delay",
+				Selector: Selector{
+					ExpressionSelectors: expressionSelectors,
+				},
+				Delay: &NetworkDelaySpec{
+					Latency:     delay,
+					Correlation: fmt.Sprintf("%d", correlation),
+					Jitter:      jitter,
+				},
+			},
+		},
+	}
+
+	return convertFaultSpecToInjectStepSpecial(description, t)
+}
+
+func buildPacketDropFault(description string, expressionSelectors []ChaosExpressionSelector, percent int, direction string, duration *time.Duration) (*types.PlanStep, error) {
+	t := NetworkChaosWrapper{
+		NetworkChaosFault: NetworkChaosFault{
+			Kind:       "NetworkChaos",
+			ApiVersion: "chaos-mesh.org/v1alpha1",
+			Spec: NetworkChaosSpec{
+				Duration: duration,
+				Mode:     "all",
+				Action:   "loss",
+				Selector: Selector{
+					ExpressionSelectors: expressionSelectors,
+				},
+				Direction: direction,
+				Loss: &NetworkLossSpec{
+					Loss: strconv.Itoa(percent),
+				},
+			},
+		},
+	}
+	return convertFaultSpecToInjectStepSpecial(description, t)
 }

@@ -8,6 +8,7 @@ import (
 type PlannerConfig struct {
 	ExecutionClients    []network.ClientVersion         `yaml:"execution"`
 	ConsensusClients    []network.ClientVersion         `yaml:"consensus"`
+	Topology            network.Topology                `yaml:"topology"`
 	GenesisParams       network.GenesisConfig           `yaml:"network_params"`
 	KurtosisPackage     string                          `yaml:"kurtosis_package"`
 	KubernetesNamespace string                          `yaml:"kubernetes_namespace"`

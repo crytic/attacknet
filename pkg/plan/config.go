@@ -11,11 +11,7 @@ func validatePlannerFaultConfiguration(c PlannerConfig) error {
 	// fault type
 	_, ok := suite.FaultTypes[c.FaultConfig.FaultType]
 	if !ok {
-		faults := make([]suite.FaultTypeEnum, 0, len(suite.FaultTypes))
-		for k := range suite.FaultTypes {
-			faults = append(faults, k)
-		}
-		return stacktrace.NewError("the fault type '%s' is not supported. Supported faults: %v", c.FaultConfig.FaultType, faults)
+		return stacktrace.NewError("the fault type '%s' is not supported. Supported faults: %v", c.FaultConfig.FaultType, suite.FaultTypesList)
 	}
 
 	// target client
@@ -28,11 +24,7 @@ func validatePlannerFaultConfiguration(c PlannerConfig) error {
 	for _, spec := range c.FaultConfig.TargetingDimensions {
 		_, ok := suite.TargetingSpecs[spec]
 		if !ok {
-			specs := make([]suite.TargetingSpec, 0, len(suite.TargetingSpecs))
-			for k := range suite.TargetingSpecs {
-				specs = append(specs, k)
-			}
-			return stacktrace.NewError("the fault targeting dimension %s is not supported. Supported dimensions: %v", spec, specs)
+			return stacktrace.NewError("the fault targeting dimension %s is not supported. Supported dimensions: %v", spec, suite.TargetingSpecList)
 		}
 	}
 
@@ -40,11 +32,7 @@ func validatePlannerFaultConfiguration(c PlannerConfig) error {
 	for _, attackSize := range c.FaultConfig.AttackSizeDimensions {
 		_, ok := suite.AttackSizes[attackSize]
 		if !ok {
-			sizes := make([]suite.AttackSize, 0, len(suite.AttackSizes))
-			for k := range suite.AttackSizes {
-				sizes = append(sizes, k)
-			}
-			return stacktrace.NewError("the attack size dimension %s is not supported. Supported dimensions: %v", attackSize, sizes)
+			return stacktrace.NewError("the attack size dimension %s is not supported. Supported dimensions: %v", attackSize, suite.AttackSizesList)
 		}
 	}
 

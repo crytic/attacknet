@@ -27,10 +27,6 @@ const (
 
 var FaultHasNoDurationErr = fmt.Errorf("this fault has no expected duration")
 
-// succeeded (inject worked, now back to normal)
-// failure?
-// time out?
-
 type FaultSession struct {
 	client                   *ChaosClient
 	faultKind                *api.ChaosKind
