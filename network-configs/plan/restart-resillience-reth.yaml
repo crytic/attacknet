@@ -1,207 +1,207 @@
 participants:
-    - el_client_type: nethermind
-      el_client_image: nethermind/nethermind:1.25.1
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    - el_type: nethermind
+      el_image: nethermind/nethermind:1.25.1
+      cl_type: prysm
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: reth
-      el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
-      cl_client_type: lighthouse
-      cl_client_image: sigp/lighthouse:latest
+    - el_type: reth
+      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: reth
-      el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    - el_type: reth
+      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      cl_type: prysm
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: reth
-      el_client_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
-      cl_client_type: lodestar
-      cl_client_image: chainsafe/lodestar:v1.12.1
+    - el_type: reth
+      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.12.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: geth
-      el_client_image: ethereum/client-go:latest
-      cl_client_type: lighthouse
-      cl_client_image: sigp/lighthouse:latest
+    - el_type: geth
+      el_image: ethereum/client-go:latest
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: erigon
-      el_client_image: thorax/erigon:v2.53.4
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    - el_type: erigon
+      el_image: thorax/erigon:v2.53.4
+      cl_type: prysm
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: nethermind
-      el_client_image: nethermind/nethermind:1.25.1
-      cl_client_type: lodestar
-      cl_client_image: chainsafe/lodestar:v1.12.1
+    - el_type: nethermind
+      el_image: nethermind/nethermind:1.25.1
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.12.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: geth
-      el_client_image: ethereum/client-go:latest
-      cl_client_type: lighthouse
-      cl_client_image: sigp/lighthouse:latest
+    - el_type: geth
+      el_image: ethereum/client-go:latest
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: erigon
-      el_client_image: thorax/erigon:v2.53.4
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    - el_type: erigon
+      el_image: thorax/erigon:v2.53.4
+      cl_type: prysm
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: nethermind
-      el_client_image: nethermind/nethermind:1.25.1
-      cl_client_type: lodestar
-      cl_client_image: chainsafe/lodestar:v1.12.1
+    - el_type: nethermind
+      el_image: nethermind/nethermind:1.25.1
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.12.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: geth
-      el_client_image: ethereum/client-go:latest
-      cl_client_type: lighthouse
-      cl_client_image: sigp/lighthouse:latest
+    - el_type: geth
+      el_image: ethereum/client-go:latest
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
-    - el_client_type: erigon
-      el_client_image: thorax/erigon:v2.53.4
-      cl_client_type: prysm
-      cl_client_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
+    - el_type: erigon
+      el_image: thorax/erigon:v2.53.4
+      cl_type: prysm
+      cl_image: prysmaticlabs/prysm-beacon-chain:latest,prysmaticlabs/prysm-validator:latest
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
       el_max_mem: 1024
-      bn_min_cpu: 1000
-      bn_max_cpu: 1000
-      bn_min_mem: 2048
-      bn_max_mem: 2048
-      v_min_cpu: 1000
-      v_max_cpu: 1000
-      v_min_mem: 1024
-      v_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 2048
+      cl_max_mem: 2048
+      vc_min_cpu: 1000
+      vc_max_cpu: 1000
+      vc_min_mem: 1024
+      vc_max_mem: 1024
       count: 1
 network_params:
     num_validator_keys_per_node: 32

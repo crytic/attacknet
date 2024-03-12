@@ -2,7 +2,7 @@ attacknetConfig:
     grafanaPodName: grafana
     grafanaPodPort: "3000"
     allowPostFaultInspection: false
-    waitBeforeInjectionSeconds: 300
+    waitBeforeInjectionSeconds: 0
     reuseDevnetBetweenRuns: true
     existingDevnetNamespace: kt-restart-reth
 harnessConfig:

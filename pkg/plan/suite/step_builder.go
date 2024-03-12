@@ -34,7 +34,7 @@ func ConvertToNodeIdTag(networkNodeCount int, node *network.Node, client clientT
 	case Consensus:
 		return fmt.Sprintf("cl-%s-%s-%s", nodeNumStr, node.Consensus.Type, node.Execution.Type)
 	case Validator:
-		return fmt.Sprintf("cl-%s-%s-%s-validator", nodeNumStr, node.Consensus.Type, node.Execution.Type)
+		return fmt.Sprintf("val-%s-%s-%s", nodeNumStr, node.Consensus.Type, node.Execution.Type)
 	default:
 		log.Errorf("Unrecognized node type %s", client)
 		return ""

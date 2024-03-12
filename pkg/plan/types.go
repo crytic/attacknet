@@ -43,26 +43,26 @@ type EthKurtosisConfig struct {
 }
 
 type Participant struct {
-	ElClientType  string `yaml:"el_client_type"`
-	ElClientImage string `yaml:"el_client_image"`
+	ElClientType  string `yaml:"el_type"`
+	ElClientImage string `yaml:"el_image"`
 
-	ClClientType  string `yaml:"cl_client_type"`
-	ClClientImage string `yaml:"cl_client_image"`
+	ClClientType  string `yaml:"cl_type"`
+	ClClientImage string `yaml:"cl_image"`
 
 	ElMinCpu    int `yaml:"el_min_cpu"`
 	ElMaxCpu    int `yaml:"el_max_cpu"`
 	ElMinMemory int `yaml:"el_min_mem"`
 	ElMaxMemory int `yaml:"el_max_mem"`
 
-	ClMinCpu    int `yaml:"bn_min_cpu"`
-	ClMaxCpu    int `yaml:"bn_max_cpu"`
-	ClMinMemory int `yaml:"bn_min_mem"`
-	ClMaxMemory int `yaml:"bn_max_mem"`
+	ClMinCpu    int `yaml:"cl_min_cpu"`
+	ClMaxCpu    int `yaml:"cl_max_cpu"`
+	ClMinMemory int `yaml:"cl_min_mem"`
+	ClMaxMemory int `yaml:"cl_max_mem"`
 
-	ValMinCpu    int `yaml:"v_min_cpu,omitempty"`
-	ValMaxCpu    int `yaml:"v_max_cpu,omitempty"`
-	ValMinMemory int `yaml:"v_min_mem,omitempty"`
-	ValMaxMemory int `yaml:"v_max_mem,omitempty"`
+	ValMinCpu    int `yaml:"vc_min_cpu,omitempty"`
+	ValMaxCpu    int `yaml:"vc_max_cpu,omitempty"`
+	ValMinMemory int `yaml:"vc_min_mem,omitempty"`
+	ValMaxMemory int `yaml:"vc_max_mem,omitempty"`
 
 	Count int `yaml:"count"`
 }

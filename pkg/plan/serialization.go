@@ -2,7 +2,6 @@ package plan
 
 import (
 	"attacknet/cmd/pkg/plan/network"
-	"fmt"
 	"github.com/kurtosis-tech/stacktrace"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -46,6 +45,7 @@ func DeserializeNetworkTopology(conf []byte) ([]*network.Node, error) {
 		validatorImage := ""
 		if participant.ValMaxCpu != 0 {
 			hasSidecar = true
+			// todo: remove this
 			if strings.Contains(consensusImage, ",") {
 				images := strings.Split(consensusImage, ",")
 				consensusImage = images[0]
@@ -90,9 +90,9 @@ func serializeNodes(nodes []*network.Node) []*Participant {
 		consensusImage := node.Consensus.Image
 
 		// prysm contingency
-		if node.Consensus.HasValidatorSidecar && node.Consensus.ValidatorImage != "" {
-			consensusImage = consensusImage + fmt.Sprintf(",%s", node.Consensus.ValidatorImage)
-		}
+		//if node.Consensus.HasValidatorSidecar && node.Consensus.ValidatorImage != "" {
+		//	consensusImage = consensusImage + fmt.Sprintf(",%s", node.Consensus.ValidatorImage)
+		//}
 
 		p := &Participant{
 			ElClientType:  node.Execution.Type,
