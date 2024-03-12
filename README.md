@@ -236,6 +236,7 @@ First public release!
 - Fixed an issue where the test planner's resultant network topology was non-deterministic
 - Fixed an issue where a dropped port-forwarding connection to a pod may result in a panic
 - Fixed an issue where Chaos Mesh would fail to find targets in networks with more than 10 nodes
+- Updated for Kurtosis SDK v0.88.5
 
 **Jan 30, 2024 version v0.3 (internal)**
 - Fixed the demo example suite
