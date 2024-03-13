@@ -14,7 +14,7 @@ func defaultConfig() *types.Config {
 		AttacknetConfig: types.AttacknetConfig{
 			WaitBeforeInjectionSeconds: 0,
 			ExistingDevnetNamespace:    "",
-			ReuseDevnetBetweenRuns:     false,
+			ReuseDevnetBetweenRuns:     true,
 			AllowPostFaultInspection:   true,
 		},
 	}
