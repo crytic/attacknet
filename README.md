@@ -27,7 +27,7 @@ Attacknet can be used in the following ways:
 - Use the planner to define a matrix of faults and targets, automatically generating the network topology and fault configuration.
 - (WIP) Exploratory testing. Dynamically generate various faults/targeting criterion and run faults continuously. 
 
-See [DOCUMENTATION.MD](docs/DOCUMENTATION.MD) for specific usage examples.
+See [DOCUMENTATION.md](docs/DOCUMENTATION.md) for specific usage examples.
 
 ## Getting started
 ### Installation/Building
@@ -53,7 +53,7 @@ See [DOCUMENTATION.MD](docs/DOCUMENTATION.MD) for specific usage examples.
 
 ## Usage/Configuration
 
-See [DOCUMENTATION.MD](docs/DOCUMENTATION.MD)
+See [DOCUMENTATION.md](docs/DOCUMENTATION.md)
 
 ## Contributing
 This tool was developed as a collaboration between [Trail of Bits](https://www.trailofbits.com/) and the [Ethereum Foundation](https://github.com/ethereum/).
