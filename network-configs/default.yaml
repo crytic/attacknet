@@ -1,0 +1,43 @@
+participants:
+  - el_type: geth
+    el_image: ethereum/client-go:latest
+    cl_type: lighthouse
+    cl_image: sigp/lighthouse:latest
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    cl_min_cpu: 2000
+    cl_max_cpu: 3000
+    cl_min_mem: 2048
+    cl_max_mem: 2048
+    vc_min_cpu: 1000
+    vc_max_cpu: 1000
+    vc_min_mem: 1028
+    vc_max_mem: 1028
+    count: 1
+  - el_type: geth
+    el_image: ethereum/client-go:latest
+    cl_type: prysm
+    cl_image: prysmaticlabs/prysm-beacon-chain:latest
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    cl_min_cpu: 2000
+    cl_max_cpu: 3000
+    cl_min_mem: 2048
+    cl_max_mem: 2048
+    vc_min_cpu: 1000
+    vc_max_cpu: 1000
+    vc_min_mem: 1028
+    vc_max_mem: 1028
+    count: 1
+
+network_params:
+  deneb_fork_epoch: 1
+  num_validator_keys_per_node: 32
+additional_services:
+  - prometheus_grafana
+  - dora
+persistent: false

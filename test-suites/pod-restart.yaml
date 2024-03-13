@@ -1,0 +1,37 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 300
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+  networkType: ethereum
+
+testConfig:
+  tests:
+  - testName: pod-restart
+    # This fault effectively forces the targeted pods to restart. If no PVC is attached, they will have to resync.
+    # Do not set the duration too high or k8s will unschedule the pod due to crash loop backoff.
+    # May have unexpected results if run against the network's bootnode.
+    planSteps:
+    - stepType: injectFault
+      description: restart the specified pod
+      chaosFaultSpec:
+        kind: PodChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          action: pod-failure
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: cl-3-prysm-geth-validator
+
+
+

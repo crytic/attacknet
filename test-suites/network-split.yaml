@@ -1,0 +1,40 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 300
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: devnet-12.yaml
+  networkType: ethereum
+
+testConfig:
+  tests:
+  - testName: network-split
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: 'network split'
+      chaosFaultSpec:
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          action: partition
+          duration: 30s
+          mode: all
+          selector:
+            labelSelectors:
+              kurtosistech.com.custom/ethereum-package.partition: partA
+          direction: both
+          target:
+            mode: all
+            selector:
+              labelSelectors:
+                kurtosistech.com.custom/ethereum-package.partition: partB
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

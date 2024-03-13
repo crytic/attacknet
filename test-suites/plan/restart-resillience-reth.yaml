@@ -1,0 +1,169 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 300
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-restart-reth
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f
+    networkConfig: plan/restart-resillience-reth.yaml
+testConfig:
+    tests:
+        - testName: Restarting 1 targets. Impacting the full node of targeted reth clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Restart target reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-reth-lighthouse
+                                - cl-2-lighthouse-reth
+                                - cl-2-lighthouse-reth-validator
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: Restarting 3 targets. Impacting the full node of targeted reth clients. Injecting into AttackMinorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Restart target reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-reth-lighthouse
+                                - cl-2-lighthouse-reth
+                                - cl-2-lighthouse-reth-validator
+            - stepType: injectFault
+              description: 'Restart target reth/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-reth-prysm
+                                - cl-3-prysm-reth
+                                - cl-3-prysm-reth-validator
+            - stepType: injectFault
+              description: 'Restart target reth/lodestar Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-reth-lodestar
+                                - cl-4-lodestar-reth
+                                - cl-4-lodestar-reth-validator
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: Restarting 1 targets. Impacting the client of targeted reth clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Restart target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-reth-lighthouse
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: Restarting 3 targets. Impacting the client of targeted reth clients. Injecting into AttackMinorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Restart target reth client of reth/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-reth-lighthouse
+            - stepType: injectFault
+              description: 'Restart target reth client of reth/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-reth-prysm
+            - stepType: injectFault
+              description: 'Restart target reth client of reth/lodestar Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: PodChaos
+                spec:
+                    action: pod-failure
+                    duration: 5s
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-reth-lodestar
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s

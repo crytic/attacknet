@@ -1,0 +1,12 @@
+prysm/consensus/genesis.ssz
+geth/execution/geth
+.test/
+deposit_manifest.json
+/attacknet
+.DS_Store
+.idea
+.vscode
+/artifacts
+webhook
+attacknetruns
+metrics-server.yaml

@@ -1,0 +1,20 @@
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - gosec
+
+issues:
+  exclude-rules:
+  - path: pkg/kubernetes/port_forward.go
+    text: Binds to all network interfaces
+  - path: pkg/plan/
+    text: is unused
+

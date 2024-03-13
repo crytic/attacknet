@@ -1,0 +1,53 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 10
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: devnet-12.yaml
+  networkType: ethereum
+
+testConfig:
+  tests:
+  # Note: io chaos will not work unless the "volumePath" actually maps to a volume mount. The root mount is not valid.
+  # This means testing io chaos is blocked on Kurtosis supporting persistent volume mounts.
+  - testName: io-fault
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: 'Inject i/o faults'
+      chaosFaultSpec:
+        kind: IOChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          action: fault
+          mode: all
+          selector:
+            labelSelectors:
+              # kurtosistech.com.custom/ethereum-package.client-type: beacon
+              # kurtosistech.com.custom/ethereum-package.client-type: execution
+              #kurtosistech.com/id: cl-3-prysm-geth
+              kurtosistech.com/id: el-3-geth-prysm
+
+          volumePath: /data/geth/execution-data
+          # Run errno -l on a linux system to get a list of supporter error numbers
+          errno: 16
+          mistake:
+            filling: zero
+            maxOccurrences: 1
+            maxLength: 10
+          methods:
+            - READ
+            - WRITE
+          percent: 100
+          duration: '10s'
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate
+
+

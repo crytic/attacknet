@@ -1,0 +1,41 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 300
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: devnet-12.yaml
+  networkType: ethereum
+
+
+testConfig:
+  tests:
+  - testName: packetdrop
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: "inject packet drop fault"
+      chaosFaultSpec:
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com/id: el-3-geth-prysm
+              #kurtosistech.com.custom/ethereum-package.client: prysm
+              #kurtosistech.com.custom/ethereum-package.client-type: beacon
+
+          mode: all
+          action: loss
+          duration: 120s
+          loss:
+            loss: '100'
+          direction: to
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

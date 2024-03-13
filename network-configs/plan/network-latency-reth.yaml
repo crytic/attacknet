@@ -1,0 +1,197 @@
+participants:
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: prysm
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: reth
+      el_image: parithoshj/reth:main-1a8440a-debug
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:v4.6.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: reth
+      el_image: parithoshj/reth:main-1a8440a-debug
+      cl_type: prysm
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: reth
+      el_image: parithoshj/reth:main-1a8440a-debug
+      cl_type: teku
+      cl_image: consensys/teku:24.1.1-amd64
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+    - el_type: reth
+      el_image: parithoshj/reth:main-1a8440a-debug
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.15.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: reth
+      el_image: parithoshj/reth:main-1a8440a-debug
+      cl_type: nimbus
+      cl_image: ethpandaops/nimbus:unstable
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:v4.6.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: prysm
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: teku
+      cl_image: consensys/teku:24.1.1-amd64
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.15.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_type: geth
+      el_image: ethereum/client-go:v1.13.11
+      cl_type: nimbus
+      cl_image: ethpandaops/nimbus:unstable
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+    - el_type: erigon
+      el_image: thorax/erigon:v2.57.3
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:v4.6.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+network_params:
+    num_validator_keys_per_node: 32
+additional_services:
+    - prometheus_grafana
+    - dora
+parallel_keystore_generation: false
+persistent: false
+disable_peer_scoring: true

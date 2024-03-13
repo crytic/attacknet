@@ -1,0 +1,35 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 0
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+  networkType: ethereum
+testConfig:
+  tests:
+  - testName: clock-skew
+    health:
+      enableChecks: true
+      gracePeriod: 30s
+    planSteps:
+    - stepType: injectFault
+      description: 'Inject clock skew on target'
+      chaosFaultSpec:
+        kind: TimeChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com.custom/ethereum-package.client: lighthouse
+              kurtosistech.com.custom/ethereum-package.client-type: beacon
+          mode: all
+          action: delay
+          timeOffset: '-5m'
+          duration: 1m
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

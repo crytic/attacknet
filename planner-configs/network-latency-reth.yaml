@@ -1,0 +1,56 @@
+execution:
+  - name: geth
+    image: ethereum/client-go:v1.13.11
+  - name: reth
+    image: parithoshj/reth:main-1a8440a-debug
+  - name: erigon
+    image: thorax/erigon:v2.57.3
+  - name: nethermind
+    image: nethermind/nethermind:1.25.3
+  - name: besu
+    image: hyperledger/besu:24.1.1
+consensus:
+  - name: lighthouse
+    image: sigp/lighthouse:v4.6.0
+    has_sidecar: true
+  - name: prysm
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1,gcr.io/prysmaticlabs/prysm/validator:v4.2.1
+    has_sidecar: true
+  - name: teku
+    image: consensys/teku:24.1.1-amd64
+    has_sidecar: false
+  - name: lodestar
+    image: chainsafe/lodestar:v1.15.0
+    has_sidecar: true
+  # https://github.com/kurtosis-tech/ethereum-package/issues/417
+  - name: nimbus
+    image: ethpandaops/nimbus:unstable
+    has_sidecar: false
+topology:
+  bootnode_el: geth
+  bootnode_cl: prysm
+  target_node_multiplier: 1
+  targets_as_percent_of_network: 0.40
+network_params:
+  num_validator_keys_per_node: 32
+kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
+kubernetes_namespace: kt-restart-reth
+fault_config:
+  fault_type: NetworkLatency
+  target_client: reth
+  wait_before_first_test: 300s
+  fault_config_dimensions:
+    - grace_period: 300s
+      delay: 500ms
+      jitter: 500ms
+      duration: 1m
+      correlation: 100
+  fault_targeting_dimensions:
+    - MatchingClient
+  fault_attack_size_dimensions:
+    - AttackOneMatching
+    - AttackMinorityMatching
+    - AttackSuperminorityMatching
+    - AttackMajorityMatching
+    - AttackSupermajorityMatching
+    - AttackAllMatching

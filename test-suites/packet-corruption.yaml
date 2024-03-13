@@ -1,0 +1,43 @@
+attacknetConfig:
+  grafanaPodName: grafana
+  grafanaPodPort: 3000
+  waitBeforeInjectionSeconds: 240
+  reuseDevnetBetweenRuns: true
+  existingDevnetNamespace: kt-ethereum
+  allowPostFaultInspection: true
+
+harnessConfig:
+  networkPackage: github.com/kurtosis-tech/ethereum-package
+  networkConfig: default.yaml
+  networkType: ethereum
+
+testConfig:
+  tests:
+  - testName: corrupt-geth-prysm
+    health:
+      enableChecks: true
+      gracePeriod: 2m0s
+    planSteps:
+    - stepType: injectFault
+      description: "inject packet corruption fault"
+      chaosFaultSpec:
+        kind: NetworkChaos
+        apiVersion: chaos-mesh.org/v1alpha1
+        spec:
+          selector:
+            labelSelectors:
+              kurtosistech.com.custom/ethereum-package.client-type: beacon
+
+          target:
+            mode: all
+            labelSelectors:
+              kurtosistech.com/id: cl-2-prysm-geth
+          mode: all
+          action: corrupt
+          duration: 5m
+          direction: from
+          corrupt:
+            corrupt: '90'
+            correlation: '100'
+    - stepType: waitForFaultCompletion
+      description: wait for faults to terminate

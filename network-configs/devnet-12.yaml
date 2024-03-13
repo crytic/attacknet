@@ -1,0 +1,71 @@
+participants:
+  - el_type: geth
+    el_image: ethereum/client-go:v1.13.13
+    el_extra_labels: {"ethereum-package.partition": "partA"}
+    cl_type: lighthouse
+    cl_image: sigp/lighthouse:v5.0.0
+    beacon_extra_labels: {"ethereum-package.partition": "partA"}
+    validator_extra_labels: {"ethereum-package.partition": "partA"}
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    cl_min_cpu: 2000
+    cl_max_cpu: 3000
+    cl_min_mem: 2048
+    cl_max_mem: 2048
+    vc_min_cpu: 1000
+    vc_max_cpu: 1000
+    vc_min_mem: 1028
+    vc_max_mem: 1028
+    count: 1
+  - el_type: nethermind
+    el_image: nethermind/nethermind:1.25.4
+    el_extra_labels: {"ethereum-package.partition": "partA"}
+    cl_type: teku
+    cl_image: consensys/teku:24.2.0-amd64
+    beacon_extra_labels: {"ethereum-package.partition": "partA"}
+    validator_extra_labels: {"ethereum-package.partition": "partA"}
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    cl_min_cpu: 2000
+    cl_max_cpu: 3000
+    cl_min_mem: 2048
+    cl_max_mem: 2048
+    vc_min_cpu: 1000
+    vc_max_cpu: 1000
+    vc_min_mem: 1028
+    vc_max_mem: 1028
+    count: 1
+  - el_type: reth
+    el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
+    el_extra_labels: {"ethereum-package.partition": "partB"}
+    cl_type: prysm
+    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.0,gcr.io/prysmaticlabs/prysm/validator:v5.0.0
+    beacon_extra_labels: {"ethereum-package.partition": "partB"}
+    validator_extra_labels: {"ethereum-package.partition": "partB"}
+    el_min_cpu: 1000
+    el_max_cpu: 1000
+    el_min_mem: 1024
+    el_max_mem: 1024
+    cl_min_cpu: 2000
+    cl_max_cpu: 3000
+    cl_min_mem: 2048
+    cl_max_mem: 2048
+    vc_min_cpu: 1000
+    vc_max_cpu: 1000
+    vc_min_mem: 1028
+    vc_max_mem: 1028
+    count: 1
+network_params:
+  deneb_fork_epoch: 1
+  genesis_delay: 120
+additional_services:
+  - dora
+  - goomy_blob
+  - tx_spammer
+  - blob_spammer
+persistent: true
+global_client_log_level: info
