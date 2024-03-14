@@ -1,0 +1,1261 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 1000
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-ethereum
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package
+    networkConfig: plan/clock-skew-nethermind.yaml
+testConfig:
+    tests:
+        - testName: Apply -1m clock skew for 1m against 1 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 1 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 1 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 1 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -1m clock skew for 1m against 2 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 2 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 2 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 2 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -1m clock skew for 1m against 5 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                                - cl-4-teku-nethermind
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                                - cl-5-lodestar-nethermind
+                                - cl-5-lodestar-nethermind-validator
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                                - cl-6-nimbus-nethermind
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 5 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                                - cl-4-teku-nethermind
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                                - cl-5-lodestar-nethermind
+                                - cl-5-lodestar-nethermind-validator
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                                - cl-6-nimbus-nethermind
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 5 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                                - cl-4-teku-nethermind
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                                - cl-5-lodestar-nethermind
+                                - cl-5-lodestar-nethermind-validator
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                                - cl-6-nimbus-nethermind
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 5 targets. Impacting the full node of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                                - cl-2-lighthouse-nethermind
+                                - cl-2-lighthouse-nethermind-validator
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                                - cl-3-prysm-nethermind
+                                - cl-3-prysm-nethermind-validator
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                                - cl-4-teku-nethermind
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                                - cl-5-lodestar-nethermind
+                                - cl-5-lodestar-nethermind-validator
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                                - cl-6-nimbus-nethermind
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -1m clock skew for 1m against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -1m clock skew for 1m against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -1m clock skew for 1m against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                    timeOffset: -1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                    timeOffset: -1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 1m clock skew for 1m against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                    timeOffset: 1m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                    timeOffset: 1m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply -7m clock skew for 1m against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                    timeOffset: -7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                    timeOffset: -7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s
+        - testName: Apply 7m clock skew for 1m against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+                    timeOffset: 7m
+            - stepType: injectFault
+              description: 'Inject clock skew on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: TimeChaos
+                spec:
+                    action: delay
+                    duration: 1m
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+                    timeOffset: 7m
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 10m0s

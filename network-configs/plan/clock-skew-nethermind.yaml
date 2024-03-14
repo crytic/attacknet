@@ -1,0 +1,103 @@
+participants:
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:v5.1.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: lighthouse
+      cl_image: sigp/lighthouse:v5.1.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: prysm
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1,gcr.io/prysmaticlabs/prysm/validator:v5.0.1
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: teku
+      cl_image: consensys/teku:24.3.0-amd64
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: lodestar
+      cl_image: chainsafe/lodestar:v1.17.0
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      vc_min_cpu: 500
+      vc_max_cpu: 500
+      vc_min_mem: 512
+      vc_max_mem: 512
+      count: 1
+    - el_client_type: nethermind
+      el_client_image: nethermind/nethermind:1.25.4
+      cl_type: nimbus
+      cl_image: statusim/nimbus-eth2:multiarch-v24.2.2
+      el_min_cpu: 768
+      el_max_cpu: 768
+      el_min_mem: 1024
+      el_max_mem: 1024
+      cl_min_cpu: 1000
+      cl_max_cpu: 1000
+      cl_min_mem: 1536
+      cl_max_mem: 1536
+      count: 1
+network_params:
+    num_validator_keys_per_node: 32
+additional_services:
+    - prometheus_grafana
+    - dora
+parallel_keystore_generation: false
+persistent: false
+disable_peer_scoring: true

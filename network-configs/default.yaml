@@ -1,8 +1,8 @@
 participants:
   - el_type: geth
-    el_image: ethereum/client-go:latest
+    el_image: ethereum/client-go:v1.13.14
     cl_type: lighthouse
-    cl_image: sigp/lighthouse:latest
+    cl_image: sigp/lighthouse:v5.1.1
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -17,9 +17,9 @@ participants:
     vc_max_mem: 1028
     count: 1
   - el_type: geth
-    el_image: ethereum/client-go:latest
+    el_image: ethereum/client-go:v1.13.14
     cl_type: prysm
-    cl_image: prysmaticlabs/prysm-beacon-chain:latest
+    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024

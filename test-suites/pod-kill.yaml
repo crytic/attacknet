@@ -31,7 +31,7 @@ testConfig:
               # kurtosistech.com.custom/ethereum-package.client-type: beacon
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
-              kurtosistech.com/id: el-3-geth-prysm
+              kurtosistech.com/id: el-3-reth-prysm
 
 
 

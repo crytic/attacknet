@@ -1,6 +1,6 @@
 participants:
     - el_type: nethermind
-      el_image: nethermind/nethermind:1.25.1
+      el_image: nethermind/nethermind:1.25.4
       cl_type: prysm
       cl_image: prysmaticlabs/prysm-beacon-chain:latest
       el_min_cpu: 1000
@@ -17,9 +17,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: reth
-      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:latest
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -34,9 +34,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: reth
-      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -51,9 +51,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: reth
-      el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.13
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: lodestar
-      cl_image: chainsafe/lodestar:v1.12.1
+      cl_image: chainsafe/lodestar:v1.17.0
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -68,9 +68,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:latest
+      el_image: ethereum/client-go:v1.13.14
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:latest
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -85,9 +85,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: erigon
-      el_image: thorax/erigon:v2.53.4
+      el_image: thorax/erigon:v2.58.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -102,9 +102,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: nethermind
-      el_image: nethermind/nethermind:1.25.1
+      el_image: nethermind/nethermind:1.25.4
       cl_type: lodestar
-      cl_image: chainsafe/lodestar:v1.12.1
+      cl_image: chainsafe/lodestar:v1.17.0
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -119,9 +119,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:latest
+      el_image: ethereum/client-go:v1.13.14
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:latest
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -136,9 +136,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: erigon
-      el_image: thorax/erigon:v2.53.4
+      el_image: thorax/erigon:v2.58.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -153,9 +153,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: nethermind
-      el_image: nethermind/nethermind:1.25.1
+      el_image: nethermind/nethermind:1.25.4
       cl_type: lodestar
-      cl_image: chainsafe/lodestar:v1.12.1
+      cl_image: chainsafe/lodestar:v1.17.0
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -170,9 +170,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:latest
+      el_image: ethereum/client-go:v1.13.14
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:latest
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024
@@ -187,9 +187,9 @@ participants:
       vc_max_mem: 1024
       count: 1
     - el_type: erigon
-      el_image: thorax/erigon:v2.53.4
+      el_image: thorax/erigon:v2.58.4
       cl_type: prysm
-      cl_image: prysmaticlabs/prysm-beacon-chain:latest
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 1000
       el_max_cpu: 1000
       el_min_mem: 1024

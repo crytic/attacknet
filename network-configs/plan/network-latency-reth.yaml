@@ -1,8 +1,8 @@
 participants:
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: prysm
-      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -17,9 +17,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: reth
-      el_image: parithoshj/reth:main-1a8440a-debug
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:v4.6.0
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -34,9 +34,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: reth
-      el_image: parithoshj/reth:main-1a8440a-debug
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: prysm
-      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -51,9 +51,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: reth
-      el_image: parithoshj/reth:main-1a8440a-debug
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: teku
-      cl_image: consensys/teku:24.1.1-amd64
+      cl_image: consensys/teku:24.3.0-amd64
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -64,9 +64,9 @@ participants:
       cl_max_mem: 1536
       count: 1
     - el_type: reth
-      el_image: parithoshj/reth:main-1a8440a-debug
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: lodestar
-      cl_image: chainsafe/lodestar:v1.15.0
+      cl_image: chainsafe/lodestar:v1.17.0
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -81,9 +81,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: reth
-      el_image: parithoshj/reth:main-1a8440a-debug
+      el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
       cl_type: nimbus
-      cl_image: ethpandaops/nimbus:unstable
+      cl_image: statusim/nimbus-eth2:multiarch-v24.2.2
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -94,9 +94,9 @@ participants:
       cl_max_mem: 1536
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:v4.6.0
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -111,9 +111,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: prysm
-      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v4.2.1
+      cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -128,9 +128,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: teku
-      cl_image: consensys/teku:24.1.1-amd64
+      cl_image: consensys/teku:24.3.0-amd64
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -141,9 +141,9 @@ participants:
       cl_max_mem: 1536
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: lodestar
-      cl_image: chainsafe/lodestar:v1.15.0
+      cl_image: chainsafe/lodestar:v1.17.0
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -158,9 +158,9 @@ participants:
       vc_max_mem: 512
       count: 1
     - el_type: geth
-      el_image: ethereum/client-go:v1.13.11
+      el_image: ethereum/client-go:v1.13.14
       cl_type: nimbus
-      cl_image: ethpandaops/nimbus:unstable
+      cl_image: statusim/nimbus-eth2:multiarch-v24.2.2
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
@@ -171,9 +171,9 @@ participants:
       cl_max_mem: 1536
       count: 1
     - el_type: erigon
-      el_image: thorax/erigon:v2.57.3
+      el_image: thorax/erigon:v2.58.4
       cl_type: lighthouse
-      cl_image: sigp/lighthouse:v4.6.0
+      cl_image: sigp/lighthouse:v5.1.1
       el_min_cpu: 768
       el_max_cpu: 768
       el_min_mem: 1024
