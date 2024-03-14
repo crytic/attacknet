@@ -1,9 +1,9 @@
 participants:
   - el_type: geth
-    el_image: ethereum/client-go:v1.13.13
+    el_image: ethereum/client-go:v1.13.14
     el_extra_labels: {"ethereum-package.partition": "partA"}
     cl_type: lighthouse
-    cl_image: sigp/lighthouse:v5.0.0
+    cl_image: sigp/lighthouse:v5.1.1
     beacon_extra_labels: {"ethereum-package.partition": "partA"}
     validator_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
@@ -23,7 +23,7 @@ participants:
     el_image: nethermind/nethermind:1.25.4
     el_extra_labels: {"ethereum-package.partition": "partA"}
     cl_type: teku
-    cl_image: consensys/teku:24.2.0-amd64
+    cl_image: consensys/teku:24.3.0-amd64
     beacon_extra_labels: {"ethereum-package.partition": "partA"}
     validator_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
@@ -40,10 +40,10 @@ participants:
     vc_max_mem: 1028
     count: 1
   - el_type: reth
-    el_image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
+    el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
     el_extra_labels: {"ethereum-package.partition": "partB"}
     cl_type: prysm
-    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.0,gcr.io/prysmaticlabs/prysm/validator:v5.0.0
+    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1,gcr.io/prysmaticlabs/prysm/validator:v5.0.1
     beacon_extra_labels: {"ethereum-package.partition": "partB"}
     validator_extra_labels: {"ethereum-package.partition": "partB"}
     el_min_cpu: 1000

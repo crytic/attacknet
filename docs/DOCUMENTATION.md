@@ -62,7 +62,7 @@ attacknetConfig:
   allowPostFaultInspection: true
   waitBeforeInjectionSeconds: 600 # we want to wait until all the nodes are synced and emitting attestations
   reuseDevnetBetweenRuns: true
-  existingDevnetNamespace: pre-existing-namespace
+  existingDevnetNamespace: non-existing-namespace # we use a new namespace to ensure that the chaos is applied to a fresh network
 
 harnessConfig:
   networkType: ethereum

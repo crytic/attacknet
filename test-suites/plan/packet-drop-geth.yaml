@@ -1,0 +1,623 @@
+attacknetConfig:
+    grafanaPodName: grafana
+    grafanaPodPort: "3000"
+    allowPostFaultInspection: false
+    waitBeforeInjectionSeconds: 3
+    reuseDevnetBetweenRuns: true
+    existingDevnetNamespace: kt-packet-drop
+harnessConfig:
+    networkType: ethereum
+    networkPackage: github.com/kurtosis-tech/ethereum-package@060fd8fb3ed8e12be895a43912787313c1ad4a5f
+    networkConfig: plan/packet-drop-geth.yaml
+testConfig:
+    tests:
+        - testName: 'Apply 100 packet drop for 1m0s, direction: to against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 50 packet drop for 4m0s, direction: to against 1 targets. Impacting the client of targeted nethermind clients. Injecting into AttackOneMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 100 packet drop for 1m0s, direction: to against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackMinorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 50 packet drop for 4m0s, direction: to against 2 targets. Impacting the client of targeted nethermind clients. Injecting into AttackMinorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 100 packet drop for 1m0s, direction: to against 3 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 50 packet drop for 4m0s, direction: to against 3 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSuperminorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 100 packet drop for 1m0s, direction: to against 4 targets. Impacting the client of targeted nethermind clients. Injecting into AttackMajorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 50 packet drop for 4m0s, direction: to against 4 targets. Impacting the client of targeted nethermind clients. Injecting into AttackMajorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 100 packet drop for 1m0s, direction: to against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 1m0s
+                    loss:
+                        loss: "100"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
+        - testName: 'Apply 50 packet drop for 4m0s, direction: to against 5 targets. Impacting the client of targeted nethermind clients. Injecting into AttackSupermajorityMatching of the matching targets.'
+          planSteps:
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lighthouse Node (Node #2)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-2-nethermind-lighthouse
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/prysm Node (Node #3)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-3-nethermind-prysm
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/teku Node (Node #4)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-4-nethermind-teku
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/lodestar Node (Node #5)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-5-nethermind-lodestar
+            - stepType: injectFault
+              description: 'Inject network latency on target nethermind client of nethermind/nimbus Node (Node #6)'
+              chaosFaultSpec:
+                apiVersion: chaos-mesh.org/v1alpha1
+                kind: NetworkChaos
+                spec:
+                    action: loss
+                    direction: to
+                    duration: 4m0s
+                    loss:
+                        loss: "50"
+                    mode: all
+                    selector:
+                        expressionSelectors:
+                            - key: kurtosistech.com/id
+                              operator: In
+                              values:
+                                - el-6-nethermind-nimbus
+            - stepType: waitForFaultCompletion
+              description: wait for faults to terminate
+          health:
+            enableChecks: true
+            gracePeriod: 5m0s
