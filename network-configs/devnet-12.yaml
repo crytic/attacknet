@@ -4,8 +4,8 @@ participants:
     el_extra_labels: {"ethereum-package.partition": "partA"}
     cl_type: lighthouse
     cl_image: sigp/lighthouse:v5.1.1
-    beacon_extra_labels: {"ethereum-package.partition": "partA"}
-    validator_extra_labels: {"ethereum-package.partition": "partA"}
+    cl_extra_labels: {"ethereum-package.partition": "partA"}
+    vc_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -24,8 +24,8 @@ participants:
     el_extra_labels: {"ethereum-package.partition": "partA"}
     cl_type: teku
     cl_image: consensys/teku:24.3.0-amd64
-    beacon_extra_labels: {"ethereum-package.partition": "partA"}
-    validator_extra_labels: {"ethereum-package.partition": "partA"}
+    cl_extra_labels: {"ethereum-package.partition": "partA"}
+    vc_extra_labels: {"ethereum-package.partition": "partA"}
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -43,9 +43,10 @@ participants:
     el_image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
     el_extra_labels: {"ethereum-package.partition": "partB"}
     cl_type: prysm
-    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1,gcr.io/prysmaticlabs/prysm/validator:v5.0.1
-    beacon_extra_labels: {"ethereum-package.partition": "partB"}
-    validator_extra_labels: {"ethereum-package.partition": "partB"}
+    cl_image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1
+    vc_image: gcr.io/prysmaticlabs/prysm/validator:v5.0.1
+    cl_extra_labels: {"ethereum-package.partition": "partB"}
+    vc_extra_labels: {"ethereum-package.partition": "partB"}
     el_min_cpu: 1000
     el_max_cpu: 1000
     el_min_mem: 1024
@@ -68,4 +69,4 @@ additional_services:
   - tx_spammer
   - blob_spammer
 persistent: true
-global_client_log_level: info
+global_log_level: info

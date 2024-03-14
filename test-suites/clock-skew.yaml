@@ -4,7 +4,7 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 0
   reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
-  existingDevnetNamespace: kt-restart-reth
+  existingDevnetNamespace: kt-clock-skew-reth
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package
@@ -26,7 +26,7 @@ testConfig:
         spec:
           selector:
             labelSelectors:
-              kurtosistech.com/id: cl-04-teku-reth
+              kurtosistech.com/id: cl-3-prysm-reth
           mode: all
           action: delay
           timeOffset: '832s'
