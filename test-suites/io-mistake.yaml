@@ -33,9 +33,9 @@ testConfig:
               # kurtosistech.com.custom/ethereum-package.client-type: beacon
               # kurtosistech.com.custom/ethereum-package.client-type: execution
               #kurtosistech.com/id: cl-3-prysm-geth
-              kurtosistech.com/id: el-3-geth-prysm
+              kurtosistech.com/id: el-3-reth-prysm
 
-          volumePath: /data/geth/execution-data
+          volumePath: /data/reth/execution-data
           # Run errno -l on a linux system to get a list of supporter error numbers
           errno: 16
           mistake:

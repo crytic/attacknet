@@ -27,7 +27,7 @@ testConfig:
         spec:
           selector:
             labelSelectors:
-              kurtosistech.com/id: el-3-geth-prysm
+              kurtosistech.com/id: el-3-reth-prysm
               #kurtosistech.com.custom/ethereum-package.client: prysm
               #kurtosistech.com.custom/ethereum-package.client-type: beacon
 

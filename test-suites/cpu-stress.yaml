@@ -4,6 +4,7 @@ attacknetConfig:
   waitBeforeInjectionSeconds: 300
   reuseDevnetBetweenRuns: true
   allowPostFaultInspection: true
+  existingDevnetNamespace: kt-cpu-stress-reth
 
 harnessConfig:
   networkPackage: github.com/kurtosis-tech/ethereum-package

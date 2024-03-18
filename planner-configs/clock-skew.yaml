@@ -1,26 +1,26 @@
 execution:
   - name: geth
-    image: ethereum/client-go:v1.13.13
+    image: ethereum/client-go:v1.13.14
   - name: reth
-    image: ghcr.io/paradigmxyz/reth:v0.1.0-alpha.19
+    image: ghcr.io/paradigmxyz/reth:v0.2.0-beta.2
   - name: erigon
-    image: thorax/erigon:v2.58.1
+    image: thorax/erigon:v2.58.4
   - name: nethermind
     image: nethermindeth/nethermind:1.25.4
   - name: besu
-    image: hyperledger/besu:24.1.2
+    image: hyperledger/besu:24.3.0
 consensus:
   - name: lighthouse
-    image: sigp/lighthouse:v5.0.0
+    image: sigp/lighthouse:v5.1.1
     has_sidecar: true
   - name: prysm
-    image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.0,gcr.io/prysmaticlabs/prysm/validator:v5.0.0
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:v5.0.1,gcr.io/prysmaticlabs/prysm/validator:v5.0.1
     has_sidecar: true
   - name: teku
-    image: consensys/teku:24.2.0-amd64
+    image: consensys/teku:24.3.0-amd64
     has_sidecar: false
   - name: lodestar
-    image: chainsafe/lodestar:v1.16.0
+    image: chainsafe/lodestar:v1.17.0
     has_sidecar: true
   - name: nimbus
     image: statusim/nimbus-eth2:multiarch-v24.2.2
