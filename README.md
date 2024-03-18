@@ -72,7 +72,7 @@ When making pull requests, **please target the `develop` branch, not main.**
 
 ## Changelog
 
-**March 18, 2024 version v0.4**
+**March 18, 2024 version v1.0.0**
 
 First public release!
 
