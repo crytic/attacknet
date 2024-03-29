@@ -1,14 +1,14 @@
 package pkg
 
 import (
-	"attacknet/cmd/pkg/artifacts"
-	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
+	chaosmesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/health"
 	"attacknet/cmd/pkg/kubernetes"
 	"attacknet/cmd/pkg/runtime"
 	"attacknet/cmd/pkg/test_executor"
 	"attacknet/cmd/pkg/types"
 	"context"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -26,7 +26,7 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 
 	// create chaos-mesh client
 	log.Infof("Creating a chaos-mesh client")
-	chaosClient, err := chaos_mesh.CreateClient(enclave.Namespace, kubeClient)
+	chaosClient, err := chaosmesh.CreateClient(enclave.Namespace, kubeClient)
 	if err != nil {
 		//	grafanaTunnel.Cleanup(true)
 		return err
@@ -41,7 +41,10 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 
 	log.Infof("Running %d tests", len(cfg.TestConfig.Tests))
 
-	var testArtifacts []*artifacts.TestArtifact
+	healthArtifactSerializer, err := health.BuildArtifactSerializer(cfg.HarnessConfig.NetworkType)
+	if err != nil {
+		return err
+	}
 
 	for i, test := range cfg.TestConfig.Tests {
 		log.Infof("Running test (%d/%d): '%s'", i+1, len(cfg.TestConfig.Tests), test.TestName)
@@ -62,17 +65,25 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 				return err
 			}
 
-			hc, err := health.BuildHealthChecker(kubeClient, podsUnderTest, test.HealthConfig)
+			hc, err := health.BuildHealthChecker(
+				cfg.HarnessConfig.NetworkType,
+				kubeClient,
+				podsUnderTest,
+				test.HealthConfig.GracePeriod)
 			if err != nil {
 				return err
 			}
-			results, err := hc.RunChecks(ctx)
+			passing, resultDetail, err := hc.RunChecksUntilPassOrGrace(ctx)
 			if err != nil {
 				return err
 			}
-			testArtifact := artifacts.BuildTestArtifact(results, podsUnderTest, test)
-			testArtifacts = append(testArtifacts, testArtifact)
-			if !testArtifact.TestPassed {
+
+			err = healthArtifactSerializer.AddHealthCheckResult(resultDetail, podsUnderTest, test)
+			if err != nil {
+				return err
+			}
+
+			if !passing {
 				log.Warn("Some health checks failed. Stopping test suite.")
 				break
 			}
@@ -80,12 +91,19 @@ func StartTestSuite(ctx context.Context, cfg *types.ConfigParsed) error {
 			log.Info("Skipping health checks")
 		}
 	}
-	err = artifacts.SerializeTestArtifacts(testArtifacts)
+
+	healthArtifact, err := healthArtifactSerializer.SerializeArtifacts()
+	if err != nil {
+		return err
+	}
+
+	// write
+	artifactFilename := fmt.Sprintf("results-%d.yaml", time.Now().UnixMilli())
+	err = WriteFileOnSubpath("artifacts", artifactFilename, healthArtifact)
 	if err != nil {
 		return err
 	}
 
 	enclave.Destroy(ctx)
-
 	return nil
 }

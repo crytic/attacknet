@@ -1,7 +1,7 @@
 package ethereum
 
 import (
-	chaos_mesh "attacknet/cmd/pkg/chaos-mesh"
+	chaosmesh "attacknet/cmd/pkg/chaos-mesh"
 	"attacknet/cmd/pkg/kubernetes"
 	"context"
 )
@@ -9,8 +9,8 @@ import (
 func getPodsToHealthCheck(
 	ctx context.Context,
 	kubeClient *kubernetes.KubeClient,
-	podsUnderTest []*chaos_mesh.PodUnderTest,
-	podsUnderTestLookup map[string]*chaos_mesh.PodUnderTest,
+	podsUnderTest []*chaosmesh.PodUnderTest,
+	podsUnderTestLookup map[string]*chaosmesh.PodUnderTest,
 	labelKey, labelValue string,
 ) ([]kubernetes.KubePod, error) {
 

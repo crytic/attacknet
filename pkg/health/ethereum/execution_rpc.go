@@ -17,7 +17,7 @@ type ExecClientRPC struct {
 	client  *ethclient.Client
 }
 
-func (e *EthNetworkChecker) getExecBlockConsensus(ctx context.Context, clients []*ExecClientRPC, blockType string, maxAttempts int) (*types.BlockConsensusTestResult, error) {
+func (e *healthChecker) getExecBlockConsensus(ctx context.Context, clients []*ExecClientRPC, blockType string, maxAttempts int) (*types.BlockConsensusTestResult, error) {
 	forkChoice, err := getExecNetworkConsensus(ctx, clients, blockType)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (e *EthNetworkChecker) getExecBlockConsensus(ctx context.Context, clients [
 	}, nil
 }
 
-func (e *EthNetworkChecker) dialToExecutionClients(ctx context.Context) ([]*ExecClientRPC, error) {
+func (e *healthChecker) dialToExecutionClients(ctx context.Context) ([]*ExecClientRPC, error) {
 	labelKey := "kurtosistech.com.custom/ethereum-package.client-type"
 	labelValue := "execution"
 	podsToHealthCheck, err := getPodsToHealthCheck(

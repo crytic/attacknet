@@ -1,9 +1,14 @@
 package types
 
-import "context"
+import (
+	chaosMesh "attacknet/cmd/pkg/chaos-mesh"
+	"attacknet/cmd/pkg/types"
+	"context"
+)
 
-type GenericNetworkChecker interface {
-	RunAllChecks(context.Context, *HealthCheckResult) (*HealthCheckResult, error)
+type HealthChecker interface {
+	RunChecks(ctx context.Context) (bool, error)
+	PopFinalResult() interface{}
 }
 
 type BlockConsensusTestResult struct {
@@ -20,9 +25,7 @@ type BlockConsensusArtifact struct {
 	NodeRecoveryTimeSeconds        map[string]int `yaml:"node_recovery_time_seconds"`
 }
 
-type HealthCheckResult struct {
-	LatestElBlockResult    *BlockConsensusArtifact `yaml:"latest_el_block_health_result"`
-	FinalizedElBlockResult *BlockConsensusArtifact `yaml:"finalized_el_block_health_result"`
-	LatestClBlockResult    *BlockConsensusArtifact `yaml:"latest_cl_block_health_result"`
-	FinalizedClBlockResult *BlockConsensusArtifact `yaml:"finalized_cl_block_health_result"`
+type ArtifactSerializer interface {
+	AddHealthCheckResult(interface{}, []*chaosMesh.PodUnderTest, types.SuiteTest) error
+	SerializeArtifacts() ([]byte, error)
 }
