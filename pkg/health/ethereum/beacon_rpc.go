@@ -22,7 +22,7 @@ type BeaconClientRpc struct {
 	client  eth2client.BeaconBlockHeadersProvider
 }
 
-func (e *EthNetworkChecker) getBeaconClientConsensus(ctx context.Context, clients []*BeaconClientRpc, blockType string, maxAttempts int) (*types.BlockConsensusTestResult, error) {
+func (e *healthChecker) getBeaconClientConsensus(ctx context.Context, clients []*BeaconClientRpc, blockType string, maxAttempts int) (*types.BlockConsensusTestResult, error) {
 	forkChoice, err := getBeaconNetworkConsensus(ctx, clients, blockType)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (e *EthNetworkChecker) getBeaconClientConsensus(ctx context.Context, client
 	}, nil
 }
 
-func (e *EthNetworkChecker) dialToBeaconClients(ctx context.Context) ([]*BeaconClientRpc, error) {
+func (e *healthChecker) dialToBeaconClients(ctx context.Context) ([]*BeaconClientRpc, error) {
 	labelKey := "kurtosistech.com.custom/ethereum-package.client-type"
 	labelValue := "beacon"
 	podsToHealthCheck, err := getPodsToHealthCheck(
