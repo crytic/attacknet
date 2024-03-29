@@ -14,7 +14,7 @@ func CreateEthereumArtifactSerializer() healthTypes.ArtifactSerializer {
 	}
 }
 
-func (e artifactSerializer) AddHealthCheckResult(
+func (e *artifactSerializer) AddHealthCheckResult(
 	result interface{},
 	podsUnderTest []*chaosMesh.PodUnderTest,
 	test types.SuiteTest,
@@ -42,7 +42,7 @@ func (e artifactSerializer) AddHealthCheckResult(
 	return nil
 }
 
-func (e artifactSerializer) SerializeArtifacts() ([]byte, error) {
+func (e *artifactSerializer) SerializeArtifacts() ([]byte, error) {
 	bs, err := yaml.Marshal(e.artifacts)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "could not marshal test artifacts")
