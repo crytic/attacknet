@@ -12,14 +12,14 @@ import (
 
 var CLI struct {
 	Init struct {
-		Force bool   `arg:"force" optional:"" default:"false" name:"force" help:"Overwrite existing project"`
+		Force bool   `arg:"force" optional:"" default:"false" name:"force" help:"Overwrite existing project."`
 		Path  string `arg:"" optional:"" type:"existingdir" name:"path" help:"Path to initialize project on. Defaults to current working directory."`
 	} `cmd:"" help:"Initialize an attacknet project"`
 	Start struct {
-		Suite string `arg:"" name:"suite name" help:"The test suite to run. These are located in ./test-suites"`
+		Suite string `arg:"" name:"suite name" help:"The test suite to run. These are located in ./test-suites."`
 	} `cmd:"" help:"Run a specified test suite"`
 	Plan struct {
-		Name string `arg:"" optional:"" name:"name" help:"The name of the test suite to be generated"`
+		Name string `arg:"" optional:"" name:"name" help:"The name of the test suite to be generated."`
 		Path string `arg:"" optional:"" type:"existingfile" name:"path" help:"Location of the planner configuration."`
 	} `cmd:"" help:"Construct an attacknet suite for a client"`
 	// Explore struct{} `cmd:"" help:"Run in exploration mode"`

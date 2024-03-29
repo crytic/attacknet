@@ -31,7 +31,7 @@ func initializeDirectoriesAndFiles(suitePath string, configPath string) error {
 		return err
 	}
 
-	fmt.Print("Todo: we need to create sample files for the suite/types dirs. They will be empty until then.")
+	fmt.Println("Todo: we need to create sample files for the suite/types dirs. They will be empty until then.")
 	return nil
 }
 
@@ -42,7 +42,7 @@ func InitializeProject(path string, force bool) error {
 	if !force {
 		exists := projectAlreadyExists(suitePath, configPath)
 		if exists {
-			errStr := fmt.Sprintf("A project already exsts on %s. Re-run with --force to overwrite.", path)
+			errStr := fmt.Sprintf("A project already exists on %s. Re-run with --force to overwrite.", path)
 			fmt.Print(errStr)
 			return errors.New(errStr)
 		}
