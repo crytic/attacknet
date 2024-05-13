@@ -10,3 +10,5 @@ deposit_manifest.json
 webhook
 attacknetruns
 metrics-server.yaml
+
+dist/
