@@ -72,6 +72,11 @@ When making pull requests, **please target the `develop` branch, not main.**
 
 ## Changelog
 
+**July 11, 2024 version v1.0.1**
+- Updated to Go 1.22.5
+- Updated Kurtosis SDK to 1.0
+- Modified examples to point at temporary Kurtosis package
+
 **March 18, 2024 version v1.0.0**
 
 First public release!

@@ -22,7 +22,7 @@ consensus:
   - name: lodestar
     image: chainsafe/lodestar:v1.17.0
     has_sidecar: true
-  # https://github.com/kurtosis-tech/ethereum-package/issues/417
+  # https://github.com/ethpandaops/ethereum-package@0ed559c2661989b44cd2a44eca013acd64786f7f/issues/417
   - name: nimbus
     image: statusim/nimbus-eth2:multiarch-v24.2.2
     has_sidecar: false
@@ -33,7 +33,7 @@ topology:
   targets_as_percent_of_network: 0.40
 network_params:
   num_validator_keys_per_node: 32
-kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
+kurtosis_package: "github.com/crytic/ethereum-package@0ed559c2661989b44cd2a44eca013acd64786f7f"
 kubernetes_namespace: kt-restart-reth
 fault_config:
   fault_type: NetworkLatency

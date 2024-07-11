@@ -7,7 +7,7 @@ attacknetConfig:
     existingDevnetNamespace: kt-ethereum
 harnessConfig:
     networkType: ethereum
-    networkPackage: github.com/kurtosis-tech/ethereum-package
+    networkPackage: github.com/crytic/ethereum-package@0ed559c2661989b44cd2a44eca013acd64786f7f
     networkConfig: plan/clock-skew-nethermind.yaml
 testConfig:
     tests:

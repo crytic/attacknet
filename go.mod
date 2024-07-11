@@ -1,8 +1,6 @@
 module attacknet/cmd
 
-go 1.21
-
-toolchain go1.21.3
+go 1.22.5
 
 require (
 	github.com/alecthomas/kong v0.8.1
@@ -10,7 +8,7 @@ require (
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20240104130649-f55576898805
 	github.com/ethereum/go-ethereum v1.13.8
 	github.com/grafana-tools/sdk v0.0.0-20220919052116-6562121319fc
-	github.com/kurtosis-tech/kurtosis/api/golang v0.89.3
+	github.com/kurtosis-tech/kurtosis/api/golang v1.0.0
 	github.com/kurtosis-tech/stacktrace v0.0.0-20211028211901-1c67a77b5409
 	github.com/rs/zerolog v1.29.1
 	github.com/sirupsen/logrus v1.9.3

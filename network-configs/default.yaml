@@ -39,5 +39,4 @@ network_params:
   num_validator_keys_per_node: 32
 additional_services:
   - prometheus_grafana
-  - dora
 persistent: false
