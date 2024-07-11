@@ -27,7 +27,7 @@ consensus:
     has_sidecar: false
 network_params:
   num_validator_keys_per_node: 32
-kurtosis_package: "github.com/kurtosis-tech/ethereum-package"
+kurtosis_package: "github.com/crytic/ethereum-package@0ed559c2661989b44cd2a44eca013acd64786f7f"
 kubernetes_namespace: kt-ethereum
 topology:
   bootnode_el: geth

@@ -6,6 +6,10 @@ Fundamentally, Attacknet is an orchestration tool for performing Chaos Testing. 
 
 To understand its capabilities and how to use it, we've documented a set of "testing workflows", ranging from simple to more complicated, along with accompanying docs on how to use the workflow and what kind of testing it should be used for. 
 
+**NOTE**: at this time, the canonical Kurtosis package for deploying Ethereum devnets is located here: https://github.com/ethpandaops/ethereum-package. However, there's been some compatibility issues that are preventing the latest version of the package from working with Attacknet on Kubernetes. 
+
+Until it gets fixed, we recommend using the following Kurtosis package, however this package may not work for the latest testnet configurations: `github.com/crytic/ethereum-package@0ed559c2661989b44cd2a44eca013acd64786f7f`
+
 ### Workflow #1, Inject fault into an existing pod, then quit
 
 For this workflow, we want Attacknet to inject a fault into a pre-existing pod in a pre-existing namespace, then quit.
