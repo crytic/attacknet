@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/kurtosis-tech/stacktrace"
 	log "github.com/sirupsen/logrus"
+	"slices"
 	"time"
 )
 
@@ -116,13 +117,7 @@ func (c *ExecClientRPC) GetLatestBlockBy(ctx context.Context, blockType string) 
 			"unknown block",             //reth
 		}
 
-		noFinalBlockFound := false
-		for _, msg := range notFinalizingErrors {
-			if err.Error() == msg {
-				noFinalBlockFound = true
-				break
-			}
-		}
+		noFinalBlockFound := slices.Contains(notFinalizingErrors, err.Error())
 
 		if noFinalBlockFound {
 			choice = &ClientForkChoice{
